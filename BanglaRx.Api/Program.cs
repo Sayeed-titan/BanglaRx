@@ -503,8 +503,12 @@ app.MapPost("/api/ai/analyze-consultation", async (ConsultationInput input, IHtt
         var medicineContext = string.Join("\n", allMedicines.Select(m => 
             $"- {m.brand_name} ({m.generic_name}, {m.form}, {m.strength}, {m.manufacturer})"));
 
+        var amendmentContext = input.IsAmendment && !string.IsNullOrWhiteSpace(input.CurrentPrescriptionJson)
+            ? $"\n\nCURRENT ACTIVE PRESCRIPTION ON PAD (Apply doctor's amendments/corrections to this):\n{input.CurrentPrescriptionJson}\n"
+            : "";
+
         var systemPrompt = $@"
-You are the BanglaRx Clinical AI Engine, a medical artificial intelligence deployed for hospital chambers in Bangladesh.
+You are the BanglaRx Clinical AI Engine, a medical AI deployed for hospital chambers in Bangladesh.
 You understand clinical dialogue spoken in English, Bengali, or mixed colloquial Banglish.
 
 Your tasks:
@@ -512,8 +516,13 @@ Your tasks:
 2. Extract Vitals (BP, Temp, Pulse, SpO2) if present or infer clinical baseline.
 3. Formulate a Differential or Clinical Diagnosis.
 4. Extract all prescribed medications. Ground each medicine to genuine Bangladeshi pharmaceutical brands from the inventory below whenever possible.
-5. Provide Bengali dosage instructions (e.g. 'খাওয়ার ২০ মিনিট আগে', 'ভরা পেটে খাবেন') and dosage patterns (e.g. 1+0+1, 0+0+1).
-6. Recommend relevant laboratory investigations and patient advice in Bengali.
+   - For dosage pattern, capture precise instructions: e.g. '1+0+1', '1+1+1', '1+0+0', '0+0+1', or interval-based patterns like '৪ ঘণ্টা পর পর' (every 4 hrs), '৬ ঘণ্টা পর পর' (every 6 hrs), '৮ ঘণ্টা পর পর' (every 8 hrs), 'জর আসলে ১টি' (as needed / PRN / SOS).
+5. Extract Laboratory Investigations Advised by doctor (e.g. 'CBC with ESR', 'Dengue NS1 Antigen', 'Serum Creatinine', 'USG of Whole Abdomen').
+6. Extract Patient's Prior Test Reports presented today (e.g. 'Dengue NS1: Positive', 'Platelet: 95,000/μL', 'HbA1c: 8.5%').
+7. Extract Patient Dietary & Lifestyle Advice in fluent Bengali (e.g. 'পর্যাপ্ত পানি ও ডাবের পানি খাবেন').
+8. Extract Follow-up timing (e.g. '৭ দিন পর রিপোর্টসহ দেখা করবেন') and Red Flag emergency warnings.
+
+{(input.IsAmendment ? "CRITICAL: This is an AMENDMENT. The doctor is modifying an existing prescription. Apply the doctor's modifications (changing medicine, changing dosage pattern, altering duration, adding or removing medicine) while keeping all other unchanged items intact." : "")}
 
 Official Bangladesh Medicines Catalog:
 {medicineContext}
@@ -529,13 +538,16 @@ You MUST return a valid JSON object strictly matching this schema:
       ""genericName"": ""string"",
       ""form"": ""Tablet/Capsule/Syrup/Inhaler"",
       ""strength"": ""string"",
-      ""dosagePattern"": ""1+0+1"",
+      ""dosagePattern"": ""1+0+1 or ৪ ঘণ্টা পর পর or জর আসলে ১টি"",
       ""duration"": ""string"",
       ""instructionsBangla"": ""string""
     }}
   ],
   ""investigations"": [""string""],
-  ""adviceBangla"": [""string""]
+  ""patientReportsPresented"": [""string""],
+  ""adviceBangla"": [""string""],
+  ""followUp"": ""৭ দিন পর রিপোর্টসহ দেখা করবেন"",
+  ""emergencyRedFlags"": ""জ্বর ১০৩ ডিগ্রির বেশি হলে দ্রুত হাসপাতালে যাবেন""
 }}";
 
         var payload = new
@@ -546,7 +558,7 @@ You MUST return a valid JSON object strictly matching this schema:
                 {
                     parts = new[]
                     {
-                        new { text = $"{systemPrompt}\n\nClinical Consultation Dialogue:\n{text}\n\nOutput Valid JSON:" }
+                        new { text = $"{systemPrompt}{amendmentContext}\n\nClinical Consultation Dialogue:\n{text}\n\nOutput Valid JSON:" }
                     }
                 }
             },
@@ -665,7 +677,10 @@ You MUST return a valid JSON object strictly matching this schema:
             Diagnosis = aiResult.Diagnosis ?? "Clinical Evaluation",
             Medicines = enrichedMedicines,
             Investigations = aiResult.Investigations ?? new List<string> { "CBC with ESR" },
+            PatientReportsPresented = aiResult.PatientReportsPresented ?? new List<string>(),
             AdviceBangla = aiResult.AdviceBangla ?? new List<string> { "পর্যাপ্ত বিশ্রাম ও তরল খাবার গ্রহণ করুন।" },
+            FollowUp = aiResult.FollowUp ?? "৭ দিন পর রিপোর্টসহ দেখা করবেন",
+            EmergencyRedFlags = aiResult.EmergencyRedFlags ?? "জ্বর ১০৩ ডিগ্রির বেশি হলে দ্রুত হাসপাতালে যাবেন",
             InteractionWarnings = warnings,
             ConfidenceScore = 0.98,
             ExecutionTimeMs = sw.ElapsedMilliseconds,
@@ -778,6 +793,8 @@ public class ConsultationInput
 {
     public string? Transcript { get; set; }
     public string? DoctorNotes { get; set; }
+    public bool IsAmendment { get; set; } = false;
+    public string? CurrentPrescriptionJson { get; set; }
 }
 
 public class ClinicalAiResponse
@@ -787,7 +804,10 @@ public class ClinicalAiResponse
     public string? Diagnosis { get; set; }
     public List<PrescriptionItem>? Medicines { get; set; }
     public List<string>? Investigations { get; set; }
+    public List<string>? PatientReportsPresented { get; set; }
     public List<string>? AdviceBangla { get; set; }
+    public string? FollowUp { get; set; }
+    public string? EmergencyRedFlags { get; set; }
 }
 
 public class CreatePatientRequest

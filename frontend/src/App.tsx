@@ -10,7 +10,7 @@ import { StackInfoModal } from './components/StackInfoModal';
 import { PatientRegistrationModal } from './components/PatientRegistrationModal';
 import { DoctorProfileModal } from './components/DoctorProfileModal';
 import { ChamberQueueDrawer } from './components/ChamberQueueDrawer';
-import { Info, Users, UserPlus } from 'lucide-react';
+import { Info } from 'lucide-react';
 
 const API_BASE = 'http://localhost:5000/api';
 
@@ -34,6 +34,7 @@ export default function App() {
   const [aiMeta, setAiMeta] = useState('BanglaRx AI™ Clinical Assistant');
   const [executionTime, setExecutionTime] = useState<number | null>(null);
   const [speechLanguage, setSpeechLanguage] = useState<'bn-BD' | 'en-US'>('bn-BD');
+  const [isAmendmentMode, setIsAmendmentMode] = useState(false);
 
   // Accuracy & Clinical Summary State
   const [accuracyMetrics, setAccuracyMetrics] = useState<AccuracyMetrics | null>({
@@ -73,11 +74,17 @@ export default function App() {
     }
   ]);
   const [investigations, setInvestigations] = useState<string[]>(['CBC with ESR', 'Serum Creatinine', 'Dengue NS1 Antigen']);
+  const [patientReportsPresented, setPatientReportsPresented] = useState<string[]>([
+    'Dengue NS1 Antigen: Positive',
+    'Platelet Count: 95,000/μL (Mild Thrombocytopenia)'
+  ]);
   const [advice, setAdvice] = useState<string[]>([
     'পর্যাপ্ত পরিমাণে পানি, ডাবের পানি ও খাবার স্যালাইন গ্রহণ করুন।',
     'হালকা ও সহজে হজম হয় এমন খাবার খান।',
     'জ্বর বেশি হলে জলপট্টি দিন ও পূর্ণ বিশ্রামে থাকুন।'
   ]);
+  const [followUp, setFollowUp] = useState('৭ দিন পর রিপোর্টসহ দেখা করবেন');
+  const [emergencyRedFlags, setEmergencyRedFlags] = useState('জ্বর ১০৩ ডিগ্রির বেশি হলে অথবা মাড়ি দিয়ে রক্তক্ষরণ হলে জরুরি বিভাগে যোগাযোগ করবেন');
   const [warnings, setWarnings] = useState<DrugWarning[]>([]);
 
   // UI Controls
@@ -170,24 +177,34 @@ export default function App() {
     }
   };
 
-  // Demo Scenarios
+  // Demo Scenarios & Voice Edit Prompts
   const loadScenario = (type: string) => {
     if (type === 'bangla_pure') {
+      setIsAmendmentMode(false);
       setSpeechLanguage('bn-BD');
       setTranscript("রোগীর গত ৩ দিন ধরে অনেক জ্বর, ১০২ ডিগ্রি। সাথে মাথা ঘোরা এবং পেটে গ্যাস ও বুক জ্বালাপোড়া। ডাক্তার বললেন নাপা এক্সট্রা দিনে দুইবার খাওয়ার পরে খাবেন ৫ দিন, আর সেকলো ২০ সকালে ও রাতে খাওয়ার ২০ মিনিট আগে ১৪ দিন। ডাবের পানি বেশি করে পান করবেন।");
     } else if (type === 'fever') {
+      setIsAmendmentMode(false);
       setSpeechLanguage('en-US');
       setTranscript("Patient complains in Banglish: 'Amar kalke theke onek jor 102 degree, shathe matha ghora, r pet fape ase, buke jala pora.' Doctor examines: BP is 120/80 mmHg, pulse 84 bpm. Doctor says: 'Apnake Napa Extra dichhi dine 2 bar khabar por 5 din, r Seclo 20 shokale r rate khabar 20 min age 14 din. Monas 10 ekta kore rate khaben. Pani r shorbot beshi kore khaben.'");
     } else if (type === 'diabetes') {
+      setIsAmendmentMode(false);
       setSpeechLanguage('en-US');
       setTranscript("Known diabetic patient, fasting blood sugar 9.2 mmol/L, BP 145/95 mmHg. Complains of generalized fatigue, blurred vision and leg pain. Doctor prescribes Diapro 500 twice daily with meals, Bizoran 5/20 at bedtime, and Atova 10 at night. Continue regular exercise, low carb diet.");
     } else if (type === 'interaction') {
+      setIsAmendmentMode(false);
       setSpeechLanguage('en-US');
       setTranscript("Critical Safety Check Case: 65-year-old cardiac patient on long-term Warfarin therapy for atrial fibrillation. Doctor inadvertently prescribes Aspirin 75mg daily along with Ciprocin 500mg and Napa.");
+    } else if (type === 'edit_interval') {
+      setIsAmendmentMode(true);
+      setTranscript("Doctor amendment: Change Napa dosage to every 4 hours instead of 3 times daily, for 3 days.");
+    } else if (type === 'edit_add_med') {
+      setIsAmendmentMode(true);
+      setTranscript("Doctor amendment: Add Tab. Monas 10mg one tablet at bedtime for 14 days, and advise Dengue NS1 test.");
     }
   };
 
-  // Analyze Consultation Dialogue
+  // Analyze Consultation Dialogue or Apply Voice Amendment
   const handleAnalyzeConsultation = async () => {
     if (!transcript.trim()) return;
     setIsProcessing(true);
@@ -197,7 +214,11 @@ export default function App() {
       const res = await fetch(`${API_BASE}/ai/analyze-consultation`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ transcript })
+        body: JSON.stringify({
+          transcript,
+          isAmendment: isAmendmentMode,
+          currentPrescriptionJson: isAmendmentMode ? JSON.stringify(medicines) : null
+        })
       });
       const data = await res.json();
 
@@ -207,7 +228,12 @@ export default function App() {
         if (data.diagnosis) setDiagnosis(data.diagnosis);
         if (data.medicines && data.medicines.length > 0) setMedicines(data.medicines);
         if (data.investigations) setInvestigations(data.investigations);
+        if (data.patientReportsPresented && data.patientReportsPresented.length > 0) {
+          setPatientReportsPresented(data.patientReportsPresented);
+        }
         if (data.adviceBangla) setAdvice(data.adviceBangla);
+        if (data.followUp) setFollowUp(data.followUp);
+        if (data.emergencyRedFlags) setEmergencyRedFlags(data.emergencyRedFlags);
         if (data.interactionWarnings) setWarnings(data.interactionWarnings);
         if (data.executionTimeMs) setExecutionTime(data.executionTimeMs);
 
@@ -228,6 +254,12 @@ export default function App() {
             instructions: data.adviceBangla?.length || 0
           }
         });
+
+        // If amendment applied, switch back to full consultation mode
+        if (isAmendmentMode) {
+          setIsAmendmentMode(false);
+          setTranscript('');
+        }
       }
     } catch (err) {
       console.error('Clinical Inference Error:', err);
@@ -235,6 +267,16 @@ export default function App() {
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  // Direct In-Pad Medicine Editing
+  const handleUpdateMedicine = (index: number, field: keyof PrescriptionItem, value: string) => {
+    setMedicines(prev => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], [field]: value };
+      checkInteractions(copy);
+      return copy;
+    });
   };
 
   // Add / Remove Medicine
@@ -260,6 +302,17 @@ export default function App() {
     const updated = medicines.filter((_, i) => i !== index);
     setMedicines(updated);
     checkInteractions(updated);
+  };
+
+  // In-Pad Investigation Add / Remove
+  const handleAddInvestigation = (test: string) => {
+    if (!investigations.includes(test)) {
+      setInvestigations(prev => [...prev, test]);
+    }
+  };
+
+  const handleDeleteInvestigation = (index: number) => {
+    setInvestigations(prev => prev.filter((_, i) => i !== index));
   };
 
   const checkInteractions = async (medList: PrescriptionItem[]) => {
@@ -368,7 +421,6 @@ export default function App() {
 
   // 1-Click "Call Next Waiting Patient" Workflow
   const handleCallNextPatient = async () => {
-    // 1. Mark current as completed if currently in consultation
     const activeItem = queue.find(q => q.patient_id === selectedPatient?.id && q.status === 'In Consultation');
     if (activeItem) {
       await fetch(`${API_BASE}/queue/${activeItem.id}/status`, {
@@ -378,7 +430,6 @@ export default function App() {
       });
     }
 
-    // 2. Find next waiting patient
     const nextWaiting = queue.find(q => q.status === 'Waiting');
     if (nextWaiting) {
       await handleSelectPatientFromQueue(nextWaiting);
@@ -467,6 +518,9 @@ export default function App() {
             isProcessing={isProcessing}
             executionTime={executionTime}
             aiMeta={aiMeta}
+            isAmendmentMode={isAmendmentMode}
+            setIsAmendmentMode={setIsAmendmentMode}
+            hasExistingPrescription={medicines.length > 0}
           />
 
           <AccuracyAnalytics metrics={accuracyMetrics} />
@@ -490,9 +544,16 @@ export default function App() {
             diagnosis={diagnosis}
             medicines={medicines}
             investigations={investigations}
+            patientReportsPresented={patientReportsPresented}
             advice={advice}
+            followUp={followUp}
+            emergencyRedFlags={emergencyRedFlags}
             warnings={warnings}
             onDeleteMedicine={handleDeleteMedicine}
+            onUpdateMedicine={handleUpdateMedicine}
+            onAddInvestigation={handleAddInvestigation}
+            onDeleteInvestigation={handleDeleteInvestigation}
+            onUpdateFollowUp={setFollowUp}
             onSpeakBangla={speakBangla}
             onOpenQrModal={() => setShowQrModal(true)}
           />
