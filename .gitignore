@@ -1,0 +1,20 @@
+# .NET build artifacts
+**/bin/
+**/obj/
+*.user
+*.suo
+
+# Node & Frontend build artifacts
+**/node_modules/
+**/dist/
+.vite/
+
+# Secret & Environment files
+**/appsettings.local.json
+*.env
+*.pem
+*.key
+
+# OS files
+.DS_Store
+Thumbs.db
