@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, UserPlus, HeartPulse, ShieldAlert, Check } from 'lucide-react';
+import { X, UserPlus, HeartPulse, Check, RotateCcw } from 'lucide-react';
 
 interface PatientRegistrationModalProps {
   isOpen: boolean;
@@ -23,13 +23,30 @@ export const PatientRegistrationModal: React.FC<PatientRegistrationModalProps> =
   const [chronicConditions, setChronicConditions] = useState('');
   const [chiefComplaint, setChiefComplaint] = useState('');
   
-  // Triage Vitals
-  const [bp, setBp] = useState('120/80 mmHg');
-  const [temp, setTemp] = useState('98.6 F');
-  const [pulse, setPulse] = useState('78 bpm');
-  const [weight, setWeight] = useState('65 kg');
+  // Triage Vitals (Numeric inputs with fixed suffix badges)
+  const [bpSys, setBpSys] = useState('120');
+  const [bpDia, setBpDia] = useState('80');
+  const [temp, setTemp] = useState('98.6');
+  const [pulse, setPulse] = useState('78');
+  const [weight, setWeight] = useState('65');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleClearForm = () => {
+    setFullName('');
+    setAge('');
+    setGender('Male');
+    setPhone('+880 ');
+    setBloodGroup('B+');
+    setAllergies('');
+    setChronicConditions('');
+    setChiefComplaint('');
+    setBpSys('');
+    setBpDia('');
+    setTemp('');
+    setPulse('');
+    setWeight('');
+  };
 
   if (!isOpen) return null;
 
@@ -58,6 +75,14 @@ export const PatientRegistrationModal: React.FC<PatientRegistrationModalProps> =
       });
       const newPatient = await patRes.json();
 
+      // Format vitals with standard clinical units
+      const triageVitals: Record<string, string> = {};
+      if (bpSys && bpDia) triageVitals.bp = `${bpSys}/${bpDia} mmHg`;
+      else if (bpSys) triageVitals.bp = `${bpSys} mmHg`;
+      if (temp) triageVitals.temp = `${temp} °F`;
+      if (pulse) triageVitals.pulse = `${pulse} bpm`;
+      if (weight) triageVitals.weight = `${weight} kg`;
+
       // 2. Add to Today's Chamber Queue
       const queueRes = await fetch('http://localhost:5000/api/queue', {
         method: 'POST',
@@ -65,13 +90,13 @@ export const PatientRegistrationModal: React.FC<PatientRegistrationModalProps> =
         body: JSON.stringify({
           doctorId: activeDoctorId,
           patientId: newPatient.id,
-          triageVitals: { bp, temp, pulse, weight },
+          triageVitals,
           chiefComplaint: chiefComplaint.trim() || 'General Consultation'
         })
       });
       const queueData = await queueRes.json();
 
-      onPatientRegistered(newPatient, queueData);
+      onPatientRegistered(newPatient, { ...queueData, triage_vitals: triageVitals, chief_complaint: chiefComplaint.trim() });
       onClose();
     } catch (err) {
       console.error('Failed to register patient:', err);
@@ -281,10 +306,15 @@ export const PatientRegistrationModal: React.FC<PatientRegistrationModalProps> =
 
           {/* Section 3: Triage Vitals (Assistant Pre-Check) */}
           <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-              <HeartPulse size={14} color="var(--teal-600)" />
-              <span style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--slate-500)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                3. Triage Vitals (Pre-Consultation Measurements):
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <HeartPulse size={14} color="var(--teal-600)" />
+                <span style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--slate-500)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  3. Triage Vitals (Numeric Entry):
+                </span>
+              </div>
+              <span style={{ fontSize: '0.68rem', color: 'var(--slate-400)' }}>
+                Units attached automatically
               </span>
             </div>
 
@@ -294,69 +324,235 @@ export const PatientRegistrationModal: React.FC<PatientRegistrationModalProps> =
               borderRadius: 'var(--radius-md)',
               border: '1px solid var(--slate-200)',
               display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
+              gridTemplateColumns: '1.3fr 1fr 1fr 1fr',
               gap: '8px'
             }}>
+              {/* BP Systolic / Diastolic */}
               <div>
-                <label style={{ fontSize: '0.7rem', color: 'var(--slate-500)', fontWeight: '600' }}>BP</label>
-                <input
-                  type="text"
-                  value={bp}
-                  onChange={e => setBp(e.target.value)}
-                  className="input-clinical"
-                  style={{ padding: '6px 8px', fontSize: '0.78rem', marginTop: '2px' }}
-                />
+                <label style={{ fontSize: '0.7rem', color: 'var(--slate-600)', fontWeight: '700', display: 'block', marginBottom: '3px' }}>
+                  BP (Sys / Dia)
+                </label>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  background: '#FFFFFF',
+                  border: '1px solid var(--slate-300)',
+                  borderRadius: 'var(--radius-sm)',
+                  overflow: 'hidden'
+                }}>
+                  <input
+                    type="number"
+                    placeholder="120"
+                    value={bpSys}
+                    onChange={e => setBpSys(e.target.value)}
+                    style={{
+                      width: '42px',
+                      border: 'none',
+                      outline: 'none',
+                      padding: '6px 4px',
+                      fontSize: '0.78rem',
+                      textAlign: 'center'
+                    }}
+                  />
+                  <span style={{ color: 'var(--slate-400)', fontWeight: 'bold', fontSize: '0.75rem' }}>/</span>
+                  <input
+                    type="number"
+                    placeholder="80"
+                    value={bpDia}
+                    onChange={e => setBpDia(e.target.value)}
+                    style={{
+                      width: '42px',
+                      border: 'none',
+                      outline: 'none',
+                      padding: '6px 4px',
+                      fontSize: '0.78rem',
+                      textAlign: 'center'
+                    }}
+                  />
+                  <span style={{
+                    background: 'var(--slate-100)',
+                    color: 'var(--slate-600)',
+                    fontSize: '0.66rem',
+                    fontWeight: '700',
+                    padding: '6px 6px',
+                    borderLeft: '1px solid var(--slate-200)',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    mmHg
+                  </span>
+                </div>
               </div>
+
+              {/* Temperature */}
               <div>
-                <label style={{ fontSize: '0.7rem', color: 'var(--slate-500)', fontWeight: '600' }}>Temp</label>
-                <input
-                  type="text"
-                  value={temp}
-                  onChange={e => setTemp(e.target.value)}
-                  className="input-clinical"
-                  style={{ padding: '6px 8px', fontSize: '0.78rem', marginTop: '2px' }}
-                />
+                <label style={{ fontSize: '0.7rem', color: 'var(--slate-600)', fontWeight: '700', display: 'block', marginBottom: '3px' }}>
+                  Temperature
+                </label>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  background: '#FFFFFF',
+                  border: '1px solid var(--slate-300)',
+                  borderRadius: 'var(--radius-sm)',
+                  overflow: 'hidden'
+                }}>
+                  <input
+                    type="number"
+                    step="0.1"
+                    placeholder="98.6"
+                    value={temp}
+                    onChange={e => setTemp(e.target.value)}
+                    style={{
+                      width: '100%',
+                      minWidth: '40px',
+                      border: 'none',
+                      outline: 'none',
+                      padding: '6px 8px',
+                      fontSize: '0.78rem'
+                    }}
+                  />
+                  <span style={{
+                    background: 'var(--slate-100)',
+                    color: 'var(--slate-600)',
+                    fontSize: '0.66rem',
+                    fontWeight: '700',
+                    padding: '6px 6px',
+                    borderLeft: '1px solid var(--slate-200)',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    °F
+                  </span>
+                </div>
               </div>
+
+              {/* Pulse */}
               <div>
-                <label style={{ fontSize: '0.7rem', color: 'var(--slate-500)', fontWeight: '600' }}>Pulse</label>
-                <input
-                  type="text"
-                  value={pulse}
-                  onChange={e => setPulse(e.target.value)}
-                  className="input-clinical"
-                  style={{ padding: '6px 8px', fontSize: '0.78rem', marginTop: '2px' }}
-                />
+                <label style={{ fontSize: '0.7rem', color: 'var(--slate-600)', fontWeight: '700', display: 'block', marginBottom: '3px' }}>
+                  Pulse Rate
+                </label>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  background: '#FFFFFF',
+                  border: '1px solid var(--slate-300)',
+                  borderRadius: 'var(--radius-sm)',
+                  overflow: 'hidden'
+                }}>
+                  <input
+                    type="number"
+                    placeholder="78"
+                    value={pulse}
+                    onChange={e => setPulse(e.target.value)}
+                    style={{
+                      width: '100%',
+                      minWidth: '40px',
+                      border: 'none',
+                      outline: 'none',
+                      padding: '6px 8px',
+                      fontSize: '0.78rem'
+                    }}
+                  />
+                  <span style={{
+                    background: 'var(--slate-100)',
+                    color: 'var(--slate-600)',
+                    fontSize: '0.66rem',
+                    fontWeight: '700',
+                    padding: '6px 6px',
+                    borderLeft: '1px solid var(--slate-200)',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    bpm
+                  </span>
+                </div>
               </div>
+
+              {/* Weight */}
               <div>
-                <label style={{ fontSize: '0.7rem', color: 'var(--slate-500)', fontWeight: '600' }}>Weight</label>
-                <input
-                  type="text"
-                  value={weight}
-                  onChange={e => setWeight(e.target.value)}
-                  className="input-clinical"
-                  style={{ padding: '6px 8px', fontSize: '0.78rem', marginTop: '2px' }}
-                />
+                <label style={{ fontSize: '0.7rem', color: 'var(--slate-600)', fontWeight: '700', display: 'block', marginBottom: '3px' }}>
+                  Body Weight
+                </label>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  background: '#FFFFFF',
+                  border: '1px solid var(--slate-300)',
+                  borderRadius: 'var(--radius-sm)',
+                  overflow: 'hidden'
+                }}>
+                  <input
+                    type="number"
+                    step="0.5"
+                    placeholder="65"
+                    value={weight}
+                    onChange={e => setWeight(e.target.value)}
+                    style={{
+                      width: '100%',
+                      minWidth: '40px',
+                      border: 'none',
+                      outline: 'none',
+                      padding: '6px 8px',
+                      fontSize: '0.78rem'
+                    }}
+                  />
+                  <span style={{
+                    background: 'var(--slate-100)',
+                    color: 'var(--slate-600)',
+                    fontSize: '0.66rem',
+                    fontWeight: '700',
+                    padding: '6px 6px',
+                    borderLeft: '1px solid var(--slate-200)',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    kg
+                  </span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Action Row */}
-          <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', paddingTop: '10px', borderTop: '1px solid var(--slate-100)' }}>
+          {/* Action Row with Clear Form button */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingTop: '12px',
+            borderTop: '1px solid var(--slate-200)'
+          }}>
             <button
               type="button"
-              onClick={onClose}
-              className="btn-clinical btn-secondary"
+              onClick={handleClearForm}
+              className="btn-clinical btn-outline"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                color: 'var(--slate-600)',
+                fontSize: '0.76rem',
+                padding: '7px 12px'
+              }}
+              title="Clear all fields in this form"
             >
-              Cancel
+              <RotateCcw size={14} />
+              <span>Clear Form (রিসেট)</span>
             </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="btn-clinical btn-primary-teal"
-            >
-              <Check size={16} />
-              {isSubmitting ? 'Registering & Queuing...' : 'Register & Issue Serial Token'}
-            </button>
+
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={onClose}
+                className="btn-clinical btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="btn-clinical btn-primary-teal"
+              >
+                <Check size={16} />
+                {isSubmitting ? 'Registering & Queuing...' : 'Register & Issue Serial Token'}
+              </button>
+            </div>
           </div>
 
         </form>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mic, MicOff, Sparkles, CheckCircle2, Edit3, MessageSquarePlus } from 'lucide-react';
+import { Mic, MicOff, Sparkles, CheckCircle2, Edit3, MessageSquarePlus, Square, Loader2 } from 'lucide-react';
 
 interface VoiceConsultationProps {
   isRecording: boolean;
@@ -10,6 +10,7 @@ interface VoiceConsultationProps {
   setTranscript: (text: string) => void;
   onLoadScenario: (type: string) => void;
   onAnalyzeConsultation: () => void;
+  onCancelGeneration?: () => void;
   isProcessing: boolean;
   executionTime: number | null;
   aiMeta: string;
@@ -27,6 +28,7 @@ export const VoiceConsultation: React.FC<VoiceConsultationProps> = ({
   setTranscript,
   onLoadScenario,
   onAnalyzeConsultation,
+  onCancelGeneration,
   isProcessing,
   isAmendmentMode = false,
   setIsAmendmentMode,
@@ -411,24 +413,71 @@ export const VoiceConsultation: React.FC<VoiceConsultationProps> = ({
       </div>
 
       {/* Clinical Synthesis / Amendment Action Button */}
-      <button
-        type="button"
-        onClick={onAnalyzeConsultation}
-        disabled={isProcessing || !transcript.trim()}
-        className={`btn-clinical ${isAmendmentMode ? 'btn-primary-slate' : 'btn-primary-teal'}`}
-        style={{
-          width: '100%',
-          padding: '12px 18px',
-          fontSize: '0.9rem',
-          borderRadius: 'var(--radius-md)',
-          boxShadow: 'var(--shadow-elevated)'
-        }}
-      >
-        <Sparkles size={18} />
-        {isProcessing 
-          ? (isAmendmentMode ? 'Applying Prescription Amendments...' : 'Generating Prescription...') 
-          : (isAmendmentMode ? 'Apply Voice Amendment to Prescription' : 'Generate Prescription')}
-      </button>
+      {isProcessing ? (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '8px' }}>
+          <button
+            type="button"
+            disabled
+            className="btn-clinical btn-primary-teal"
+            style={{
+              padding: '12px 18px',
+              fontSize: '0.88rem',
+              borderRadius: 'var(--radius-md)',
+              opacity: 0.9,
+              cursor: 'wait',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px'
+            }}
+          >
+            <Loader2 size={18} className="anim-spin" />
+            <span>{isAmendmentMode ? 'Applying Amendments...' : 'Generating Prescription...'}</span>
+          </button>
+
+          {onCancelGeneration && (
+            <button
+              type="button"
+              onClick={onCancelGeneration}
+              className="btn-clinical"
+              style={{
+                background: 'var(--crimson-50)',
+                color: 'var(--crimson-700)',
+                border: '1px solid var(--crimson-300)',
+                padding: '12px 16px',
+                fontSize: '0.84rem',
+                fontWeight: '700',
+                borderRadius: 'var(--radius-md)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                cursor: 'pointer'
+              }}
+              title="Stop and abort AI generation immediately"
+            >
+              <Square size={14} fill="var(--crimson-600)" />
+              <span>Stop (বন্ধ করুন)</span>
+            </button>
+          )}
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={onAnalyzeConsultation}
+          disabled={!transcript.trim()}
+          className={`btn-clinical ${isAmendmentMode ? 'btn-primary-slate' : 'btn-primary-teal'}`}
+          style={{
+            width: '100%',
+            padding: '12px 18px',
+            fontSize: '0.9rem',
+            borderRadius: 'var(--radius-md)',
+            boxShadow: 'var(--shadow-elevated)'
+          }}
+        >
+          <Sparkles size={18} />
+          {isAmendmentMode ? 'Apply Voice Amendment to Prescription' : 'Generate Prescription'}
+        </button>
+      )}
 
       {/* Subtitle & Compliance Note */}
       <div style={{

@@ -97,6 +97,9 @@ export default function App() {
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   const recognitionRef = useRef<any>(null);
+  const isRecordingRef = useRef<boolean>(false);
+  const accumulatedTranscriptRef = useRef<string>('');
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Initialize Doctors, Patients & Live Queue
   useEffect(() => {
@@ -144,37 +147,104 @@ export default function App() {
     }
   }, [searchQuery]);
 
-  // Speech Recognition (bn-BD or en-US)
+  // Speech Recognition with Continuous Ambient Listening Keep-Alive
+  const startSpeechEngine = (lang: string) => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Web Speech API not supported in this browser. Please use Google Chrome or Microsoft Edge.');
+      isRecordingRef.current = false;
+      setIsRecording(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = lang;
+
+    recognition.onresult = (event: any) => {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        const piece = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          accumulatedTranscriptRef.current += piece + ' ';
+        } else {
+          interim += piece;
+        }
+      }
+      setTranscript(accumulatedTranscriptRef.current + interim);
+    };
+
+    recognition.onerror = (event: any) => {
+      // Normal conversational pauses produce 'no-speech'; ignore and keep alive
+      if (event.error === 'not-allowed') {
+        isRecordingRef.current = false;
+        setIsRecording(false);
+        alert('Microphone access was denied. Please allow microphone permissions in your browser.');
+      }
+    };
+
+    recognition.onend = () => {
+      // Auto-restart keepalive loop if ambient listening is still enabled
+      if (isRecordingRef.current) {
+        try {
+          recognition.start();
+        } catch {
+          setTimeout(() => {
+            if (isRecordingRef.current) {
+              try { recognition.start(); } catch {}
+            }
+          }, 200);
+        }
+      } else {
+        setIsRecording(false);
+      }
+    };
+
+    try {
+      recognition.start();
+      recognitionRef.current = recognition;
+      setIsRecording(true);
+    } catch (err) {
+      console.warn('Speech engine start deferred:', err);
+    }
+  };
+
   const toggleRecording = () => {
-    if (isRecording) {
-      if (recognitionRef.current) recognitionRef.current.stop();
+    if (isRecordingRef.current) {
+      isRecordingRef.current = false;
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch {}
+      }
       setIsRecording(false);
     } else {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        const recognition = new SpeechRecognition();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.lang = speechLanguage;
-
-        recognition.onresult = (event: any) => {
-          let currentTranscript = '';
-          for (let i = 0; i < event.results.length; i++) {
-            currentTranscript += event.results[i][0].transcript + ' ';
-          }
-          setTranscript(currentTranscript);
-        };
-
-        recognition.onerror = () => setIsRecording(false);
-        recognition.onend = () => setIsRecording(false);
-
-        recognition.start();
-        recognitionRef.current = recognition;
-        setIsRecording(true);
-      } else {
-        alert('Web Speech API not supported in this browser. Please use Google Chrome or Microsoft Edge.');
-      }
+      isRecordingRef.current = true;
+      accumulatedTranscriptRef.current = transcript ? transcript.trim() + ' ' : '';
+      startSpeechEngine(speechLanguage);
     }
+  };
+
+  const handleLanguageChange = (newLang: 'bn-BD' | 'en-US') => {
+    setSpeechLanguage(newLang);
+    if (isRecordingRef.current) {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch {}
+      }
+      setTimeout(() => {
+        if (isRecordingRef.current) {
+          startSpeechEngine(newLang);
+        }
+      }, 150);
+    }
+  };
+
+  // Abort / Cancel AI Generation
+  const handleCancelGeneration = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsProcessing(false);
   };
 
   // Demo Scenarios & Voice Edit Prompts
@@ -207,6 +277,13 @@ export default function App() {
   // Analyze Consultation Dialogue or Apply Voice Amendment
   const handleAnalyzeConsultation = async () => {
     if (!transcript.trim()) return;
+
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setIsProcessing(true);
     setWarnings([]);
 
@@ -218,8 +295,14 @@ export default function App() {
           transcript,
           isAmendment: isAmendmentMode,
           currentPrescriptionJson: isAmendmentMode ? JSON.stringify(medicines) : null
-        })
+        }),
+        signal: controller.signal
       });
+
+      if (!res.ok) {
+        throw new Error(`Inference returned HTTP ${res.status}`);
+      }
+
       const data = await res.json();
 
       if (data) {
@@ -261,11 +344,16 @@ export default function App() {
           setTranscript('');
         }
       }
-    } catch (err) {
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        console.log('Prescription generation canceled by doctor.');
+        return;
+      }
       console.error('Clinical Inference Error:', err);
       alert('Clinical inference call failed. Please verify that the backend API is online.');
     } finally {
       setIsProcessing(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -510,11 +598,12 @@ export default function App() {
             isRecording={isRecording}
             onToggleRecording={toggleRecording}
             speechLanguage={speechLanguage}
-            setSpeechLanguage={setSpeechLanguage}
+            setSpeechLanguage={handleLanguageChange}
             transcript={transcript}
             setTranscript={setTranscript}
             onLoadScenario={loadScenario}
             onAnalyzeConsultation={handleAnalyzeConsultation}
+            onCancelGeneration={handleCancelGeneration}
             isProcessing={isProcessing}
             executionTime={executionTime}
             aiMeta={aiMeta}
