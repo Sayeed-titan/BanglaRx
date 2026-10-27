@@ -1,15 +1,21 @@
+# Visual Studio internal IDE cache & Copilot DB (NEVER commit these)
+.vs/
+**/.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
 # .NET build artifacts
 **/bin/
 **/obj/
-*.user
-*.suo
 
 # Node & Frontend build artifacts
 **/node_modules/
 **/dist/
 .vite/
 
-# Secret & Environment files
+# Secret & Local Environment files (NEVER commit these)
 **/appsettings.local.json
 *.env
 *.pem
