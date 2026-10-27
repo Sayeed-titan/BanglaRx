@@ -72,10 +72,10 @@ app.MapGet("/api/status", async () =>
         return Results.Ok(new
         {
             DatabaseConnected = true,
-            Engine = "PostgreSQL 18",
+            Engine = "Secure Relational Clinical Data Vault",
             DatabaseName = "BanglaRxDB",
-            AiModel = geminiModel,
-            AiStatus = string.IsNullOrEmpty(geminiApiKey) ? "Not Configured" : "Connected (Google Gemini Neural Network)",
+            AiModel = "BanglaRx Neural Core",
+            AiStatus = string.IsNullOrEmpty(geminiApiKey) ? "Not Configured" : "Connected (BanglaRx Ambient Neural Network)",
             Counts = stats,
             Timestamp = DateTime.UtcNow
         });
@@ -502,7 +502,7 @@ You MUST return a valid JSON object strictly matching this schema:
             InteractionWarnings = warnings,
             ConfidenceScore = 0.98,
             ExecutionTimeMs = sw.ElapsedMilliseconds,
-            Model = $"Google {geminiModel} (Neural Network) + PostgreSQL 18 RAG"
+            Model = "BanglaRx Multimodal Neural Intelligence (CDSS)"
         });
     }
     catch (Exception ex)

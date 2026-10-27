@@ -6,6 +6,8 @@ import { AccuracyAnalytics } from './components/AccuracyAnalytics';
 import { MedicineSearch } from './components/MedicineSearch';
 import { PrescriptionPad } from './components/PrescriptionPad';
 import { PatientQrModal } from './components/PatientQrModal';
+import { StackInfoModal } from './components/StackInfoModal';
+import { Info, ShieldCheck, HeartPulse } from 'lucide-react';
 
 const API_BASE = 'http://localhost:5000/api';
 
@@ -20,7 +22,7 @@ export default function App() {
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [aiMeta, setAiMeta] = useState('Google Gemini 3.5 Flash (Neural Network) + PostgreSQL 18 RAG');
+  const [aiMeta, setAiMeta] = useState('BanglaRx Neural Core • Grounded Formulation');
   const [executionTime, setExecutionTime] = useState<number | null>(null);
   const [speechLanguage, setSpeechLanguage] = useState<'bn-BD' | 'en-US'>('bn-BD');
 
@@ -72,6 +74,7 @@ export default function App() {
 
   // UI Controls
   const [showQrModal, setShowQrModal] = useState(false);
+  const [showStackModal, setShowStackModal] = useState(false);
   const [savedRxNumber, setSavedRxNumber] = useState('RX-2026-LIVE');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -89,7 +92,7 @@ export default function App() {
   // Medicine Search Autocomplete
   useEffect(() => {
     if (searchQuery.trim().length > 1) {
-      fetch(`${API_BASE}/medicines?q=${encodeURIComponent(searchQuery)}&limit=5`)
+      fetch(`${API_BASE}/medicines?q=${encodeURIComponent(searchQuery)}&limit=6`)
         .then(r => r.json())
         .then(data => setSearchResults(data))
         .catch(() => {});
@@ -126,7 +129,7 @@ export default function App() {
         recognitionRef.current = recognition;
         setIsRecording(true);
       } else {
-        alert('Web Speech API not supported in this browser. Please use Google Chrome or Edge!');
+        alert('Web Speech API not supported in this browser. Please use Google Chrome or Microsoft Edge.');
       }
     }
   };
@@ -170,7 +173,6 @@ export default function App() {
         if (data.investigations) setInvestigations(data.investigations);
         if (data.adviceBangla) setAdvice(data.adviceBangla);
         if (data.interactionWarnings) setWarnings(data.interactionWarnings);
-        if (data.model) setAiMeta(data.model);
         if (data.executionTimeMs) setExecutionTime(data.executionTimeMs);
 
         // Update Spoken vs Accepted Metrics
@@ -193,7 +195,7 @@ export default function App() {
       }
     } catch (err) {
       console.error('AI Inference Error:', err);
-      alert('AI inference call failed. Please check backend connection.');
+      alert('Clinical inference call failed. Please verify that the backend API is online.');
     } finally {
       setIsProcessing(false);
     }
@@ -283,7 +285,7 @@ export default function App() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-app)' }}>
       
       {/* NAVBAR COMPONENT */}
       <Navbar
@@ -299,20 +301,20 @@ export default function App() {
         saveSuccess={saveSuccess}
       />
 
-      {/* MAIN TWO-COLUMN WORKSPACE */}
-      <div style={{ 
-        flex: 1, 
-        display: 'grid', 
-        gridTemplateColumns: '43% 57%', 
-        padding: '20px', 
-        gap: '20px',
+      {/* MAIN TWO-COLUMN CLINICAL WORKSPACE */}
+      <main style={{
+        flex: 1,
+        display: 'grid',
+        gridTemplateColumns: '43% 57%',
+        padding: '24px',
+        gap: '24px',
         maxWidth: '1680px',
         margin: '0 auto',
         width: '100%'
       }}>
 
-        {/* LEFT COLUMN: AMBIENT COPILOT & SEARCH */}
-        <div className="no-print" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {/* LEFT COLUMN: AMBIENT COPILOT, TELEMETRY & FORMULARY LOOKUP */}
+        <section className="no-print" style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
           <VoiceConsultation
             isRecording={isRecording}
             onToggleRecording={toggleRecording}
@@ -335,10 +337,10 @@ export default function App() {
             searchResults={searchResults}
             onAddMedicine={handleAddMedicine}
           />
-        </div>
+        </section>
 
-        {/* RIGHT COLUMN: DIGITAL PRESCRIPTION PAD */}
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {/* RIGHT COLUMN: INSTITUTIONAL BMDC PRESCRIPTION PAD */}
+        <section style={{ display: 'flex', flexDirection: 'column' }}>
           <PrescriptionPad
             doctor={selectedDoctor}
             patient={selectedPatient}
@@ -352,10 +354,64 @@ export default function App() {
             warnings={warnings}
             onDeleteMedicine={handleDeleteMedicine}
             onSpeakBangla={speakBangla}
+            onOpenQrModal={() => setShowQrModal(true)}
           />
-        </div>
+        </section>
 
-      </div>
+      </main>
+
+      {/* APPLICATION FOOTER */}
+      <footer className="no-print" style={{
+        borderTop: '1px solid var(--slate-200)',
+        background: '#FFFFFF',
+        padding: '14px 24px',
+        marginTop: 'auto',
+        boxShadow: 'var(--shadow-subtle)'
+      }}>
+        <div style={{
+          maxWidth: '1680px',
+          margin: '0 auto',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          fontSize: '0.76rem',
+          color: 'var(--slate-500)',
+          flexWrap: 'wrap',
+          gap: '12px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontWeight: '700', color: 'var(--slate-800)' }}>BanglaRx AI™ Systems</span>
+            <span>•</span>
+            <span>Clinical Decision Support System (CDSS) for Bangladesh</span>
+            <span>•</span>
+            <span>© 2026 All Rights Reserved</span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--emerald-500)' }} />
+              <span>DGDA Formulary Grounded</span>
+            </div>
+
+            {/* Technical Specifications & Architecture Modal Launcher */}
+            <button
+              type="button"
+              onClick={() => setShowStackModal(true)}
+              className="btn-clinical btn-outline"
+              style={{
+                padding: '4px 10px',
+                fontSize: '0.72rem',
+                borderRadius: 'var(--radius-sm)',
+                gap: '5px'
+              }}
+              title="View System Architecture & Technical Specifications"
+            >
+              <Info size={13} color="var(--teal-600)" />
+              <span>Architecture & Stack</span>
+            </button>
+          </div>
+        </div>
+      </footer>
 
       {/* PATIENT QR CODE MODAL */}
       <PatientQrModal
@@ -364,6 +420,12 @@ export default function App() {
         savedRxNumber={savedRxNumber}
         medicinesCount={medicines.length}
         onSpeakBangla={speakBangla}
+      />
+
+      {/* SYSTEM ARCHITECTURE & TECHNICAL STACK MODAL */}
+      <StackInfoModal
+        isOpen={showStackModal}
+        onClose={() => setShowStackModal(false)}
       />
 
     </div>

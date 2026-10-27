@@ -1,5 +1,5 @@
 import React from 'react';
-import { HeartPulse, ShieldAlert, Trash2, Volume2 } from 'lucide-react';
+import { Stethoscope, ShieldAlert, Trash2, Volume2, Printer, QrCode, HeartPulse, Sparkles, AlertTriangle } from 'lucide-react';
 import type { Doctor, Patient, PrescriptionItem, DrugWarning } from '../types/index';
 
 interface PrescriptionPadProps {
@@ -15,6 +15,7 @@ interface PrescriptionPadProps {
   warnings: DrugWarning[];
   onDeleteMedicine: (index: number) => void;
   onSpeakBangla: (text: string) => void;
+  onOpenQrModal: () => void;
 }
 
 export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
@@ -30,284 +31,434 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
   warnings,
   onDeleteMedicine,
   onSpeakBangla,
+  onOpenQrModal,
 }) => {
   return (
-    <div className="rx-paper" style={{ 
-      background: '#FFFFFF', 
-      borderRadius: '12px', 
-      boxShadow: 'var(--shadow-md)',
-      border: '1px solid #E2E8F0',
-      padding: '28px',
-      minHeight: '800px',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between'
-    }}>
+    <div
+      className="rx-paper clinical-card"
+      style={{
+        padding: '32px',
+        minHeight: '840px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        background: '#FFFFFF',
+        border: '1px solid var(--slate-200)',
+        boxShadow: 'var(--shadow-elevated)'
+      }}
+    >
       <div>
-        {/* DOCTOR HEADER */}
-        <div style={{ 
-          borderBottom: '2px solid #0F52BA', 
-          paddingBottom: '16px', 
-          display: 'flex', 
+        
+        {/* TOP OFFICIAL BMDC DOCTOR HEADER */}
+        <div style={{
+          borderBottom: '2px solid var(--slate-900)',
+          paddingBottom: '18px',
+          display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'flex-start'
+          alignItems: 'flex-start',
+          flexWrap: 'wrap',
+          gap: '16px'
         }}>
           <div>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0F52BA' }}>
+            <h2 style={{
+              fontSize: '1.35rem',
+              fontWeight: '800',
+              color: 'var(--slate-900)',
+              letterSpacing: '-0.02em'
+            }}>
               {doctor?.name || 'Prof. Dr. M. A. Rahman'}
             </h2>
-            <p style={{ fontSize: '0.82rem', color: '#475569', fontWeight: '600' }}>
+            <p style={{ fontSize: '0.84rem', color: 'var(--teal-700)', fontWeight: '700', marginTop: '2px' }}>
               {doctor?.degrees || 'MBBS, FCPS (Medicine), MD (Cardiology)'}
             </p>
-            <p style={{ fontSize: '0.8rem', color: '#64748B' }}>
-              {doctor?.specialization || 'Medicine & Interventional Cardiology'}
+            <p style={{ fontSize: '0.8rem', color: 'var(--slate-600)', marginTop: '1px' }}>
+              {doctor?.specialization || 'Clinical Medicine & Interventional Cardiology'}
             </p>
-            <p style={{ fontSize: '0.78rem', color: '#94A3B8', marginTop: '2px' }}>
-              BMDC Reg. No: <strong>{doctor?.bmdc_reg_no || 'A-45982'}</strong> | {doctor?.hospital_name || 'Dhaka Medical College & Hospital'}
+            <p style={{ fontSize: '0.76rem', color: 'var(--slate-500)', marginTop: '4px' }}>
+              BMDC Reg. No: <strong style={{ color: 'var(--slate-800)' }}>{doctor?.bmdc_reg_no || 'A-45982'}</strong> • {doctor?.hospital_name || 'Dhaka Medical College & Hospital'} • Room: {doctor?.room_no || 'Chamber 402'}
             </p>
           </div>
 
           <div style={{ textAlign: 'right' }}>
-            <div style={{ 
-              fontSize: '0.9rem', 
-              fontWeight: '800', 
-              color: '#0F52BA',
-              letterSpacing: '0.05em' 
+            <div style={{
+              fontSize: '0.82rem',
+              fontWeight: '800',
+              color: 'var(--slate-900)',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase'
             }}>
-              E-PRESCRIPTION
+              Official E-Prescription
             </div>
-            <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '4px' }}>
-              Rx No: <strong>{savedRxNumber}</strong>
+            <div style={{ fontSize: '0.78rem', color: 'var(--slate-500)', marginTop: '3px' }}>
+              Rx ID: <strong style={{ color: 'var(--slate-900)', fontFamily: 'var(--font-mono)' }}>{savedRxNumber}</strong>
             </div>
-            <div style={{ fontSize: '0.78rem', color: '#64748B' }}>
-              Date: <strong>{new Date().toLocaleDateString('en-GB')}</strong>
+            <div style={{ fontSize: '0.78rem', color: 'var(--slate-500)', marginTop: '1px' }}>
+              Date: <strong style={{ color: 'var(--slate-900)' }}>{new Date().toLocaleDateString('en-GB')}</strong>
+            </div>
+
+            {/* Quick Pad Action Toolbar (Hidden during print) */}
+            <div className="no-print" style={{ display: 'flex', gap: '8px', marginTop: '10px', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="btn-clinical btn-outline"
+                style={{ padding: '6px 12px', fontSize: '0.74rem' }}
+                title="Print Prescription Pad"
+              >
+                <Printer size={13} />
+                <span>Print Rx</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={onOpenQrModal}
+                className="btn-clinical btn-primary-slate"
+                style={{ padding: '6px 12px', fontSize: '0.74rem' }}
+                title="Open Patient Mobile View"
+              >
+                <QrCode size={13} />
+                <span>QR View</span>
+              </button>
             </div>
           </div>
         </div>
 
         {/* PATIENT DEMOGRAPHICS BAR */}
-        <div style={{ 
-          background: '#F8FAFC', 
-          padding: '10px 14px', 
-          borderRadius: '8px', 
-          marginTop: '14px',
+        <div style={{
+          background: 'var(--slate-50)',
+          padding: '12px 16px',
+          borderRadius: 'var(--radius-md)',
+          marginTop: '16px',
           display: 'grid',
           gridTemplateColumns: 'repeat(5, 1fr)',
           fontSize: '0.8rem',
-          gap: '8px'
+          gap: '12px',
+          border: '1px solid var(--slate-200)'
         }}>
-          <div><span style={{ color: '#64748B' }}>Patient:</span> <strong>{patient?.full_name || 'Md. Kabir Hossain'}</strong></div>
-          <div><span style={{ color: '#64748B' }}>Age / Sex:</span> <strong>{patient?.age || 45}Y / {patient?.gender || 'Male'}</strong></div>
-          <div><span style={{ color: '#64748B' }}>UID:</span> <strong>{patient?.patient_uid || 'PAT-2026-001'}</strong></div>
-          <div><span style={{ color: '#64748B' }}>Blood Grp:</span> <strong>{patient?.blood_group || 'B+'}</strong></div>
-          <div><span style={{ color: '#64748B' }}>Phone:</span> <strong>{patient?.phone || '+8801819000111'}</strong></div>
+          <div>
+            <span style={{ color: 'var(--slate-500)', fontSize: '0.74rem' }}>Patient Name:</span>
+            <div style={{ fontWeight: '700', color: 'var(--slate-900)' }}>{patient?.full_name || 'Md. Kabir Hossain'}</div>
+          </div>
+          <div>
+            <span style={{ color: 'var(--slate-500)', fontSize: '0.74rem' }}>Age / Sex:</span>
+            <div style={{ fontWeight: '700', color: 'var(--slate-900)' }}>{patient?.age || 45}Y / {patient?.gender || 'Male'}</div>
+          </div>
+          <div>
+            <span style={{ color: 'var(--slate-500)', fontSize: '0.74rem' }}>Blood Group:</span>
+            <div style={{ fontWeight: '700', color: 'var(--crimson-700)' }}>{patient?.blood_group || 'B+ Positive'}</div>
+          </div>
+          <div>
+            <span style={{ color: 'var(--slate-500)', fontSize: '0.74rem' }}>Contact Phone:</span>
+            <div style={{ fontWeight: '600', color: 'var(--slate-800)' }}>{patient?.phone || '01712-XXXXXX'}</div>
+          </div>
+          <div>
+            <span style={{ color: 'var(--slate-500)', fontSize: '0.74rem' }}>Known Allergies:</span>
+            <div style={{ fontWeight: '600', color: 'var(--amber-700)' }}>{patient?.allergies || 'None Reported'}</div>
+          </div>
         </div>
 
-        {/* VITALS STRIP */}
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '16px', 
-          marginTop: '10px', 
-          padding: '6px 14px', 
-          background: '#EBF3FF', 
-          borderRadius: '6px',
-          fontSize: '0.78rem'
-        }}>
-          <HeartPulse size={15} color="#0F52BA" />
-          <span>BP: <strong>{vitals.bp}</strong></span>
-          <span>•</span>
-          <span>Temp: <strong>{vitals.temp}</strong></span>
-          <span>•</span>
-          <span>Pulse: <strong>{vitals.pulse}</strong></span>
-        </div>
-
-        {/* DDI SAFETY ALERT BANNER */}
+        {/* CRITICAL DRUG-DRUG INTERACTION (DDI) SAFETY INTERCEPT CARD */}
         {warnings.length > 0 && (
-          <div style={{ 
-            marginTop: '14px', 
-            background: '#FEF2F2', 
-            border: '1px solid #FCA5A5', 
-            borderRadius: '8px', 
-            padding: '12px 16px',
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '12px'
-          }}>
-            <ShieldAlert size={22} color="#DC2626" style={{ flexShrink: 0, marginTop: '2px' }} />
-            <div>
-              <div style={{ fontSize: '0.85rem', fontWeight: '800', color: '#DC2626', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                CLINICAL DRUG-DRUG INTERACTION ALERT ({warnings.length} detected)
+          <div
+            className="anim-slide-up"
+            style={{
+              marginTop: '16px',
+              padding: '14px 18px',
+              background: 'var(--crimson-50)',
+              border: '1px solid var(--crimson-100)',
+              borderRadius: 'var(--radius-md)',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '12px'
+            }}
+          >
+            <div style={{
+              background: 'var(--crimson-600)',
+              color: '#FFFFFF',
+              padding: '7px',
+              borderRadius: 'var(--radius-sm)',
+              display: 'flex',
+              marginTop: '2px'
+            }}>
+              <ShieldAlert size={18} />
+            </div>
+
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <span style={{
+                  fontSize: '0.84rem',
+                  fontWeight: '800',
+                  color: 'var(--crimson-900)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em'
+                }}>
+                  Clinical Contraindication Intercept
+                </span>
+                <span className="badge-clinical badge-crimson">
+                  HIGH SEVERITY DDI
+                </span>
               </div>
-              {warnings.map((w, idx) => (
-                <div key={idx} style={{ fontSize: '0.78rem', color: '#7F1D1D', marginTop: '4px' }}>
-                  <strong>{w.drugA} + {w.drugB} ({w.severity}):</strong> {w.description}
-                  <div style={{ fontStyle: 'italic', color: '#B91C1C', marginTop: '2px' }}>
-                    💡 Clinical Guidance: {w.clinicalAdvice}
-                  </div>
+
+              {warnings.map((w, i) => (
+                <div key={i} style={{ marginTop: '6px', fontSize: '0.8rem', color: 'var(--crimson-900)' }}>
+                  <strong>Conflict:</strong> {w.drugA} + {w.drugB}
+                  <p style={{ marginTop: '2px', color: 'var(--crimson-700)', lineHeight: 1.45 }}>
+                    {w.description}
+                  </p>
+                  <p style={{ marginTop: '3px', fontWeight: '700', color: 'var(--crimson-900)' }}>
+                    Clinical Recommendation: {w.clinicalAdvice}
+                  </p>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* PRESCRIPTION BODY: LEFT & RIGHT */}
-        <div style={{ display: 'grid', gridTemplateColumns: '32% 68%', marginTop: '16px', gap: '20px' }}>
+        {/* MAIN CLINICAL CONTENT GRID (SPLIT COLUMN: FINDINGS VS RX) */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '260px 1fr',
+          gap: '24px',
+          marginTop: '20px',
+          minHeight: '440px'
+        }}>
           
-          {/* Clinical Notes (Left) */}
-          <div style={{ borderRight: '1px solid #E2E8F0', paddingRight: '14px' }}>
+          {/* LEFT CLINICAL COLUMN: VITALS, COMPLAINTS, INVESTIGATIONS */}
+          <div style={{
+            borderRight: '1px solid var(--slate-200)',
+            paddingRight: '18px'
+          }}>
             
-            {/* Complaints */}
-            <div style={{ marginBottom: '14px' }}>
-              <div style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>
-                Chief Complaints (লক্ষণসমূহ):
+            {/* Vitals */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                <HeartPulse size={14} color="var(--teal-600)" />
+                <span style={{ fontSize: '0.74rem', fontWeight: '800', color: 'var(--slate-800)', textTransform: 'uppercase' }}>
+                  Recorded Vitals
+                </span>
               </div>
-              <ul style={{ paddingLeft: '16px', fontSize: '0.8rem', color: '#334155' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.78rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', background: 'var(--slate-50)', padding: '5px 8px', borderRadius: 'var(--radius-sm)' }}>
+                  <span style={{ color: 'var(--slate-500)' }}>BP:</span>
+                  <strong style={{ color: 'var(--slate-900)' }}>{vitals.bp}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', background: 'var(--slate-50)', padding: '5px 8px', borderRadius: 'var(--radius-sm)' }}>
+                  <span style={{ color: 'var(--slate-500)' }}>Temp:</span>
+                  <strong style={{ color: 'var(--crimson-700)' }}>{vitals.temp}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', background: 'var(--slate-50)', padding: '5px 8px', borderRadius: 'var(--radius-sm)' }}>
+                  <span style={{ color: 'var(--slate-500)' }}>Pulse:</span>
+                  <strong style={{ color: 'var(--slate-900)' }}>{vitals.pulse}</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Chief Complaints */}
+            <div style={{ marginBottom: '16px' }}>
+              <span style={{ fontSize: '0.74rem', fontWeight: '800', color: 'var(--slate-800)', textTransform: 'uppercase' }}>
+                Chief Complaints
+              </span>
+              <ul style={{ marginTop: '6px', paddingLeft: '16px', fontSize: '0.78rem', color: 'var(--slate-700)', lineHeight: 1.5 }}>
                 {complaints.map((c, i) => (
-                  <li key={i} style={{ marginBottom: '4px' }}>{c}</li>
+                  <li key={i}>{c}</li>
                 ))}
               </ul>
             </div>
 
             {/* Diagnosis */}
-            <div style={{ marginBottom: '14px' }}>
-              <div style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '4px' }}>
-                Clinical Diagnosis (রোগ নির্ণয়):
-              </div>
-              <div style={{ 
-                fontSize: '0.82rem', 
-                fontWeight: '700', 
-                color: '#0F52BA', 
-                background: '#F0F9FF', 
-                padding: '6px 8px', 
-                borderRadius: '6px' 
+            <div style={{ marginBottom: '16px' }}>
+              <span style={{ fontSize: '0.74rem', fontWeight: '800', color: 'var(--slate-800)', textTransform: 'uppercase' }}>
+                Clinical Diagnosis
+              </span>
+              <div style={{
+                marginTop: '6px',
+                fontSize: '0.8rem',
+                fontWeight: '700',
+                color: 'var(--teal-800)',
+                background: 'var(--teal-50)',
+                padding: '6px 10px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--teal-100)'
               }}>
                 {diagnosis}
               </div>
             </div>
 
             {/* Investigations */}
-            {investigations.length > 0 && (
-              <div>
-                <div style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>
-                  Investigations (পরীক্ষা-নিরীক্ষা):
-                </div>
-                <ul style={{ paddingLeft: '16px', fontSize: '0.78rem', color: '#475569' }}>
-                  {investigations.map((inv, i) => (
-                    <li key={i} style={{ marginBottom: '3px' }}>{inv}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            <div>
+              <span style={{ fontSize: '0.74rem', fontWeight: '800', color: 'var(--slate-800)', textTransform: 'uppercase' }}>
+                Investigations Advised
+              </span>
+              <ul style={{ marginTop: '6px', paddingLeft: '16px', fontSize: '0.78rem', color: 'var(--slate-700)', lineHeight: 1.5 }}>
+                {investigations.map((inv, i) => (
+                  <li key={i}>{inv}</li>
+                ))}
+              </ul>
+            </div>
 
           </div>
 
-          {/* Rx Medications Grid (Right) */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-              <span style={{ fontSize: '1.4rem', fontWeight: '900', color: '#0F52BA', fontStyle: 'italic' }}>
-                ℞
-              </span>
-              <span style={{ fontSize: '0.78rem', fontWeight: '700', color: '#64748B', textTransform: 'uppercase' }}>
-                Prescribed Medications (Grounded with DB):
-              </span>
+          {/* RIGHT COLUMN: OFFICIAL RX SECTION */}
+          <div style={{ paddingLeft: '4px' }}>
+            
+            {/* Rx Symbol Header */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'baseline',
+              justifyContent: 'space-between',
+              borderBottom: '1px solid var(--slate-200)',
+              paddingBottom: '8px',
+              marginBottom: '16px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                <span style={{
+                  fontSize: '1.8rem',
+                  fontFamily: 'serif',
+                  fontWeight: '800',
+                  color: 'var(--slate-900)',
+                  lineHeight: 1
+                }}>
+                  ℞
+                </span>
+                <span style={{ fontSize: '0.76rem', color: 'var(--slate-500)', fontWeight: '600' }}>
+                  Prescribed Pharmacotherapy ({medicines.length} Medicines)
+                </span>
+              </div>
+
+              {/* Read Aloud Button in Bengali */}
+              <button
+                type="button"
+                onClick={() => {
+                  const speech = medicines.map((m, idx) => 
+                    `${idx + 1}. ${m.brandName}, ${m.dosagePattern}, ${m.instructionsBangla}`
+                  ).join('। ');
+                  onSpeakBangla(`ঔষধ সেবনের নির্দেশিকা: ${speech}`);
+                }}
+                className="btn-clinical btn-outline no-print"
+                style={{ padding: '4px 10px', fontSize: '0.72rem' }}
+                title="Read prescription in Bengali"
+              >
+                <Volume2 size={13} color="var(--teal-600)" />
+                <span className="font-bangla">অডিও শুনুন (Bangla)</span>
+              </button>
             </div>
 
-            {/* Medicine Items List */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {/* MEDICINES LIST */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {medicines.map((med, index) => (
-                <div 
-                  key={index} 
-                  style={{ 
-                    padding: '10px 14px', 
-                    borderRadius: '8px', 
-                    border: '1px solid #E2E8F0',
-                    background: '#FFFFFF',
+                <div
+                  key={index}
+                  className="anim-slide-up"
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: 'var(--radius-md)',
+                    background: 'var(--slate-50)',
+                    border: '1px solid var(--slate-200)',
                     display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between'
+                    alignItems: 'flex-start',
+                    justifyContent: 'space-between',
+                    gap: '12px',
+                    transition: 'all 0.15s ease'
                   }}
                 >
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ 
-                        fontSize: '0.7rem', 
-                        background: '#F1F5F9', 
-                        color: '#475569', 
-                        padding: '2px 6px', 
-                        borderRadius: '4px',
-                        fontWeight: '700' 
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <span style={{
+                        fontSize: '0.76rem',
+                        fontWeight: '700',
+                        color: 'var(--slate-400)',
+                        fontFamily: 'var(--font-mono)'
                       }}>
-                        {med.form}
+                        #{index + 1}
                       </span>
-                      <strong style={{ fontSize: '0.9rem', color: '#1E293B' }}>{med.brandName}</strong>
-                      <span style={{ fontSize: '0.8rem', color: '#64748B' }}>({med.strength})</span>
+                      <strong style={{ fontSize: '0.94rem', color: 'var(--slate-900)' }}>
+                        {med.brandName}
+                      </strong>
+                      <span className="badge-clinical badge-teal" style={{ fontSize: '0.7rem' }}>
+                        {med.form} • {med.strength}
+                      </span>
+                      <span style={{ fontSize: '0.74rem', color: 'var(--slate-500)' }}>
+                        ({med.genericName})
+                      </span>
                     </div>
 
-                    <div style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: '2px' }}>
-                      {med.genericName}
-                    </div>
-
-                    {/* Bengali Dosage Instruction */}
-                    <div className="bangla-text" style={{ 
-                      fontSize: '0.85rem', 
-                      color: '#0F52BA', 
-                      fontWeight: '600', 
-                      marginTop: '4px' 
+                    {/* Dosage, Duration & Bengali Instructions */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      marginTop: '6px',
+                      flexWrap: 'wrap',
+                      fontSize: '0.8rem'
                     }}>
-                      {med.dosagePattern} — {med.duration} ({med.instructionsBangla})
+                      <div style={{
+                        background: '#FFFFFF',
+                        border: '1px solid var(--slate-300)',
+                        padding: '2px 8px',
+                        borderRadius: 'var(--radius-sm)',
+                        fontWeight: '700',
+                        color: 'var(--slate-800)',
+                        fontFamily: 'var(--font-mono)'
+                      }}>
+                        {med.dosagePattern}
+                      </div>
+
+                      <div style={{ color: 'var(--slate-600)', fontWeight: '600' }}>
+                        ⏱️ {med.duration}
+                      </div>
+
+                      <div className="font-bangla" style={{
+                        color: 'var(--teal-800)',
+                        fontWeight: '600',
+                        fontSize: '0.84rem'
+                      }}>
+                        {med.instructionsBangla}
+                      </div>
                     </div>
                   </div>
 
-                  <button 
-                    className="no-print"
+                  {/* Delete Item (No-Print) */}
+                  <button
+                    type="button"
                     onClick={() => onDeleteMedicine(index)}
-                    style={{ 
-                      background: 'none', 
-                      border: 'none', 
-                      color: '#94A3B8', 
-                      cursor: 'pointer',
-                      padding: '4px'
+                    className="no-print btn-clinical btn-outline"
+                    style={{
+                      padding: '6px',
+                      borderRadius: 'var(--radius-sm)',
+                      color: 'var(--crimson-600)',
+                      borderColor: 'transparent'
                     }}
-                    onMouseEnter={e => e.currentTarget.style.color = '#DC2626'}
-                    onMouseLeave={e => e.currentTarget.style.color = '#94A3B8'}
+                    title="Remove medicine"
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={14} />
                   </button>
                 </div>
               ))}
             </div>
 
-            {/* Bengali Advice Box */}
-            <div style={{ marginTop: '16px', background: '#F8FAFC', padding: '12px 14px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                <div className="bangla-text" style={{ fontSize: '0.85rem', fontWeight: '700', color: '#334155' }}>
-                  পরামর্শ (Patient Instructions in Bengali):
-                </div>
-                <button 
-                  className="no-print"
-                  onClick={() => onSpeakBangla(advice.join('. '))}
-                  style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '4px', 
-                    background: '#EBF3FF', 
-                    border: 'none', 
-                    color: '#0F52BA', 
-                    padding: '3px 8px', 
-                    borderRadius: '4px',
-                    fontSize: '0.72rem',
-                    fontWeight: '700',
-                    cursor: 'pointer' 
-                  }}
-                >
-                  <Volume2 size={13} /> বাংলায় শুনুন (Voice Readout)
-                </button>
-              </div>
-
-              <ul className="bangla-text" style={{ paddingLeft: '18px', fontSize: '0.82rem', color: '#475569' }}>
+            {/* ADVICE IN BENGALI SECTION */}
+            <div style={{
+              marginTop: '24px',
+              paddingTop: '16px',
+              borderTop: '1px dashed var(--slate-200)'
+            }}>
+              <span style={{
+                fontSize: '0.76rem',
+                fontWeight: '800',
+                color: 'var(--slate-800)',
+                textTransform: 'uppercase'
+              }}>
+                পরামর্শ ও খাদ্যবিধি (Doctor's Advice in Bengali):
+              </span>
+              <ul className="font-bangla" style={{
+                marginTop: '6px',
+                paddingLeft: '18px',
+                fontSize: '0.86rem',
+                color: 'var(--slate-700)',
+                lineHeight: 1.6
+              }}>
                 {advice.map((adv, i) => (
-                  <li key={i} style={{ marginBottom: '3px' }}>{adv}</li>
+                  <li key={i}>{adv}</li>
                 ))}
               </ul>
             </div>
@@ -315,35 +466,37 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
           </div>
 
         </div>
+
       </div>
 
-      {/* FOOTER: SIGNATURE & DISCLAIMER */}
-      <div style={{ 
-        borderTop: '1px solid #E2E8F0', 
-        paddingTop: '14px', 
-        marginTop: '24px', 
-        display: 'flex', 
-        alignItems: 'flex-end', 
-        justifyContent: 'space-between' 
+      {/* FOOTER OF PRESCRIPTION PAD (SIGNATURE & REGISTRATION) */}
+      <div style={{
+        marginTop: '36px',
+        paddingTop: '16px',
+        borderTop: '1px solid var(--slate-200)',
+        display: 'flex',
+        alignItems: 'flex-end',
+        justifyContent: 'space-between',
+        fontSize: '0.74rem',
+        color: 'var(--slate-500)'
       }}>
-        <div style={{ fontSize: '0.72rem', color: '#94A3B8' }}>
-          Generated via <strong>BanglaRx AI Engine</strong>. Verified by Attending Physician.<br />
-          Powered by Google Gemini Neural Foundation & PostgreSQL 18 RAG.
+        <div>
+          <div>Prescription generated via <strong>BanglaRx AI™ Clinical Systems</strong></div>
+          <div>Strictly verified against DGDA pharmaceutical registry standards</div>
         </div>
 
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ 
-            fontFamily: 'cursive', 
-            fontSize: '1.1rem', 
-            color: '#0F52BA',
-            borderBottom: '1px dashed #94A3B8',
-            paddingBottom: '2px',
+        <div style={{ textAlign: 'center', minWidth: '180px' }}>
+          <div style={{
+            fontFamily: 'serif',
+            fontStyle: 'italic',
+            fontSize: '1rem',
+            color: 'var(--teal-800)',
             marginBottom: '4px'
           }}>
-            {doctor?.name || 'Dr. M. A. Rahman'}
+            {doctor?.name || 'Dr. Tanvir Ahmed'}
           </div>
-          <div style={{ fontSize: '0.72rem', fontWeight: '700', color: '#64748B' }}>
-            Registered Medical Practitioner
+          <div style={{ borderTop: '1px solid var(--slate-400)', paddingTop: '4px' }}>
+            Registered Physician's Signature
           </div>
         </div>
       </div>

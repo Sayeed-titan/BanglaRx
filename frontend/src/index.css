@@ -1,105 +1,65 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&display=swap');
+@import './styles/design-tokens.css';
 
-:root {
-  --font-sans: 'Plus Jakarta Sans', 'Century Gothic', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-bangla: 'Hind Siliguri', 'Century Gothic', sans-serif;
-  
-  --primary: #0F52BA;
-  --primary-dark: #0A387E;
-  --primary-light: #EBF3FF;
-  --accent: #00A86B;
-  --accent-light: #E6F7F0;
-  --danger: #DC2626;
-  --danger-light: #FEE2E2;
-  --warning: #D97706;
-  --warning-light: #FEF3C7;
-  
-  --bg-main: #F4F7FB;
-  --bg-card: #FFFFFF;
-  --border: #E2E8F0;
-  --text-main: #1E293B;
-  --text-muted: #64748B;
-  --text-light: #94A3B8;
-  
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-* {
+/* Universal resets */
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-body {
+html, body {
+  background-color: var(--bg-app);
+  color: var(--slate-900);
   font-family: var(--font-sans);
-  background-color: var(--bg-main);
-  color: var(--text-main);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
 }
 
-.bangla-text {
-  font-family: var(--font-bangla);
-}
-
-/* Animations */
-@keyframes pulse-ring {
-  0% { transform: scale(0.95); opacity: 0.8; }
-  50% { transform: scale(1.15); opacity: 0.4; }
-  100% { transform: scale(0.95); opacity: 0.8; }
-}
-
-.animate-pulse-ring {
-  animation: pulse-ring 2s infinite ease-in-out;
-}
-
-@keyframes wave {
-  0%, 100% { height: 8px; }
-  50% { height: 28px; }
-}
-
-.wave-bar {
-  display: inline-block;
-  width: 4px;
-  background-color: #0F52BA;
-  border-radius: 9999px;
-  animation: wave 1.2s infinite ease-in-out;
-}
-
-/* Scrollbar */
+/* Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #F1F5F9;
+  background: var(--slate-100);
 }
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
-  border-radius: 4px;
+  background: var(--slate-300);
+  border-radius: var(--radius-full);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
+  background: var(--slate-400);
 }
 
-/* Print Styling for Prescription */
+/* Print Stylesheet for BMDC Hospital Prescription Pad */
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 15mm;
+  }
+
   body {
     background: #FFFFFF !important;
+    color: #000000 !important;
+    font-size: 11pt;
   }
+
   .no-print {
     display: none !important;
   }
+
   .print-only {
     display: block !important;
   }
+
   .rx-paper {
-    box-shadow: none !important;
     border: none !important;
+    box-shadow: none !important;
     padding: 0 !important;
+    min-height: auto !important;
+    width: 100% !important;
     max-width: 100% !important;
   }
 }

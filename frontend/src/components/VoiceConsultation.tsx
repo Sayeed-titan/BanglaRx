@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, Mic, MicOff } from 'lucide-react';
+import { Mic, MicOff, Sparkles, Volume2, Clock, Globe2 } from 'lucide-react';
 
 interface VoiceConsultationProps {
   isRecording: boolean;
@@ -26,53 +26,82 @@ export const VoiceConsultation: React.FC<VoiceConsultationProps> = ({
   onAnalyzeConsultation,
   isProcessing,
   executionTime,
-  aiMeta,
 }) => {
   return (
-    <div style={{ 
-      background: '#FFFFFF', 
-      borderRadius: '12px', 
-      padding: '20px', 
-      boxShadow: 'var(--shadow-sm)',
-      border: '1px solid var(--border)'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+    <div className="clinical-card" style={{ padding: '22px' }}>
+      
+      {/* Header & Language Mode Selector */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '16px',
+        flexWrap: 'wrap',
+        gap: '10px'
+      }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Sparkles size={18} color="#0F52BA" />
-          <h2 style={{ fontSize: '1rem', fontWeight: '700', color: '#1E293B' }}>
-            Ambient Voice Consultation & Neural Parser
-          </h2>
+          <div style={{
+            background: 'var(--teal-50)',
+            color: 'var(--teal-700)',
+            padding: '6px',
+            borderRadius: 'var(--radius-sm)',
+            display: 'flex'
+          }}>
+            <Sparkles size={16} />
+          </div>
+          <div>
+            <h2 style={{ fontSize: '0.94rem', fontWeight: '700', color: 'var(--slate-900)' }}>
+              Ambient Consultation & Speech Scribe
+            </h2>
+            <p style={{ fontSize: '0.74rem', color: 'var(--slate-500)' }}>
+              Continuous acoustic dialogue capture
+            </p>
+          </div>
         </div>
 
-        {/* Dynamic Language Mode Toggle */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#F1F5F9', padding: '3px', borderRadius: '8px' }}>
-          <button 
+        {/* Dynamic Language Mode Tabs */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '3px',
+          background: 'var(--slate-100)',
+          padding: '3px',
+          borderRadius: 'var(--radius-md)',
+          border: '1px solid var(--slate-200)'
+        }}>
+          <button
+            type="button"
             onClick={() => setSpeechLanguage('bn-BD')}
-            style={{ 
-              border: 'none', 
-              padding: '4px 10px', 
-              borderRadius: '6px',
+            style={{
+              border: 'none',
+              padding: '5px 12px',
+              borderRadius: 'var(--radius-sm)',
               fontSize: '0.74rem',
               fontWeight: '700',
               cursor: 'pointer',
-              background: speechLanguage === 'bn-BD' ? '#0F52BA' : 'transparent',
-              color: speechLanguage === 'bn-BD' ? '#FFFFFF' : '#475569'
+              background: speechLanguage === 'bn-BD' ? '#FFFFFF' : 'transparent',
+              color: speechLanguage === 'bn-BD' ? 'var(--teal-700)' : 'var(--slate-600)',
+              boxShadow: speechLanguage === 'bn-BD' ? 'var(--shadow-subtle)' : 'none',
+              transition: 'all 0.15s ease'
             }}
           >
             🇧🇩 বাংলা (bn-BD)
           </button>
 
-          <button 
+          <button
+            type="button"
             onClick={() => setSpeechLanguage('en-US')}
-            style={{ 
-              border: 'none', 
-              padding: '4px 10px', 
-              borderRadius: '6px',
+            style={{
+              border: 'none',
+              padding: '5px 12px',
+              borderRadius: 'var(--radius-sm)',
               fontSize: '0.74rem',
               fontWeight: '700',
               cursor: 'pointer',
-              background: speechLanguage === 'en-US' ? '#0F52BA' : 'transparent',
-              color: speechLanguage === 'en-US' ? '#FFFFFF' : '#475569'
+              background: speechLanguage === 'en-US' ? '#FFFFFF' : 'transparent',
+              color: speechLanguage === 'en-US' ? 'var(--teal-700)' : 'var(--slate-600)',
+              boxShadow: speechLanguage === 'en-US' ? 'var(--shadow-subtle)' : 'none',
+              transition: 'all 0.15s ease'
             }}
           >
             🇬🇧 English / Banglish
@@ -80,189 +109,232 @@ export const VoiceConsultation: React.FC<VoiceConsultationProps> = ({
         </div>
       </div>
 
-      {/* Mic Button & Waveform */}
-      <div style={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center', 
+      {/* Hero Ambient Microphone Pod */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
         justifyContent: 'center',
-        padding: '16px',
-        background: '#F8FAFC',
-        borderRadius: '10px',
-        border: '1px dashed #CBD5E1',
-        marginBottom: '16px'
+        padding: '20px 16px',
+        background: isRecording ? 'var(--crimson-50)' : 'var(--slate-50)',
+        borderRadius: 'var(--radius-lg)',
+        border: isRecording ? '1px solid var(--crimson-100)' : '1px dashed var(--slate-300)',
+        marginBottom: '18px',
+        transition: 'all var(--duration-normal) ease'
       }}>
-        <button 
+        {/* Pulsing Mic Button */}
+        <button
+          type="button"
           onClick={onToggleRecording}
-          style={{ 
-            width: '64px', 
-            height: '64px', 
-            borderRadius: '50%', 
+          className={isRecording ? 'anim-pulse-glow' : ''}
+          style={{
+            width: '62px',
+            height: '62px',
+            borderRadius: '50%',
             border: 'none',
-            background: isRecording ? '#DC2626' : '#0F52BA',
+            background: isRecording 
+              ? 'linear-gradient(135deg, var(--crimson-600) 0%, var(--crimson-700) 100%)' 
+              : 'linear-gradient(135deg, var(--slate-900) 0%, var(--slate-800) 100%)',
             color: '#FFFFFF',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            boxShadow: isRecording ? '0 0 0 10px rgba(220,38,38,0.2)' : '0 4px 12px rgba(15,82,186,0.3)',
-            transition: 'all 0.2s ease'
+            boxShadow: isRecording ? '0 4px 14px rgba(225, 29, 72, 0.4)' : 'var(--shadow-elevated)',
+            transition: 'all var(--duration-fast) var(--ease-spring)'
           }}
+          title={isRecording ? 'Click to stop listening' : 'Click to start ambient listening'}
         >
-          {isRecording ? <MicOff size={28} /> : <Mic size={28} />}
+          {isRecording ? <MicOff size={26} /> : <Mic size={26} />}
         </button>
-        
-        <p style={{ marginTop: '12px', fontSize: '0.8rem', fontWeight: '600', color: '#475569' }}>
+
+        <p style={{
+          marginTop: '12px',
+          fontSize: '0.8rem',
+          fontWeight: '600',
+          color: isRecording ? 'var(--crimson-700)' : 'var(--slate-700)'
+        }}>
           {isRecording 
-            ? `Listening in ${speechLanguage === 'bn-BD' ? 'Bangla (বাংলা)' : 'English/Banglish'}...` 
-            : `Click mic to speak in ${speechLanguage === 'bn-BD' ? 'Bangla (বাংলা)' : 'English/Banglish'}`}
+            ? `Ambient microphone active (${speechLanguage === 'bn-BD' ? 'বাংলা লিসেনিং' : 'English / Banglish'})...`
+            : `Click microphone to start ambient scribing`}
         </p>
 
+        {/* Dynamic Voice Waveform Equalizer */}
         {isRecording && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '10px', height: '30px' }}>
-            <span className="wave-bar" style={{ animationDelay: '0.1s' }} />
-            <span className="wave-bar" style={{ animationDelay: '0.3s' }} />
-            <span className="wave-bar" style={{ animationDelay: '0.5s' }} />
-            <span className="wave-bar" style={{ animationDelay: '0.2s' }} />
-            <span className="wave-bar" style={{ animationDelay: '0.4s' }} />
-            <span className="wave-bar" style={{ animationDelay: '0.6s' }} />
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            marginTop: '10px',
+            height: '28px'
+          }}>
+            <span className="equalizer-bar" style={{ animationDelay: '0.05s', background: 'var(--crimson-600)' }} />
+            <span className="equalizer-bar" style={{ animationDelay: '0.25s', background: 'var(--crimson-600)' }} />
+            <span className="equalizer-bar" style={{ animationDelay: '0.45s', background: 'var(--crimson-600)' }} />
+            <span className="equalizer-bar" style={{ animationDelay: '0.15s', background: 'var(--crimson-600)' }} />
+            <span className="equalizer-bar" style={{ animationDelay: '0.35s', background: 'var(--crimson-600)' }} />
+            <span className="equalizer-bar" style={{ animationDelay: '0.55s', background: 'var(--crimson-600)' }} />
           </div>
         )}
       </div>
 
-      {/* Stall Showcase Presets */}
-      <div style={{ marginBottom: '14px' }}>
-        <div style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '8px' }}>
-          ⚡ Stall Showcase Presets (One-Click Rehearsal):
+      {/* Preset Rehearsal Scenarios */}
+      <div style={{ marginBottom: '16px' }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '8px'
+        }}>
+          <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--slate-500)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            Quick Clinical Presets:
+          </span>
+          <span style={{ fontSize: '0.7rem', color: 'var(--slate-400)' }}>
+            One-click demonstration
+          </span>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '6px' }}>
-          <button 
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '8px'
+        }}>
+          <button
+            type="button"
             onClick={() => onLoadScenario('bangla_pure')}
-            style={{ 
-              padding: '8px 8px', 
-              borderRadius: '8px', 
-              border: '1px solid #A7F3D0',
-              background: '#ECFDF5',
-              fontSize: '0.73rem',
-              fontWeight: '700',
-              color: '#065F46',
-              cursor: 'pointer',
-              textAlign: 'left'
+            className="btn-clinical"
+            style={{
+              padding: '8px 10px',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--emerald-100)',
+              background: 'var(--emerald-50)',
+              fontSize: '0.74rem',
+              color: 'var(--emerald-700)',
+              textAlign: 'left',
+              justifyContent: 'flex-start'
             }}
           >
-            🇧🇩 1. বিশুদ্ধ বাংলা
+            🇧🇩 ১. বিশুদ্ধ বাংলা
           </button>
 
-          <button 
+          <button
+            type="button"
             onClick={() => onLoadScenario('fever')}
-            style={{ 
-              padding: '8px 8px', 
-              borderRadius: '8px', 
-              border: '1px solid #E2E8F0',
-              background: '#FFFFFF',
-              fontSize: '0.73rem',
-              fontWeight: '600',
-              color: '#0F52BA',
-              cursor: 'pointer',
-              textAlign: 'left'
+            className="btn-clinical btn-secondary"
+            style={{
+              padding: '8px 10px',
+              borderRadius: 'var(--radius-md)',
+              fontSize: '0.74rem',
+              textAlign: 'left',
+              justifyContent: 'flex-start'
             }}
           >
-            🌡️ 2. Banglish Fever
+            🌡️ ২. Fever & Gastric
           </button>
 
-          <button 
+          <button
+            type="button"
             onClick={() => onLoadScenario('diabetes')}
-            style={{ 
-              padding: '8px 8px', 
-              borderRadius: '8px', 
-              border: '1px solid #E2E8F0',
-              background: '#FFFFFF',
-              fontSize: '0.73rem',
-              fontWeight: '600',
-              color: '#00A86B',
-              cursor: 'pointer',
-              textAlign: 'left'
+            className="btn-clinical btn-secondary"
+            style={{
+              padding: '8px 10px',
+              borderRadius: 'var(--radius-md)',
+              fontSize: '0.74rem',
+              textAlign: 'left',
+              justifyContent: 'flex-start'
             }}
           >
-            🩺 3. Diabetes & BP
+            🩺 ৩. Diabetes & BP
           </button>
 
-          <button 
+          <button
+            type="button"
             onClick={() => onLoadScenario('interaction')}
-            style={{ 
-              padding: '8px 8px', 
-              borderRadius: '8px', 
-              border: '1px solid #FCA5A5',
-              background: '#FEF2F2',
-              fontSize: '0.73rem',
-              fontWeight: '600',
-              color: '#DC2626',
-              cursor: 'pointer',
-              textAlign: 'left'
+            className="btn-clinical"
+            style={{
+              padding: '8px 10px',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--crimson-100)',
+              background: 'var(--crimson-50)',
+              fontSize: '0.74rem',
+              color: 'var(--crimson-700)',
+              textAlign: 'left',
+              justifyContent: 'flex-start'
             }}
           >
-            ⚠️ 4. Warfarin DDI
+            ⚠️ ৪. Warfarin Alert
           </button>
         </div>
       </div>
 
-      {/* Transcript Textarea */}
-      <div style={{ marginBottom: '14px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-          <label style={{ fontSize: '0.78rem', fontWeight: '600', color: '#475569' }}>
-            Doctor-Patient Speech Narrative ({speechLanguage === 'bn-BD' ? 'বাংলা' : 'English / Banglish'}):
+      {/* Consultation Transcript Area */}
+      <div style={{ marginBottom: '16px' }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '6px'
+        }}>
+          <label style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--slate-700)' }}>
+            Consultation Speech Narrative ({speechLanguage === 'bn-BD' ? 'বাংলা' : 'English / Banglish'}):
           </label>
           {executionTime && (
-            <span style={{ fontSize: '0.72rem', color: '#00A86B', fontWeight: '700' }}>
-              ⚡ Neural Latency: {executionTime}ms
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontSize: '0.72rem',
+              color: 'var(--emerald-700)',
+              fontWeight: '700'
+            }}>
+              <Clock size={12} />
+              Latency: {executionTime}ms
             </span>
           )}
         </div>
-        <textarea 
+
+        <textarea
           value={transcript}
           onChange={e => setTranscript(e.target.value)}
-          placeholder="Doctor voice conversation in Bangla or English appears here..."
+          placeholder="Acoustic consultation speech appears here in real-time or type manually..."
           rows={4}
-          style={{ 
-            width: '100%', 
-            padding: '10px', 
-            borderRadius: '8px', 
-            border: '1px solid #CBD5E1',
-            fontSize: '0.84rem',
-            fontFamily: speechLanguage === 'bn-BD' ? 'var(--font-bangla)' : 'inherit',
+          className={`textarea-clinical ${speechLanguage === 'bn-BD' ? 'font-bangla' : ''}`}
+          style={{
+            lineHeight: 1.6,
+            fontSize: '0.86rem',
             resize: 'vertical'
           }}
         />
       </div>
 
-      {/* Process Button */}
-      <button 
+      {/* Neural Synthesis Action Button */}
+      <button
+        type="button"
         onClick={onAnalyzeConsultation}
         disabled={isProcessing || !transcript.trim()}
-        style={{ 
-          width: '100%', 
-          padding: '12px', 
-          borderRadius: '8px', 
-          border: 'none',
-          background: isProcessing ? '#94A3B8' : '#0F52BA',
-          color: '#FFFFFF',
-          fontWeight: '700',
-          fontSize: '0.88rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '8px',
-          cursor: isProcessing ? 'not-allowed' : 'pointer'
+        className="btn-clinical btn-primary-teal"
+        style={{
+          width: '100%',
+          padding: '12px 18px',
+          fontSize: '0.9rem',
+          borderRadius: 'var(--radius-md)',
+          boxShadow: 'var(--shadow-elevated)'
         }}
       >
         <Sparkles size={18} />
-        {isProcessing ? 'Gemini Neural Network Reasoning...' : 'Process with Gemini Neural Engine (AI)'}
+        {isProcessing ? 'Synthesizing Clinical Entities & Safety Intercept...' : 'Synthesize Prescription (BanglaRx AI)'}
       </button>
 
-      {/* Model Subtitle */}
-      <div style={{ fontSize: '0.72rem', color: '#64748B', textAlign: 'center', marginTop: '8px' }}>
-        Engine: <strong>{aiMeta}</strong>
+      {/* Subtitle & Compliance Note */}
+      <div style={{
+        fontSize: '0.72rem',
+        color: 'var(--slate-400)',
+        textAlign: 'center',
+        marginTop: '10px'
+      }}>
+        Ambient Neural Intelligence • Grounded against DGDA National Formulary
       </div>
+
     </div>
   );
 };

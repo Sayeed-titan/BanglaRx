@@ -1,5 +1,5 @@
 import React from 'react';
-import { BarChart2 } from 'lucide-react';
+import { BarChart3, Activity, CheckCircle, ShieldCheck } from 'lucide-react';
 import type { AccuracyMetrics } from '../types/index';
 
 interface AccuracyAnalyticsProps {
@@ -10,94 +10,145 @@ export const AccuracyAnalytics: React.FC<AccuracyAnalyticsProps> = ({ metrics })
   if (!metrics) return null;
 
   return (
-    <div style={{ 
-      background: '#FFFFFF', 
-      borderRadius: '12px', 
-      padding: '16px 20px', 
-      boxShadow: 'var(--shadow-sm)',
-      border: '1px solid #E2E8F0'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+    <div className="clinical-card" style={{ padding: '18px 22px' }}>
+      
+      {/* Header */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '14px'
+      }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <BarChart2 size={16} color="#0F52BA" />
-          <h3 style={{ fontSize: '0.88rem', fontWeight: '800', color: '#1E293B' }}>
-            Voice Accuracy & Grounding Analytics
-          </h3>
+          <div style={{
+            background: 'var(--teal-50)',
+            color: 'var(--teal-700)',
+            padding: '5px',
+            borderRadius: 'var(--radius-sm)',
+            display: 'flex'
+          }}>
+            <BarChart3 size={15} />
+          </div>
+          <div>
+            <h3 style={{ fontSize: '0.86rem', fontWeight: '700', color: 'var(--slate-900)' }}>
+              Acoustic Extraction & Grounding Telemetry
+            </h3>
+            <p style={{ fontSize: '0.72rem', color: 'var(--slate-500)' }}>
+              Speech-to-entity precision analytics
+            </p>
+          </div>
         </div>
-        <span style={{ 
-          fontSize: '0.72rem', 
-          background: '#ECFDF5', 
-          color: '#065F46', 
-          padding: '2px 8px', 
-          borderRadius: '12px',
-          fontWeight: '700' 
-        }}>
+
+        <span className="badge-clinical badge-emerald">
+          <ShieldCheck size={12} />
           VERIFIED ACCURATE
         </span>
       </div>
 
-      {/* 4-Stat Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '14px' }}>
+      {/* 4-Stat Metric Pod Grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: '10px',
+        marginBottom: '14px'
+      }}>
         
-        {/* Words Spoken */}
-        <div style={{ background: '#F8FAFC', padding: '8px 10px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
-          <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: '600' }}>Words Spoken:</div>
-          <div style={{ fontSize: '1.1rem', fontWeight: '800', color: '#1E293B' }}>
+        {/* Metric 1: Spoken Words */}
+        <div style={{
+          background: 'var(--slate-50)',
+          padding: '10px 12px',
+          borderRadius: 'var(--radius-md)',
+          border: '1px solid var(--slate-200)'
+        }}>
+          <div style={{ fontSize: '0.68rem', color: 'var(--slate-500)', fontWeight: '600', textTransform: 'uppercase' }}>
+            Spoken Tokens
+          </div>
+          <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--slate-900)', marginTop: '2px' }}>
             {metrics.spokenWordsCount}
           </div>
-          <div style={{ fontSize: '0.68rem', color: '#94A3B8' }}>Acoustic Audio Input</div>
+          <div style={{ fontSize: '0.66rem', color: 'var(--slate-400)', marginTop: '1px' }}>
+            Acoustic audio stream
+          </div>
         </div>
 
-        {/* Entities Codified */}
-        <div style={{ background: '#F0FDF4', padding: '8px 10px', borderRadius: '8px', border: '1px solid #BBF7D0' }}>
-          <div style={{ fontSize: '0.7rem', color: '#166534', fontWeight: '600' }}>Entities Codified:</div>
-          <div style={{ fontSize: '1.1rem', fontWeight: '800', color: '#15803D' }}>
+        {/* Metric 2: Codified Entities */}
+        <div style={{
+          background: 'var(--emerald-50)',
+          padding: '10px 12px',
+          borderRadius: 'var(--radius-md)',
+          border: '1px solid var(--emerald-100)'
+        }}>
+          <div style={{ fontSize: '0.68rem', color: 'var(--emerald-700)', fontWeight: '600', textTransform: 'uppercase' }}>
+            Codified Entities
+          </div>
+          <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--emerald-800)', marginTop: '2px' }}>
             {metrics.acceptedEntitiesCount}
           </div>
-          <div style={{ fontSize: '0.68rem', color: '#86EFAC' }}>Medical Entities</div>
+          <div style={{ fontSize: '0.66rem', color: 'var(--emerald-600)', marginTop: '1px' }}>
+            Clinical data points
+          </div>
         </div>
 
-        {/* Extraction Ratio */}
-        <div style={{ background: '#EFF6FF', padding: '8px 10px', borderRadius: '8px', border: '1px solid #BFDBFE' }}>
-          <div style={{ fontSize: '0.7rem', color: '#1E40AF', fontWeight: '600' }}>Extraction Rate:</div>
-          <div style={{ fontSize: '1.1rem', fontWeight: '800', color: '#1D4ED8' }}>
+        {/* Metric 3: Information Yield */}
+        <div style={{
+          background: 'var(--sapphire-50)',
+          padding: '10px 12px',
+          borderRadius: 'var(--radius-md)',
+          border: '1px solid rgba(37, 99, 235, 0.15)'
+        }}>
+          <div style={{ fontSize: '0.68rem', color: 'var(--sapphire-700)', fontWeight: '600', textTransform: 'uppercase' }}>
+            Yield Ratio
+          </div>
+          <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--sapphire-800)', marginTop: '2px' }}>
             {metrics.conversionRate}%
           </div>
-          <div style={{ fontSize: '0.68rem', color: '#93C5FD' }}>Information Yield</div>
+          <div style={{ fontSize: '0.66rem', color: 'var(--sapphire-600)', marginTop: '1px' }}>
+            Information density
+          </div>
         </div>
 
-        {/* AI Confidence */}
-        <div style={{ background: '#FAF5FF', padding: '8px 10px', borderRadius: '8px', border: '1px solid #E9D5FF' }}>
-          <div style={{ fontSize: '0.7rem', color: '#6B21A8', fontWeight: '600' }}>Neural Confidence:</div>
-          <div style={{ fontSize: '1.1rem', fontWeight: '800', color: '#7E22CE' }}>
+        {/* Metric 4: Semantic Confidence */}
+        <div style={{
+          background: 'var(--teal-50)',
+          padding: '10px 12px',
+          borderRadius: 'var(--radius-md)',
+          border: '1px solid var(--teal-100)'
+        }}>
+          <div style={{ fontSize: '0.68rem', color: 'var(--teal-700)', fontWeight: '600', textTransform: 'uppercase' }}>
+            Certainty Score
+          </div>
+          <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--teal-800)', marginTop: '2px' }}>
             {metrics.confidenceScore}%
           </div>
-          <div style={{ fontSize: '0.68rem', color: '#D8B4FE' }}>Gemini Logprob</div>
+          <div style={{ fontSize: '0.66rem', color: 'var(--teal-600)', marginTop: '1px' }}>
+            Semantic validation
+          </div>
         </div>
 
       </div>
 
-      {/* Breakdown Pills */}
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: '8px', 
+      {/* Category Breakdown Tags */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        flexWrap: 'wrap',
         fontSize: '0.72rem',
-        borderTop: '1px solid #F1F5F9',
-        paddingTop: '10px'
+        borderTop: '1px solid var(--slate-100)',
+        paddingTop: '12px'
       }}>
-        <span style={{ color: '#64748B', fontWeight: '600' }}>Codified Breakdown:</span>
-        <span style={{ background: '#FEF3C7', color: '#92400E', padding: '2px 8px', borderRadius: '6px', fontWeight: '700' }}>
+        <span style={{ color: 'var(--slate-500)', fontWeight: '600' }}>Extracted Entities:</span>
+        <span className="badge-clinical badge-amber">
           {metrics.detectedCategories.symptoms} Symptoms
         </span>
-        <span style={{ background: '#DBEAFE', color: '#1E40AF', padding: '2px 8px', borderRadius: '6px', fontWeight: '700' }}>
+        <span className="badge-clinical badge-teal">
           {metrics.detectedCategories.vitals} Vitals
         </span>
-        <span style={{ background: '#D1FAE5', color: '#065F46', padding: '2px 8px', borderRadius: '6px', fontWeight: '700' }}>
-          {metrics.detectedCategories.medications} Medicines (DB Grounded)
+        <span className="badge-clinical badge-emerald">
+          {metrics.detectedCategories.medications} Formulary Drugs Grounded
         </span>
-        <span style={{ background: '#F1F5F9', color: '#475569', padding: '2px 8px', borderRadius: '6px', fontWeight: '700' }}>
-          {metrics.detectedCategories.instructions} Advice Items
+        <span className="badge-clinical badge-slate">
+          {metrics.detectedCategories.instructions} Bengali Directions
         </span>
       </div>
 

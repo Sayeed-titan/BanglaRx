@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stethoscope, Cpu, QrCode, Building2, User, Printer, CheckCircle2 } from 'lucide-react';
+import { Stethoscope, ShieldCheck, QrCode, CheckCircle2, User, Building2, Sparkles } from 'lucide-react';
 import type { Doctor, Patient } from '../types/index';
 
 interface NavbarProps {
@@ -28,208 +28,224 @@ export const Navbar: React.FC<NavbarProps> = ({
   saveSuccess,
 }) => {
   return (
-    <>
-      {/* TOP HEADER */}
-      <header className="no-print" style={{ 
-        background: '#0F52BA', 
-        color: '#FFFFFF', 
-        padding: '12px 24px', 
-        display: 'flex', 
-        alignItems: 'center', 
+    <header className="no-print" style={{
+      background: 'var(--slate-900)',
+      color: '#FFFFFF',
+      borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+      boxShadow: 'var(--shadow-card)'
+    }}>
+      {/* Primary Navigation Row */}
+      <div style={{
+        maxWidth: '1680px',
+        margin: '0 auto',
+        padding: '12px 24px',
+        display: 'flex',
+        alignItems: 'center',
         justifyContent: 'space-between',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+        flexWrap: 'wrap',
+        gap: '16px'
       }}>
+        {/* Brand & System Title */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{ 
-            background: 'rgba(255,255,255,0.15)', 
-            padding: '8px', 
-            borderRadius: '10px',
+          <div style={{
+            background: 'linear-gradient(135deg, var(--teal-600) 0%, var(--teal-700) 100%)',
+            color: '#FFFFFF',
+            padding: '9px',
+            borderRadius: 'var(--radius-md)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(13, 148, 136, 0.35)'
           }}>
-            <Stethoscope size={26} color="#FFFFFF" />
+            <Stethoscope size={24} />
           </div>
+
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <h1 style={{ fontSize: '1.25rem', fontWeight: '800', letterSpacing: '-0.02em' }}>
-                BanglaRx AI™
-              </h1>
-              <span style={{ 
-                fontSize: '0.7rem', 
-                background: '#00A86B', 
-                padding: '2px 8px', 
-                borderRadius: '12px',
-                fontWeight: '700'
+              <span style={{
+                fontSize: '1.2rem',
+                fontWeight: '800',
+                letterSpacing: '-0.02em',
+                color: '#FFFFFF'
               }}>
-                R&D FAIR EDITION
+                BanglaRx AI<sup style={{ fontSize: '0.65rem', color: 'var(--teal-400)', marginLeft: '1px' }}>™</sup>
+              </span>
+              <span className="badge-clinical badge-teal" style={{
+                background: 'rgba(13, 148, 136, 0.2)',
+                color: 'var(--teal-300)',
+                border: '1px solid rgba(13, 148, 136, 0.35)'
+              }}>
+                CLINICAL SUITE
               </span>
             </div>
-            <p style={{ fontSize: '0.78rem', opacity: 0.85 }}>
-              Ambient Clinical Intelligence & Smart Prescription Guardian (DCCI AI Fair)
+            <p style={{ fontSize: '0.74rem', color: 'var(--slate-400)', marginTop: '1px' }}>
+              Ambient Clinical Intelligence & Smart Prescription Guardian
             </p>
           </div>
         </div>
 
-        {/* Badges & Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '8px', 
-            background: 'rgba(255,255,255,0.18)', 
-            padding: '6px 14px', 
-            borderRadius: '20px',
-            fontSize: '0.8rem',
-            border: '1px solid rgba(255,255,255,0.25)'
+        {/* System Telemetry & White-labeled Engine Status */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          
+          {/* Intelligence Engine Status Pill (White-labeled) */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            padding: '6px 12px',
+            borderRadius: 'var(--radius-full)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            fontSize: '0.76rem'
           }}>
-            <Cpu size={15} color="#67E8F9" />
-            <span>AI: <strong>Gemini 3.5 Flash Neural Engine</strong></span>
+            <Sparkles size={13} color="var(--teal-400)" />
+            <span style={{ color: 'var(--slate-300)' }}>
+              Intelligence: <strong style={{ color: '#FFFFFF', fontWeight: '600' }}>BanglaRx Neural Core</strong>
+            </span>
           </div>
 
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '6px', 
-            background: 'rgba(255,255,255,0.12)', 
-            padding: '6px 12px', 
-            borderRadius: '20px',
-            fontSize: '0.78rem'
+          {/* Database Health Pill (White-labeled) */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '7px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            padding: '6px 12px',
+            borderRadius: 'var(--radius-full)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            fontSize: '0.76rem'
           }}>
-            <span style={{ 
-              width: '8px', 
-              height: '8px', 
-              borderRadius: '50%', 
-              backgroundColor: '#10B981',
-              display: 'inline-block' 
+            <span style={{
+              width: '7px',
+              height: '7px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--emerald-500)',
+              display: 'inline-block',
+              boxShadow: '0 0 6px var(--emerald-500)'
             }} />
-            <span>PostgreSQL 18: <strong>BanglaRxDB</strong></span>
+            <span style={{ color: 'var(--slate-300)' }}>
+              Formulary Vault: <strong style={{ color: '#FFFFFF', fontWeight: '600' }}>Synchronized</strong>
+            </span>
           </div>
 
-          <button 
+          {/* Patient Mobile Passport Button */}
+          <button
             onClick={onOpenQrModal}
-            style={{ 
-              background: '#FFFFFF', 
-              color: '#0F52BA', 
-              border: 'none', 
-              padding: '7px 16px', 
-              borderRadius: '8px',
-              fontWeight: '700',
-              fontSize: '0.82rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              cursor: 'pointer'
+            className="btn-clinical"
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              color: '#FFFFFF',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              fontSize: '0.78rem',
+              padding: '7px 14px'
             }}
           >
-            <QrCode size={16} /> Patient Mobile View
+            <QrCode size={15} />
+            <span>Patient Mobile View</span>
+          </button>
+
+          {/* Save / Finalize Prescription Button */}
+          <button
+            onClick={onSavePrescription}
+            disabled={isSaving}
+            className="btn-clinical btn-primary-teal"
+            style={{
+              fontSize: '0.78rem',
+              padding: '7px 16px'
+            }}
+          >
+            {saveSuccess ? (
+              <>
+                <CheckCircle2 size={15} />
+                <span>Signed & Dispatched</span>
+              </>
+            ) : isSaving ? (
+              <span>Validating...</span>
+            ) : (
+              <>
+                <ShieldCheck size={15} />
+                <span>Sign & Save Rx</span>
+              </>
+            )}
           </button>
         </div>
-      </header>
+      </div>
 
-      {/* DOCTOR & PATIENT SELECTION SUB-BAR */}
-      <div className="no-print" style={{ 
-        background: '#FFFFFF', 
-        borderBottom: '1px solid #E2E8F0', 
-        padding: '10px 24px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        fontSize: '0.85rem'
+      {/* Secondary Doctor & Patient Selector Bar */}
+      <div style={{
+        background: 'rgba(2, 6, 23, 0.55)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+        padding: '8px 24px'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+        <div style={{
+          maxWidth: '1680px',
+          margin: '0 auto',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '12px',
+          fontSize: '0.78rem'
+        }}>
+          {/* Active Doctor Selector */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Building2 size={16} color="#0F52BA" />
-            <span style={{ color: '#64748B', fontWeight: '500' }}>Physician:</span>
-            <select 
-              value={selectedDoctor?.id || ''} 
+            <Building2 size={14} color="var(--teal-400)" />
+            <span style={{ color: 'var(--slate-400)' }}>Prescribing Physician:</span>
+            <select
+              value={selectedDoctor?.id || ''}
               onChange={e => {
-                const doc = doctors.find(d => d.id === parseInt(e.target.value));
+                const doc = doctors.find(d => d.id === Number(e.target.value));
                 if (doc) setSelectedDoctor(doc);
               }}
-              style={{ 
-                padding: '4px 8px', 
-                borderRadius: '6px', 
-                border: '1px solid #CBD5E1',
-                fontWeight: '600',
-                color: '#1E293B',
-                background: '#F8FAFC'
+              style={{
+                background: 'rgba(255, 255, 255, 0.08)',
+                color: '#FFFFFF',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '4px 10px',
+                fontSize: '0.76rem',
+                outline: 'none',
+                cursor: 'pointer'
               }}
             >
               {doctors.map(d => (
-                <option key={d.id} value={d.id}>{d.name} — {d.specialization}</option>
+                <option key={d.id} value={d.id} style={{ background: 'var(--slate-900)', color: '#FFFFFF' }}>
+                  {d.name} — {d.specialization} ({d.hospital_name})
+                </option>
               ))}
             </select>
           </div>
 
+          {/* Active Patient Selector */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <User size={16} color="#00A86B" />
-            <span style={{ color: '#64748B', fontWeight: '500' }}>Patient:</span>
-            <select 
-              value={selectedPatient?.id || ''} 
+            <User size={14} color="var(--sapphire-400)" />
+            <span style={{ color: 'var(--slate-400)' }}>Active Consultation:</span>
+            <select
+              value={selectedPatient?.id || ''}
               onChange={e => {
-                const pat = patients.find(p => p.id === parseInt(e.target.value));
+                const pat = patients.find(p => p.id === Number(e.target.value));
                 if (pat) setSelectedPatient(pat);
               }}
-              style={{ 
-                padding: '4px 8px', 
-                borderRadius: '6px', 
-                border: '1px solid #CBD5E1',
-                fontWeight: '600',
-                color: '#1E293B',
-                background: '#F8FAFC'
+              style={{
+                background: 'rgba(255, 255, 255, 0.08)',
+                color: '#FFFFFF',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '4px 10px',
+                fontSize: '0.76rem',
+                outline: 'none',
+                cursor: 'pointer'
               }}
             >
               {patients.map(p => (
-                <option key={p.id} value={p.id}>
-                  {p.full_name} ({p.age}y/{p.gender[0]}) — {p.patient_uid}
+                <option key={p.id} value={p.id} style={{ background: 'var(--slate-900)', color: '#FFFFFF' }}>
+                  {p.full_name} ({p.age}Y, {p.gender}) — {p.chronic_conditions || 'Routine Visit'}
                 </option>
               ))}
             </select>
           </div>
         </div>
-
-        {/* Action Buttons */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <button 
-            onClick={() => window.print()}
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '6px', 
-              padding: '6px 14px', 
-              borderRadius: '6px', 
-              border: '1px solid #CBD5E1',
-              background: '#FFFFFF',
-              fontWeight: '600',
-              cursor: 'pointer',
-              color: '#334155'
-            }}
-          >
-            <Printer size={15} /> Print Rx Pad
-          </button>
-
-          <button 
-            onClick={onSavePrescription}
-            disabled={isSaving}
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '6px', 
-              padding: '6px 16px', 
-              borderRadius: '6px', 
-              border: 'none',
-              background: saveSuccess ? '#00A86B' : '#0F52BA',
-              color: '#FFFFFF',
-              fontWeight: '700',
-              cursor: 'pointer'
-            }}
-          >
-            <CheckCircle2 size={15} />
-            {saveSuccess ? 'Signed & Stored!' : isSaving ? 'Saving...' : 'Sign & Save Rx'}
-          </button>
-        </div>
       </div>
-    </>
+    </header>
   );
 };

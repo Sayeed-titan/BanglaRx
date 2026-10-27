@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, Pill, Building } from 'lucide-react';
 
 interface MedicineSearchProps {
   searchQuery: string;
@@ -15,76 +15,145 @@ export const MedicineSearch: React.FC<MedicineSearchProps> = ({
   onAddMedicine,
 }) => {
   return (
-    <div style={{ 
-      background: '#FFFFFF', 
-      borderRadius: '12px', 
-      padding: '16px', 
-      boxShadow: 'var(--shadow-sm)',
-      border: '1px solid var(--border)'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-        <Search size={16} color="#0F52BA" />
-        <h3 style={{ fontSize: '0.88rem', fontWeight: '700', color: '#1E293B' }}>
-          Add Medicine (PostgreSQL Inventory Lookup)
-        </h3>
-      </div>
+    <div className="clinical-card" style={{ padding: '18px 22px' }}>
       
+      {/* Header */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '12px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{
+            background: 'var(--teal-50)',
+            color: 'var(--teal-700)',
+            padding: '5px',
+            borderRadius: 'var(--radius-sm)',
+            display: 'flex'
+          }}>
+            <Pill size={15} />
+          </div>
+          <div>
+            <h3 style={{ fontSize: '0.86rem', fontWeight: '700', color: 'var(--slate-900)' }}>
+              National Pharmaceutical Formulary
+            </h3>
+            <p style={{ fontSize: '0.72rem', color: 'var(--slate-500)' }}>
+              Instant directory lookup & manual append
+            </p>
+          </div>
+        </div>
+
+        <span className="badge-clinical badge-slate">
+          DGDA Standard
+        </span>
+      </div>
+
+      {/* Search Input Pod */}
       <div style={{ position: 'relative' }}>
-        <input 
-          type="text" 
-          placeholder="Type brand name (e.g. Napa, Seclo, Monas, Fexo)..."
+        <div style={{
+          position: 'absolute',
+          left: '12px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          color: 'var(--slate-400)',
+          display: 'flex',
+          pointerEvents: 'none'
+        }}>
+          <Search size={16} />
+        </div>
+
+        <input
+          type="text"
+          placeholder="Search by brand name (e.g. Napa, Seclo, Monas, Bizoran)..."
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
-          style={{ 
-            width: '100%', 
-            padding: '8px 12px', 
-            borderRadius: '6px', 
-            border: '1px solid #CBD5E1',
-            fontSize: '0.82rem'
+          className="input-clinical"
+          style={{
+            paddingLeft: '36px',
+            paddingRight: '14px',
+            fontSize: '0.84rem'
           }}
         />
 
-        {/* Autocomplete Dropdown */}
+        {/* Floating Autocomplete Overlay */}
         {searchResults.length > 0 && (
-          <div style={{ 
-            position: 'absolute', 
-            top: '100%', 
-            left: 0, 
-            right: 0, 
-            background: '#FFFFFF', 
-            border: '1px solid #CBD5E1',
-            borderRadius: '6px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-            zIndex: 20,
-            marginTop: '4px',
-            overflow: 'hidden'
-          }}>
+          <div
+            className="anim-slide-up"
+            style={{
+              position: 'absolute',
+              top: 'calc(100% + 6px)',
+              left: 0,
+              right: 0,
+              background: '#FFFFFF',
+              border: '1px solid var(--slate-200)',
+              borderRadius: 'var(--radius-md)',
+              boxShadow: 'var(--shadow-float)',
+              zIndex: 30,
+              overflow: 'hidden',
+              maxHeight: '280px',
+              overflowY: 'auto'
+            }}
+          >
             {searchResults.map(med => (
-              <div 
-                key={med.id} 
-                onClick={() => onAddMedicine(med)}
-                style={{ 
-                  padding: '8px 12px', 
-                  borderBottom: '1px solid #F1F5F9',
+              <div
+                key={med.id}
+                onClick={() => {
+                  onAddMedicine(med);
+                  setSearchQuery('');
+                }}
+                style={{
+                  padding: '10px 14px',
+                  borderBottom: '1px solid var(--slate-100)',
                   cursor: 'pointer',
-                  fontSize: '0.8rem',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'space-between'
+                  justifyContent: 'space-between',
+                  transition: 'background var(--duration-fast) ease'
                 }}
-                onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
-                onMouseLeave={e => e.currentTarget.style.background = '#FFFFFF'}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--slate-50)'}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = '#FFFFFF'}
               >
                 <div>
-                  <strong>{med.brand_name}</strong> <span style={{ color: '#64748B' }}>({med.form} - {med.strength})</span>
-                  <div style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{med.generic_name} • {med.manufacturer}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <strong style={{ fontSize: '0.86rem', color: 'var(--slate-900)' }}>
+                      {med.brand_name}
+                    </strong>
+                    <span className="badge-clinical badge-teal" style={{ fontSize: '0.68rem', padding: '1px 6px' }}>
+                      {med.form} • {med.strength}
+                    </span>
+                  </div>
+                  <div style={{
+                    fontSize: '0.74rem',
+                    color: 'var(--slate-500)',
+                    marginTop: '2px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}>
+                    <span>{med.generic_name}</span>
+                    <span>•</span>
+                    <span style={{ color: 'var(--slate-400)' }}>{med.manufacturer}</span>
+                  </div>
                 </div>
-                <Plus size={16} color="#0F52BA" />
+
+                <div style={{
+                  background: 'var(--teal-50)',
+                  color: 'var(--teal-700)',
+                  padding: '6px',
+                  borderRadius: 'var(--radius-sm)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <Plus size={15} />
+                </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
     </div>
   );
 };
