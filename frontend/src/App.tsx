@@ -22,7 +22,7 @@ export default function App() {
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [aiMeta, setAiMeta] = useState('BanglaRx Neural Core • Grounded Formulation');
+  const [aiMeta, setAiMeta] = useState('BanglaRx AI™ Clinical Assistant');
   const [executionTime, setExecutionTime] = useState<number | null>(null);
   const [speechLanguage, setSpeechLanguage] = useState<'bn-BD' | 'en-US'>('bn-BD');
 

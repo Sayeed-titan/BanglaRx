@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mic, MicOff, Sparkles, Volume2, Clock, Globe2 } from 'lucide-react';
+import { Mic, MicOff, Sparkles, CheckCircle2 } from 'lucide-react';
 
 interface VoiceConsultationProps {
   isRecording: boolean;
@@ -25,7 +25,6 @@ export const VoiceConsultation: React.FC<VoiceConsultationProps> = ({
   onLoadScenario,
   onAnalyzeConsultation,
   isProcessing,
-  executionTime,
 }) => {
   return (
     <div className="clinical-card" style={{ padding: '22px' }}>
@@ -51,10 +50,10 @@ export const VoiceConsultation: React.FC<VoiceConsultationProps> = ({
           </div>
           <div>
             <h2 style={{ fontSize: '0.94rem', fontWeight: '700', color: 'var(--slate-900)' }}>
-              Ambient Consultation & Speech Scribe
+              Ambient Consultation & Voice Capture
             </h2>
             <p style={{ fontSize: '0.74rem', color: 'var(--slate-500)' }}>
-              Continuous acoustic dialogue capture
+              Hands-free clinical conversation scribing
             </p>
           </div>
         </div>
@@ -143,7 +142,7 @@ export const VoiceConsultation: React.FC<VoiceConsultationProps> = ({
             boxShadow: isRecording ? '0 4px 14px rgba(225, 29, 72, 0.4)' : 'var(--shadow-elevated)',
             transition: 'all var(--duration-fast) var(--ease-spring)'
           }}
-          title={isRecording ? 'Click to stop listening' : 'Click to start ambient listening'}
+          title={isRecording ? 'Click to stop listening' : 'Click to start ambient voice capture'}
         >
           {isRecording ? <MicOff size={26} /> : <Mic size={26} />}
         </button>
@@ -155,8 +154,8 @@ export const VoiceConsultation: React.FC<VoiceConsultationProps> = ({
           color: isRecording ? 'var(--crimson-700)' : 'var(--slate-700)'
         }}>
           {isRecording 
-            ? `Ambient microphone active (${speechLanguage === 'bn-BD' ? 'বাংলা লিসেনিং' : 'English / Banglish'})...`
-            : `Click microphone to start ambient scribing`}
+            ? `Microphone listening (${speechLanguage === 'bn-BD' ? 'বাংলা লিসেনিং' : 'English / Banglish'})...`
+            : `Click microphone to start consultation scribing`}
         </p>
 
         {/* Dynamic Voice Waveform Equalizer */}
@@ -178,7 +177,7 @@ export const VoiceConsultation: React.FC<VoiceConsultationProps> = ({
         )}
       </div>
 
-      {/* Preset Rehearsal Scenarios */}
+      {/* Preset Consultation Scenarios */}
       <div style={{ marginBottom: '16px' }}>
         <div style={{
           display: 'flex',
@@ -187,10 +186,10 @@ export const VoiceConsultation: React.FC<VoiceConsultationProps> = ({
           marginBottom: '8px'
         }}>
           <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--slate-500)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            Quick Clinical Presets:
+            Sample Clinical Cases:
           </span>
           <span style={{ fontSize: '0.7rem', color: 'var(--slate-400)' }}>
-            One-click demonstration
+            One-click clinical preview
           </span>
         </div>
 
@@ -276,27 +275,17 @@ export const VoiceConsultation: React.FC<VoiceConsultationProps> = ({
           marginBottom: '6px'
         }}>
           <label style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--slate-700)' }}>
-            Consultation Speech Narrative ({speechLanguage === 'bn-BD' ? 'বাংলা' : 'English / Banglish'}):
+            Consultation Dialogue ({speechLanguage === 'bn-BD' ? 'বাংলা' : 'English / Banglish'}):
           </label>
-          {executionTime && (
-            <span style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              fontSize: '0.72rem',
-              color: 'var(--emerald-700)',
-              fontWeight: '700'
-            }}>
-              <Clock size={12} />
-              Latency: {executionTime}ms
-            </span>
-          )}
+          <span className="badge-clinical badge-teal" style={{ fontSize: '0.7rem' }}>
+            <CheckCircle2 size={11} /> Voice Scribe Ready
+          </span>
         </div>
 
         <textarea
           value={transcript}
           onChange={e => setTranscript(e.target.value)}
-          placeholder="Acoustic consultation speech appears here in real-time or type manually..."
+          placeholder="Consultation speech appears here in real-time, or you can type doctor notes manually..."
           rows={4}
           className={`textarea-clinical ${speechLanguage === 'bn-BD' ? 'font-bangla' : ''}`}
           style={{
@@ -307,7 +296,7 @@ export const VoiceConsultation: React.FC<VoiceConsultationProps> = ({
         />
       </div>
 
-      {/* Neural Synthesis Action Button */}
+      {/* Clinical Synthesis Action Button */}
       <button
         type="button"
         onClick={onAnalyzeConsultation}
@@ -322,7 +311,7 @@ export const VoiceConsultation: React.FC<VoiceConsultationProps> = ({
         }}
       >
         <Sparkles size={18} />
-        {isProcessing ? 'Synthesizing Clinical Entities & Safety Intercept...' : 'Synthesize Prescription (BanglaRx AI)'}
+        {isProcessing ? 'Generating Prescription...' : 'Generate Prescription'}
       </button>
 
       {/* Subtitle & Compliance Note */}
@@ -332,7 +321,7 @@ export const VoiceConsultation: React.FC<VoiceConsultationProps> = ({
         textAlign: 'center',
         marginTop: '10px'
       }}>
-        Ambient Neural Intelligence • Grounded against DGDA National Formulary
+        BanglaRx AI™ Clinical Assistant • Grounded against DGDA National Formulary
       </div>
 
     </div>

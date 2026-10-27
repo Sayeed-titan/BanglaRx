@@ -87,7 +87,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* System Telemetry & White-labeled Engine Status */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           
-          {/* Intelligence Engine Status Pill (White-labeled) */}
+          {/* Clinical Assistant Status Pill */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -100,11 +100,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           }}>
             <Sparkles size={13} color="var(--teal-400)" />
             <span style={{ color: 'var(--slate-300)' }}>
-              Intelligence: <strong style={{ color: '#FFFFFF', fontWeight: '600' }}>BanglaRx Neural Core</strong>
+              Clinical Assistant: <strong style={{ color: '#FFFFFF', fontWeight: '600' }}>Active</strong>
             </span>
           </div>
 
-          {/* Database Health Pill (White-labeled) */}
+          {/* Formulary Status Pill */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -124,7 +124,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               boxShadow: '0 0 6px var(--emerald-500)'
             }} />
             <span style={{ color: 'var(--slate-300)' }}>
-              Formulary Vault: <strong style={{ color: '#FFFFFF', fontWeight: '600' }}>Synchronized</strong>
+              DGDA Formulary: <strong style={{ color: '#FFFFFF', fontWeight: '600' }}>Verified</strong>
             </span>
           </div>
 
