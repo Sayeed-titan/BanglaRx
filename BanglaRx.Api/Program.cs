@@ -41,6 +41,64 @@ app.UseCors("AllowAll");
 // Helper: Get DB Connection
 NpgsqlConnection GetDbConnection() => new(connectionString);
 
+// Helper: Ensure appointments table exists
+async Task EnsureDatabaseSchemaAsync()
+{
+    try
+    {
+        using var db = GetDbConnection();
+        await db.OpenAsync();
+        await db.ExecuteAsync(@"
+            CREATE TABLE IF NOT EXISTS appointments (
+                id SERIAL PRIMARY KEY,
+                token_number INT NOT NULL,
+                doctor_id INT NOT NULL,
+                patient_id INT NOT NULL,
+                status VARCHAR(30) NOT NULL DEFAULT 'Waiting',
+                triage_vitals JSONB DEFAULT '{}'::jsonb,
+                chief_complaint TEXT,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        ");
+
+        var count = await db.ExecuteScalarAsync<int>("SELECT count(*) FROM appointments;");
+        if (count == 0)
+        {
+            var pIds = (await db.QueryAsync<int>("SELECT id FROM patients ORDER BY id ASC LIMIT 3;")).ToList();
+            var dId = await db.ExecuteScalarAsync<int>("SELECT id FROM doctors ORDER BY id ASC LIMIT 1;");
+            if (pIds.Count > 0 && dId > 0)
+            {
+                await db.ExecuteAsync(@"
+                    INSERT INTO appointments (token_number, doctor_id, patient_id, status, triage_vitals, chief_complaint)
+                    VALUES 
+                    (1, @dId, @p1, 'In Consultation', '{""bp"": ""120/80 mmHg"", ""temp"": ""102 F"", ""pulse"": ""84 bpm""}'::jsonb, 'High fever for 3 days and gastric burning');
+                ", new { dId, p1 = pIds[0] });
+
+                if (pIds.Count > 1)
+                {
+                    await db.ExecuteAsync(@"
+                        INSERT INTO appointments (token_number, doctor_id, patient_id, status, triage_vitals, chief_complaint)
+                        VALUES 
+                        (2, @dId, @p2, 'Waiting', '{""bp"": ""145/95 mmHg"", ""temp"": ""98.4 F"", ""pulse"": ""76 bpm""}'::jsonb, 'Follow-up for chronic diabetes & uncontrolled BP');
+                    ", new { dId, p2 = pIds[1] });
+                }
+
+                if (pIds.Count > 2)
+                {
+                    await db.ExecuteAsync(@"
+                        INSERT INTO appointments (token_number, doctor_id, patient_id, status, triage_vitals, chief_complaint)
+                        VALUES 
+                        (3, @dId, @p3, 'Waiting', '{""bp"": ""115/75 mmHg"", ""temp"": ""99.1 F"", ""pulse"": ""80 bpm""}'::jsonb, 'Persistent dry cough, sore throat and weakness');
+                    ", new { dId, p3 = pIds[2] });
+                }
+            }
+        }
+    }
+    catch { }
+}
+
+await EnsureDatabaseSchemaAsync();
+
 // ============================================================================
 // 1. HEALTH & SYSTEM STATUS
 // ============================================================================
@@ -118,7 +176,7 @@ app.MapGet("/api/medicines", async (string? q, int limit = 50) =>
 });
 
 // ============================================================================
-// 3. DOCTORS & PATIENTS
+// 3. DOCTORS, PATIENTS & CHAMBER QUEUE
 // ============================================================================
 app.MapGet("/api/doctors", async () =>
 {
@@ -127,11 +185,120 @@ app.MapGet("/api/doctors", async () =>
     return Results.Ok(doctors);
 });
 
+app.MapPost("/api/doctors", async (Doctor doc) =>
+{
+    using var db = GetDbConnection();
+    var sql = @"
+        INSERT INTO doctors (name, degrees, specialization, bmdc_reg_no, hospital_name, room_no, phone, email)
+        VALUES (@name, @degrees, @specialization, @bmdc_reg_no, @hospital_name, @room_no, @phone, @email)
+        RETURNING id;";
+    var newId = await db.QuerySingleAsync<int>(sql, doc);
+    doc.id = newId;
+    return Results.Ok(doc);
+});
+
+app.MapPut("/api/doctors/{id:int}", async (int id, Doctor doc) =>
+{
+    using var db = GetDbConnection();
+    doc.id = id;
+    var sql = @"
+        UPDATE doctors SET
+            name = @name,
+            degrees = @degrees,
+            specialization = @specialization,
+            bmdc_reg_no = @bmdc_reg_no,
+            hospital_name = @hospital_name,
+            room_no = @room_no,
+            phone = @phone,
+            email = @email
+        WHERE id = @id;";
+    await db.ExecuteAsync(sql, doc);
+    return Results.Ok(doc);
+});
+
 app.MapGet("/api/patients", async () =>
 {
     using var db = GetDbConnection();
     var patients = await db.QueryAsync<Patient>("SELECT * FROM patients ORDER BY id ASC");
     return Results.Ok(patients);
+});
+
+app.MapPost("/api/patients", async (CreatePatientRequest req) =>
+{
+    using var db = GetDbConnection();
+    var count = await db.ExecuteScalarAsync<int>("SELECT count(*) FROM patients;");
+    var uid = $"PAT-2026-{(count + 1):D4}";
+
+    var sql = @"
+        INSERT INTO patients (patient_uid, full_name, age, gender, phone, blood_group, allergies, chronic_conditions)
+        VALUES (@uid, @FullName, @Age, @Gender, @Phone, @BloodGroup, @Allergies, @ChronicConditions)
+        RETURNING id;";
+
+    var newId = await db.QuerySingleAsync<int>(sql, new
+    {
+        uid,
+        req.FullName,
+        req.Age,
+        req.Gender,
+        req.Phone,
+        req.BloodGroup,
+        Allergies = req.Allergies ?? "None Reported",
+        ChronicConditions = req.ChronicConditions ?? "None"
+    });
+
+    var created = await db.QuerySingleAsync<Patient>("SELECT * FROM patients WHERE id = @newId", new { newId });
+    return Results.Ok(created);
+});
+
+app.MapGet("/api/queue", async (int? doctorId) =>
+{
+    using var db = GetDbConnection();
+    var query = @"
+        SELECT 
+            a.id, a.token_number, a.doctor_id, a.patient_id, a.status, a.triage_vitals, a.chief_complaint, a.created_at,
+            p.full_name as patient_name, p.age as patient_age, p.gender as patient_gender,
+            p.phone as patient_phone, p.blood_group as patient_blood_group,
+            p.allergies as patient_allergies, p.chronic_conditions as patient_chronic,
+            p.patient_uid
+        FROM appointments a
+        JOIN patients p ON a.patient_id = p.id
+        WHERE (@doctorId IS NULL OR a.doctor_id = @doctorId)
+        ORDER BY a.token_number ASC;";
+    var queue = await db.QueryAsync<dynamic>(query, new { doctorId });
+    return Results.Ok(queue);
+});
+
+app.MapPost("/api/queue", async (AddToQueueRequest req) =>
+{
+    using var db = GetDbConnection();
+    var maxToken = await db.ExecuteScalarAsync<int?>(
+        "SELECT MAX(token_number) FROM appointments WHERE doctor_id = @DoctorId;", 
+        new { req.DoctorId }) ?? 0;
+    var nextToken = maxToken + 1;
+
+    var vitalsJson = JsonSerializer.Serialize(req.TriageVitals ?? new Dictionary<string, string>());
+    var sql = @"
+        INSERT INTO appointments (token_number, doctor_id, patient_id, status, triage_vitals, chief_complaint)
+        VALUES (@nextToken, @DoctorId, @PatientId, 'Waiting', @vitalsJson::jsonb, @ChiefComplaint)
+        RETURNING id;";
+    
+    var newId = await db.QuerySingleAsync<int>(sql, new
+    {
+        nextToken,
+        req.DoctorId,
+        req.PatientId,
+        vitalsJson,
+        req.ChiefComplaint
+    });
+
+    return Results.Ok(new { Id = newId, TokenNumber = nextToken, Status = "Waiting" });
+});
+
+app.MapPatch("/api/queue/{id:int}/status", async (int id, UpdateQueueStatusRequest req) =>
+{
+    using var db = GetDbConnection();
+    await db.ExecuteAsync("UPDATE appointments SET status = @Status WHERE id = @id", new { req.Status, id });
+    return Results.Ok(new { Success = true, Id = id, Status = req.Status });
 });
 
 // ============================================================================
@@ -621,4 +788,28 @@ public class ClinicalAiResponse
     public List<PrescriptionItem>? Medicines { get; set; }
     public List<string>? Investigations { get; set; }
     public List<string>? AdviceBangla { get; set; }
+}
+
+public class CreatePatientRequest
+{
+    public string FullName { get; set; } = "";
+    public int Age { get; set; }
+    public string Gender { get; set; } = "Male";
+    public string Phone { get; set; } = "";
+    public string BloodGroup { get; set; } = "B+";
+    public string? Allergies { get; set; }
+    public string? ChronicConditions { get; set; }
+}
+
+public class AddToQueueRequest
+{
+    public int DoctorId { get; set; } = 1;
+    public int PatientId { get; set; } = 1;
+    public Dictionary<string, string>? TriageVitals { get; set; }
+    public string? ChiefComplaint { get; set; }
+}
+
+public class UpdateQueueStatusRequest
+{
+    public string Status { get; set; } = "Waiting";
 }

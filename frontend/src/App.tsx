@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { Doctor, Patient, PrescriptionItem, DrugWarning, AccuracyMetrics } from './types/index';
+import type { Doctor, Patient, PrescriptionItem, DrugWarning, AccuracyMetrics, QueueItem } from './types/index';
 import { Navbar } from './components/Navbar';
 import { VoiceConsultation } from './components/VoiceConsultation';
 import { AccuracyAnalytics } from './components/AccuracyAnalytics';
@@ -7,7 +7,10 @@ import { MedicineSearch } from './components/MedicineSearch';
 import { PrescriptionPad } from './components/PrescriptionPad';
 import { PatientQrModal } from './components/PatientQrModal';
 import { StackInfoModal } from './components/StackInfoModal';
-import { Info, ShieldCheck, HeartPulse } from 'lucide-react';
+import { PatientRegistrationModal } from './components/PatientRegistrationModal';
+import { DoctorProfileModal } from './components/DoctorProfileModal';
+import { ChamberQueueDrawer } from './components/ChamberQueueDrawer';
+import { Info, Users, UserPlus } from 'lucide-react';
 
 const API_BASE = 'http://localhost:5000/api';
 
@@ -18,6 +21,12 @@ export default function App() {
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
+  // Chamber Queue State (The Full Operational Picture)
+  const [queue, setQueue] = useState<QueueItem[]>([]);
+  const [isQueueOpen, setIsQueueOpen] = useState(false);
+  const [isPatientRegOpen, setIsPatientRegOpen] = useState(false);
+  const [isDoctorProfileOpen, setIsDoctorProfileOpen] = useState(false);
+
   // Audio & Input State
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -26,7 +35,7 @@ export default function App() {
   const [executionTime, setExecutionTime] = useState<number | null>(null);
   const [speechLanguage, setSpeechLanguage] = useState<'bn-BD' | 'en-US'>('bn-BD');
 
-  // Accuracy & Spoken vs Accepted Analytics
+  // Accuracy & Clinical Summary State
   const [accuracyMetrics, setAccuracyMetrics] = useState<AccuracyMetrics | null>({
     spokenWordsCount: 26,
     acceptedEntitiesCount: 11,
@@ -38,18 +47,17 @@ export default function App() {
   // Prescription State
   const [vitals, setVitals] = useState({ bp: '120/80 mmHg', temp: '102°F', pulse: '84 bpm' });
   const [complaints, setComplaints] = useState<string[]>([
-    'Fever (102°F)', 
-    'Dizziness (Matha ghora)', 
-    'Abdominal bloating (Pet fape ase)', 
-    'Heartburn (Buke jala pora)'
+    'High fever for 3 days (102°F)', 
+    'Dizziness & generalized body ache', 
+    'Epigastric burning / Hyperacidity'
   ]);
-  const [diagnosis, setDiagnosis] = useState('Viral Fever with Acid Peptic Disease (Dyspepsia)');
+  const [diagnosis, setDiagnosis] = useState('Viral Febrile Illness with Acid Peptic Disease (Dyspepsia)');
   const [medicines, setMedicines] = useState<PrescriptionItem[]>([
     {
-      brandName: 'Napa',
-      genericName: 'Paracetamol',
+      brandName: 'Napa Extra',
+      genericName: 'Paracetamol + Caffeine',
       form: 'Tablet',
-      strength: '500mg',
+      strength: '500mg+65mg',
       dosagePattern: '1+0+1',
       duration: '5 days',
       instructionsBangla: 'ভরা পেটে খাবেন'
@@ -60,15 +68,15 @@ export default function App() {
       form: 'Capsule',
       strength: '20mg',
       dosagePattern: '1+0+1',
-      duration: '7 days',
+      duration: '14 days',
       instructionsBangla: 'খাওয়ার ২০ মিনিট আগে খাবেন'
     }
   ]);
-  const [investigations, setInvestigations] = useState<string[]>(['CBC with ESR', 'Serum Creatinine', 'SGPT', 'Urine R/E']);
+  const [investigations, setInvestigations] = useState<string[]>(['CBC with ESR', 'Serum Creatinine', 'Dengue NS1 Antigen']);
   const [advice, setAdvice] = useState<string[]>([
-    'পর্যাপ্ত পরিমাণে পানি ও তরল খাবার গ্রহণ করুন।',
+    'পর্যাপ্ত পরিমাণে পানি, ডাবের পানি ও খাবার স্যালাইন গ্রহণ করুন।',
     'হালকা ও সহজে হজম হয় এমন খাবার খান।',
-    'পূর্ণ বিশ্রামে থাকুন এবং শরীরের তাপমাত্রা পর্যবেক্ষণ করুন।'
+    'জ্বর বেশি হলে জলপট্টি দিন ও পূর্ণ বিশ্রামে থাকুন।'
   ]);
   const [warnings, setWarnings] = useState<DrugWarning[]>([]);
 
@@ -83,11 +91,39 @@ export default function App() {
 
   const recognitionRef = useRef<any>(null);
 
-  // Initialize Data
+  // Initialize Doctors, Patients & Live Queue
   useEffect(() => {
-    fetch(`${API_BASE}/doctors`).then(r => r.json()).then(d => { setDoctors(d); if (d.length > 0) setSelectedDoctor(d[0]); }).catch(() => {});
-    fetch(`${API_BASE}/patients`).then(r => r.json()).then(p => { setPatients(p); if (p.length > 0) setSelectedPatient(p[0]); }).catch(() => {});
+    fetch(`${API_BASE}/doctors`)
+      .then(r => r.json())
+      .then(d => {
+        setDoctors(d);
+        if (d.length > 0) {
+          setSelectedDoctor(d[0]);
+          fetchQueue(d[0].id);
+        }
+      })
+      .catch(() => {});
+
+    fetch(`${API_BASE}/patients`)
+      .then(r => r.json())
+      .then(p => {
+        setPatients(p);
+        if (p.length > 0) setSelectedPatient(p[0]);
+      })
+      .catch(() => {});
   }, []);
+
+  // Fetch Queue helper
+  const fetchQueue = async (docId?: number) => {
+    try {
+      const id = docId || selectedDoctor?.id || 1;
+      const res = await fetch(`${API_BASE}/queue?doctorId=${id}`);
+      const data = await res.json();
+      if (Array.isArray(data)) setQueue(data);
+    } catch (e) {
+      console.error('Failed to fetch queue:', e);
+    }
+  };
 
   // Medicine Search Autocomplete
   useEffect(() => {
@@ -151,7 +187,7 @@ export default function App() {
     }
   };
 
-  // Analyze Consultation
+  // Analyze Consultation Dialogue
   const handleAnalyzeConsultation = async () => {
     if (!transcript.trim()) return;
     setIsProcessing(true);
@@ -175,7 +211,7 @@ export default function App() {
         if (data.interactionWarnings) setWarnings(data.interactionWarnings);
         if (data.executionTimeMs) setExecutionTime(data.executionTimeMs);
 
-        // Update Spoken vs Accepted Metrics
+        // Update Clinical Verification Summary
         const words = transcript.trim().split(/\s+/).filter(w => w.length > 0);
         const totalAccepted = (data.chiefComplaints?.length || 0) + Object.keys(data.vitals || {}).length + (data.medicines?.length || 0) + (data.adviceBangla?.length || 0);
         const rate = Math.min(99.4, Math.max(88.0, 85 + (totalAccepted * 1.5)));
@@ -194,7 +230,7 @@ export default function App() {
         });
       }
     } catch (err) {
-      console.error('AI Inference Error:', err);
+      console.error('Clinical Inference Error:', err);
       alert('Clinical inference call failed. Please verify that the backend API is online.');
     } finally {
       setIsProcessing(false);
@@ -264,6 +300,18 @@ export default function App() {
       if (data?.rxNumber) {
         setSavedRxNumber(data.rxNumber);
         setSaveSuccess(true);
+
+        // Mark current patient in queue as 'Completed'
+        const currentQueueItem = queue.find(q => q.patient_id === selectedPatient?.id && q.status !== 'Completed');
+        if (currentQueueItem) {
+          await fetch(`${API_BASE}/queue/${currentQueueItem.id}/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'Completed' })
+          });
+          fetchQueue(selectedDoctor?.id);
+        }
+
         setTimeout(() => setSaveSuccess(false), 4000);
       }
     } catch (err) {
@@ -271,6 +319,88 @@ export default function App() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // Select patient from queue into active consultation
+  const handleSelectPatientFromQueue = async (item: QueueItem) => {
+    const matched = patients.find(p => p.id === item.patient_id) || {
+      id: item.patient_id,
+      patient_uid: item.patient_uid,
+      full_name: item.patient_name,
+      age: item.patient_age,
+      gender: item.patient_gender,
+      phone: item.patient_phone,
+      blood_group: item.patient_blood_group,
+      allergies: item.patient_allergies || 'None Reported',
+      chronic_conditions: item.patient_chronic || 'None'
+    };
+    setSelectedPatient(matched);
+
+    // Load Triage Vitals into pad
+    const vitalsObj = typeof item.triage_vitals === 'string'
+      ? JSON.parse(item.triage_vitals || '{}')
+      : item.triage_vitals || {};
+
+    setVitals({
+      bp: vitalsObj.bp || '120/80 mmHg',
+      temp: vitalsObj.temp || '98.6 F',
+      pulse: vitalsObj.pulse || '76 bpm'
+    });
+
+    if (item.chief_complaint) {
+      setComplaints([item.chief_complaint]);
+    }
+
+    // Set new RX ID
+    setSavedRxNumber(`RX-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${item.token_number}00`);
+    setTranscript('');
+
+    // Update status in queue
+    try {
+      await fetch(`${API_BASE}/queue/${item.id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'In Consultation' })
+      });
+      fetchQueue(selectedDoctor?.id);
+    } catch {}
+  };
+
+  // 1-Click "Call Next Waiting Patient" Workflow
+  const handleCallNextPatient = async () => {
+    // 1. Mark current as completed if currently in consultation
+    const activeItem = queue.find(q => q.patient_id === selectedPatient?.id && q.status === 'In Consultation');
+    if (activeItem) {
+      await fetch(`${API_BASE}/queue/${activeItem.id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'Completed' })
+      });
+    }
+
+    // 2. Find next waiting patient
+    const nextWaiting = queue.find(q => q.status === 'Waiting');
+    if (nextWaiting) {
+      await handleSelectPatientFromQueue(nextWaiting);
+    } else {
+      alert("All waiting patients in today's chamber queue have been completed!");
+      fetchQueue(selectedDoctor?.id);
+    }
+  };
+
+  // When Reception Registers a New Patient
+  const handlePatientRegistered = (newPat: Patient) => {
+    setPatients(prev => [newPat, ...prev]);
+    fetchQueue(selectedDoctor?.id);
+    setSelectedPatient(newPat);
+    setTranscript('');
+    setSavedRxNumber(`RX-${Date.now().toString().slice(-6)}`);
+  };
+
+  // When Doctor Profile is Edited
+  const handleDoctorUpdated = (updatedDoc: Doctor) => {
+    setDoctors(prev => prev.map(d => d.id === updatedDoc.id ? updatedDoc : d));
+    setSelectedDoctor(updatedDoc);
   };
 
   // Voice Readout in Bangla
@@ -284,21 +414,31 @@ export default function App() {
     }
   };
 
+  const waitingCount = queue.filter(q => q.status === 'Waiting').length;
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-app)' }}>
       
-      {/* NAVBAR COMPONENT */}
+      {/* NAVBAR COMPONENT WITH QUEUE & REGISTRATION ACTIONS */}
       <Navbar
         doctors={doctors}
         patients={patients}
         selectedDoctor={selectedDoctor}
         selectedPatient={selectedPatient}
-        setSelectedDoctor={setSelectedDoctor}
+        setSelectedDoctor={doc => {
+          setSelectedDoctor(doc);
+          fetchQueue(doc.id);
+        }}
         setSelectedPatient={setSelectedPatient}
         onOpenQrModal={() => setShowQrModal(true)}
         onSavePrescription={handleSavePrescription}
         isSaving={isSaving}
         saveSuccess={saveSuccess}
+        queueCount={queue.length}
+        waitingCount={waitingCount}
+        onOpenQueue={() => setIsQueueOpen(true)}
+        onOpenPatientRegistration={() => setIsPatientRegOpen(true)}
+        onOpenDoctorProfile={() => setIsDoctorProfileOpen(true)}
       />
 
       {/* MAIN TWO-COLUMN CLINICAL WORKSPACE */}
@@ -313,7 +453,7 @@ export default function App() {
         width: '100%'
       }}>
 
-        {/* LEFT COLUMN: AMBIENT COPILOT, TELEMETRY & FORMULARY LOOKUP */}
+        {/* LEFT COLUMN: AMBIENT COPILOT, VERIFICATION & FORMULARY LOOKUP */}
         <section className="no-print" style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
           <VoiceConsultation
             isRecording={isRecording}
@@ -413,7 +553,7 @@ export default function App() {
         </div>
       </footer>
 
-      {/* PATIENT QR CODE MODAL */}
+      {/* 1. PATIENT QR CODE MODAL */}
       <PatientQrModal
         isOpen={showQrModal}
         onClose={() => setShowQrModal(false)}
@@ -422,10 +562,43 @@ export default function App() {
         onSpeakBangla={speakBangla}
       />
 
-      {/* SYSTEM ARCHITECTURE & TECHNICAL STACK MODAL */}
+      {/* 2. SYSTEM ARCHITECTURE MODAL */}
       <StackInfoModal
         isOpen={showStackModal}
         onClose={() => setShowStackModal(false)}
+      />
+
+      {/* 3. PATIENT REGISTRATION & TOKEN MODAL (RECEPTION DESK) */}
+      <PatientRegistrationModal
+        isOpen={isPatientRegOpen}
+        onClose={() => setIsPatientRegOpen(false)}
+        onPatientRegistered={handlePatientRegistered}
+        activeDoctorId={selectedDoctor?.id || 1}
+      />
+
+      {/* 4. DOCTOR PROFILE & BMDC SETUP MODAL */}
+      <DoctorProfileModal
+        isOpen={isDoctorProfileOpen}
+        onClose={() => setIsDoctorProfileOpen(false)}
+        doctor={selectedDoctor}
+        onDoctorUpdated={handleDoctorUpdated}
+      />
+
+      {/* 5. TODAY'S LIVE CHAMBER QUEUE DRAWER */}
+      <ChamberQueueDrawer
+        isOpen={isQueueOpen}
+        onClose={() => setIsQueueOpen(false)}
+        queue={queue}
+        activePatientId={selectedPatient?.id || null}
+        onSelectPatientFromQueue={handleSelectPatientFromQueue}
+        onOpenPatientRegistration={() => {
+          setIsQueueOpen(false);
+          setIsPatientRegOpen(true);
+        }}
+        onCallNextPatient={() => {
+          handleCallNextPatient();
+          setIsQueueOpen(false);
+        }}
       />
 
     </div>

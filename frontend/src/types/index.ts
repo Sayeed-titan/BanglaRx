@@ -10,6 +10,8 @@ export interface Doctor {
   bmdc_reg_no: string;
   hospital_name: string;
   room_no: string;
+  phone?: string;
+  email?: string;
 }
 
 export interface Patient {
@@ -22,6 +24,25 @@ export interface Patient {
   blood_group: string;
   allergies: string;
   chronic_conditions: string;
+}
+
+export interface QueueItem {
+  id: number;
+  token_number: number;
+  doctor_id: number;
+  patient_id: number;
+  status: 'Waiting' | 'In Consultation' | 'Completed';
+  triage_vitals: any;
+  chief_complaint?: string;
+  created_at: string;
+  patient_name: string;
+  patient_age: number;
+  patient_gender: string;
+  patient_phone: string;
+  patient_blood_group: string;
+  patient_allergies?: string;
+  patient_chronic?: string;
+  patient_uid: string;
 }
 
 export interface PrescriptionItem {

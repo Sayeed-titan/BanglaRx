@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stethoscope, ShieldCheck, QrCode, CheckCircle2, User, Building2, Sparkles } from 'lucide-react';
+import { Stethoscope, ShieldCheck, QrCode, CheckCircle2, User, Building2, Sparkles, Users, UserPlus, Settings } from 'lucide-react';
 import type { Doctor, Patient } from '../types/index';
 
 interface NavbarProps {
@@ -13,6 +13,11 @@ interface NavbarProps {
   onSavePrescription: () => void;
   isSaving: boolean;
   saveSuccess: boolean;
+  queueCount: number;
+  waitingCount: number;
+  onOpenQueue: () => void;
+  onOpenPatientRegistration: () => void;
+  onOpenDoctorProfile: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -26,6 +31,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSavePrescription,
   isSaving,
   saveSuccess,
+  queueCount,
+  waitingCount,
+  onOpenQueue,
+  onOpenPatientRegistration,
+  onOpenDoctorProfile,
 }) => {
   return (
     <header className="no-print" style={{
@@ -84,68 +94,66 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* System Telemetry & White-labeled Engine Status */}
+        {/* System Telemetry & Quick Action Bar */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           
-          {/* Clinical Assistant Status Pill */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            background: 'rgba(255, 255, 255, 0.05)',
-            padding: '6px 12px',
-            borderRadius: 'var(--radius-full)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            fontSize: '0.76rem'
-          }}>
-            <Sparkles size={13} color="var(--teal-400)" />
-            <span style={{ color: 'var(--slate-300)' }}>
-              Clinical Assistant: <strong style={{ color: '#FFFFFF', fontWeight: '600' }}>Active</strong>
-            </span>
-          </div>
-
-          {/* Formulary Status Pill */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '7px',
-            background: 'rgba(255, 255, 255, 0.05)',
-            padding: '6px 12px',
-            borderRadius: 'var(--radius-full)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            fontSize: '0.76rem'
-          }}>
-            <span style={{
-              width: '7px',
-              height: '7px',
-              borderRadius: '50%',
-              backgroundColor: 'var(--emerald-500)',
-              display: 'inline-block',
-              boxShadow: '0 0 6px var(--emerald-500)'
-            }} />
-            <span style={{ color: 'var(--slate-300)' }}>
-              DGDA Formulary: <strong style={{ color: '#FFFFFF', fontWeight: '600' }}>Verified</strong>
-            </span>
-          </div>
-
-          {/* Patient Mobile Passport Button */}
+          {/* Today's Queue Drawer Launcher */}
           <button
-            onClick={onOpenQrModal}
+            type="button"
+            onClick={onOpenQueue}
             className="btn-clinical"
             style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              color: '#FFFFFF',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
+              background: waitingCount > 0 ? 'rgba(217, 119, 6, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+              color: waitingCount > 0 ? '#FCD34D' : '#FFFFFF',
+              border: waitingCount > 0 ? '1px solid rgba(245, 158, 11, 0.4)' : '1px solid rgba(255, 255, 255, 0.15)',
               fontSize: '0.78rem',
               padding: '7px 14px'
             }}
+            title="Open Today's Patient Queue"
+          >
+            <Users size={15} />
+            <span>Chamber Queue: <strong>{queueCount} Total</strong> ({waitingCount} Waiting)</span>
+          </button>
+
+          {/* New Patient Registration Button */}
+          <button
+            type="button"
+            onClick={onOpenPatientRegistration}
+            className="btn-clinical"
+            style={{
+              background: 'rgba(13, 148, 136, 0.25)',
+              color: 'var(--teal-300)',
+              border: '1px solid rgba(13, 148, 136, 0.45)',
+              fontSize: '0.78rem',
+              padding: '7px 14px'
+            }}
+            title="Register Walk-in Patient & Issue Token"
+          >
+            <UserPlus size={15} />
+            <span>+ New Patient</span>
+          </button>
+
+          {/* Patient Mobile Passport Button */}
+          <button
+            type="button"
+            onClick={onOpenQrModal}
+            className="btn-clinical"
+            style={{
+              background: 'rgba(255, 255, 255, 0.08)',
+              color: '#FFFFFF',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              fontSize: '0.78rem',
+              padding: '7px 14px'
+            }}
+            title="Open Patient Mobile View & QR Code"
           >
             <QrCode size={15} />
-            <span>Patient Mobile View</span>
+            <span>QR View</span>
           </button>
 
           {/* Save / Finalize Prescription Button */}
           <button
+            type="button"
             onClick={onSavePrescription}
             disabled={isSaving}
             className="btn-clinical btn-primary-teal"
@@ -187,10 +195,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           gap: '12px',
           fontSize: '0.78rem'
         }}>
-          {/* Active Doctor Selector */}
+          {/* Active Doctor Selector & Profile Settings */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Building2 size={14} color="var(--teal-400)" />
-            <span style={{ color: 'var(--slate-400)' }}>Prescribing Physician:</span>
+            <span style={{ color: 'var(--slate-400)' }}>Physician:</span>
             <select
               value={selectedDoctor?.id || ''}
               onChange={e => {
@@ -214,12 +222,31 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </option>
               ))}
             </select>
+
+            {/* Doctor Profile Edit Button */}
+            <button
+              type="button"
+              onClick={onOpenDoctorProfile}
+              className="btn-clinical"
+              style={{
+                background: 'transparent',
+                color: 'var(--slate-300)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                padding: '3px 8px',
+                fontSize: '0.72rem',
+                borderRadius: 'var(--radius-sm)'
+              }}
+              title="Edit Physician BMDC Registration & Chamber Header"
+            >
+              <Settings size={12} />
+              <span>Chamber Setup</span>
+            </button>
           </div>
 
           {/* Active Patient Selector */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <User size={14} color="var(--sapphire-400)" />
-            <span style={{ color: 'var(--slate-400)' }}>Active Consultation:</span>
+            <span style={{ color: 'var(--slate-400)' }}>In Consultation:</span>
             <select
               value={selectedPatient?.id || ''}
               onChange={e => {
