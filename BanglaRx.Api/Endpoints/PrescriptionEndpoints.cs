@@ -12,7 +12,7 @@ public static class PrescriptionEndpoints
     {
         var group = app.MapGroup("/api/prescriptions").WithTags("Prescriptions");
 
-        group.MapGet("/", async (IDbConnectionFactory connectionFactory) =>
+        group.MapGet("/", async (int? doctorId, IDbConnectionFactory connectionFactory) =>
         {
             using var db = connectionFactory.CreateConnection();
             var query = @"
@@ -23,9 +23,10 @@ public static class PrescriptionEndpoints
                 FROM prescriptions p
                 JOIN doctors d ON p.doctor_id = d.id
                 JOIN patients pt ON p.patient_id = pt.id
+                WHERE (@doctorId IS NULL OR p.doctor_id = @doctorId)
                 ORDER BY p.id DESC;";
             
-            var prescriptions = await db.QueryAsync<dynamic>(query);
+            var prescriptions = await db.QueryAsync<dynamic>(query, new { doctorId });
             return Results.Ok(prescriptions);
         });
 

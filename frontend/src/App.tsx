@@ -529,6 +529,24 @@ export default function App() {
     setSavedRxNumber(`RX-${Date.now().toString().slice(-6)}`);
   };
 
+  // Handle Doctor Switch with Full Chamber & Pad Queue Isolation
+  const handleDoctorSwitch = (doc: Doctor) => {
+    setSelectedDoctor(doc);
+    fetchQueue(doc.id);
+    // Clear active prescription pad for strict multi-doctor chamber isolation
+    setMedicines([]);
+    setComplaints([]);
+    setDiagnosis('');
+    setInvestigations([]);
+    setPatientReportsPresented([]);
+    setAdvice([]);
+    setFollowUp('');
+    setEmergencyRedFlags('');
+    setWarnings([]);
+    setTranscript('');
+    setActiveQueueItemId(null);
+  };
+
   // When Doctor Profile is Edited
   const handleDoctorUpdated = (updatedDoc: Doctor) => {
     setDoctors(prev => prev.map(d => d.id === updatedDoc.id ? updatedDoc : d));
@@ -557,10 +575,7 @@ export default function App() {
         patients={patients}
         selectedDoctor={selectedDoctor}
         selectedPatient={selectedPatient}
-        setSelectedDoctor={doc => {
-          setSelectedDoctor(doc);
-          fetchQueue(doc.id);
-        }}
+        setSelectedDoctor={handleDoctorSwitch}
         setSelectedPatient={setSelectedPatient}
         onOpenQrModal={() => setShowQrModal(true)}
         onSavePrescription={handleSavePrescription}
@@ -734,8 +749,7 @@ export default function App() {
         onDoctorUpdated={handleDoctorUpdated}
         onDoctorCreated={newDoc => {
           setDoctors(prev => [...prev, newDoc]);
-          setSelectedDoctor(newDoc);
-          fetchQueue(newDoc.id);
+          handleDoctorSwitch(newDoc);
         }}
       />
 
