@@ -48,6 +48,28 @@ The roadmap follows a disciplined three-tier sequence:
 - [ ] **Multi-Doctor Isolation in Web Interface:**
   - Ensure doctors only see their assigned appointments in the queue.
   - Filter patient lookup and prescriptions by the authenticated physician's practice scope.
+- [ ] **Full Manual Override on Prescription Right-Side & Clinical Pad:**
+  - Enable doctors to manually type, add, edit, or delete ANY element on the prescription pad:
+    - *Advised Tests:* Free-text input to type custom lab/radiology investigations with one-click add (`➕`), in addition to preset chips.
+    - *Clinical Advice:* Inline textarea to type custom Bengali or English dietary/lifestyle advice lines.
+    - *Follow-Up:* Number input, unit selector (`Day` / `Week` / `Month`), calendar date picker, and free-text remarks field.
+    - *Referred To:* Manual input field for hospital/consultant referral destination.
+    - *Clinical Diagnosis & Complaints:* Direct in-pad text editing for instant manual correction.
+- [ ] **Physical A4 Laser Print Calibration:**
+  - Fix `@media print` styling so print preview matches standard institutional A4 (`210mm × 297mm`) laser printer dimensions.
+  - Eliminate browser background clipping, sidebars, buttons, and scrollbars during print.
+  - Apply `page-break-inside: avoid` on the medication table, advice section, and physician signature block.
+- [ ] **Chamber & Doctor Setup Ergonomics:**
+  - Rename navbar and modal headers from *"Physician Setup"* to **"Chamber & Doctor Setup" (চেম্বার ও ডাক্তার পরিচিতি)**.
+  - Add **"Add New Physician" (নতুন ডাক্তার যুক্ত করুন)** form allowing multi-doctor clinic registration without modifying source code.
+  - Support multi-chamber schedules per physician (e.g. Morning: Popular Diagnostic, Evening: Private Chamber).
+- [ ] **Unified Omnibox Audio Capture (UI Simplification):**
+  - Deprecate explicit language toggles (`bn-BD` vs `en-US`) and mode switchers (`Full Scribe` vs `Voice Edit`).
+  - Implement a single intelligent conversational audio/text omnibox that auto-detects Banglish language mixing and autonomously classifies intent (`NEW_CONSULTATION` vs `AMEND_MEDICINE` vs `ADD_TEST`).
+- [ ] **15,000+ Medicine Scaling (Two-Stage Hybrid RAG Pipeline):**
+  - Scale database to full DGDA Bangladesh formulary (15,000–25,000 brands).
+  - Use PostgreSQL `pg_trgm` (trigram fuzzy matching) + `pgvector` to resolve candidate medicines locally in $< 5\text{ms}$.
+  - Inject only the top 5–10 matched candidate rows into the Gemini prompt (~400 tokens), preventing context overflow and keeping operations within free-tier limits.
 
 ---
 
