@@ -251,26 +251,20 @@ export default function App() {
   // Demo Scenarios & Voice Edit Prompts
   const loadScenario = (type: string) => {
     if (type === 'bangla_pure') {
-      setIsAmendmentMode(false);
       setSpeechLanguage('bn-BD');
       setTranscript("রোগীর গত ৩ দিন ধরে অনেক জ্বর, ১০২ ডিগ্রি। সাথে মাথা ঘোরা এবং পেটে গ্যাস ও বুক জ্বালাপোড়া। ডাক্তার বললেন নাপা এক্সট্রা দিনে দুইবার খাওয়ার পরে খাবেন ৫ দিন, আর সেকলো ২০ সকালে ও রাতে খাওয়ার ২০ মিনিট আগে ১৪ দিন। ডাবের পানি বেশি করে পান করবেন।");
     } else if (type === 'fever') {
-      setIsAmendmentMode(false);
       setSpeechLanguage('en-US');
       setTranscript("Patient complains in Banglish: 'Amar kalke theke onek jor 102 degree, shathe matha ghora, r pet fape ase, buke jala pora.' Doctor examines: BP is 120/80 mmHg, pulse 84 bpm. Doctor says: 'Apnake Napa Extra dichhi dine 2 bar khabar por 5 din, r Seclo 20 shokale r rate khabar 20 min age 14 din. Monas 10 ekta kore rate khaben. Pani r shorbot beshi kore khaben.'");
     } else if (type === 'diabetes') {
-      setIsAmendmentMode(false);
       setSpeechLanguage('en-US');
       setTranscript("Known diabetic patient, fasting blood sugar 9.2 mmol/L, BP 145/95 mmHg. Complains of generalized fatigue, blurred vision and leg pain. Doctor prescribes Diapro 500 twice daily with meals, Bizoran 5/20 at bedtime, and Atova 10 at night. Continue regular exercise, low carb diet.");
     } else if (type === 'interaction') {
-      setIsAmendmentMode(false);
       setSpeechLanguage('en-US');
       setTranscript("Critical Safety Check Case: 65-year-old cardiac patient on long-term Warfarin therapy for atrial fibrillation. Doctor inadvertently prescribes Aspirin 75mg daily along with Ciprocin 500mg and Napa.");
     } else if (type === 'edit_interval') {
-      setIsAmendmentMode(true);
-      setTranscript("Doctor amendment: Change Napa dosage to every 4 hours instead of 3 times daily, for 3 days.");
+      setTranscript("Doctor amendment: Change Napa dosage to every 4 hours instead of 3 times daily, for 3 days, and add Tab. Monas 10mg at bedtime.");
     } else if (type === 'edit_add_med') {
-      setIsAmendmentMode(true);
       setTranscript("Doctor amendment: Add Tab. Monas 10mg one tablet at bedtime for 14 days, and advise Dengue NS1 test.");
     }
   };
@@ -289,13 +283,14 @@ export default function App() {
     setWarnings([]);
 
     try {
+      const hasActiveMeds = medicines && medicines.length > 0;
       const res = await fetch(`${API_BASE}/ai/analyze-consultation`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           transcript,
-          isAmendment: isAmendmentMode,
-          currentPrescriptionJson: isAmendmentMode ? JSON.stringify(medicines) : null
+          isAmendment: hasActiveMeds,
+          currentPrescriptionJson: hasActiveMeds ? JSON.stringify(medicines) : null
         }),
         signal: controller.signal
       });
@@ -339,11 +334,8 @@ export default function App() {
           }
         });
 
-        // If amendment applied, switch back to full consultation mode
-        if (isAmendmentMode) {
-          setIsAmendmentMode(false);
-          setTranscript('');
-        }
+        // Reset transcript after successful synthesis / amendment
+        setTranscript('');
       }
     } catch (err: any) {
       if (err.name === 'AbortError') {

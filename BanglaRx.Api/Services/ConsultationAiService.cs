@@ -54,15 +54,24 @@ public class ConsultationAiService : IConsultationAiService
             var medicineContext = string.Join("\n", allMedicines.Select(m => 
                 $"- {m.brand_name} ({m.generic_name}, {m.form}, {m.strength}, {m.manufacturer})"));
 
-            var amendmentContext = input.IsAmendment && !string.IsNullOrWhiteSpace(input.CurrentPrescriptionJson)
-                ? $"\n\nCURRENT ACTIVE PRESCRIPTION ON PAD (Apply doctor's amendments/corrections to this):\n{input.CurrentPrescriptionJson}\n"
-                : "";
+            var hasActivePrescription = !string.IsNullOrWhiteSpace(input.CurrentPrescriptionJson) && input.CurrentPrescriptionJson.Trim() != "[]";
+            var activeRxSection = hasActivePrescription
+                ? $@"
+
+ACTIVE PRESCRIPTION ON PAD (DOCTOR'S CURRENT DRAFT):
+{input.CurrentPrescriptionJson}
+
+AUTONOMOUS INTENT GUIDANCE:
+- Evaluate the doctor's input:
+  1. AMENDMENT INTENT: If the doctor's words are an instruction to adjust, add, modify, replace, change dosage/duration, or remove medicines from the ACTIVE PRESCRIPTION above (e.g. 'Change Napa to every 4 hours', 'Add Monas 10', 'Dose baran', 'Remove Napa', '৫ দিনের জায়গায় ৭ দিন দিন'), you MUST perform an intelligent AMENDMENT. Update the specified items, add new items, or delete removed items, while preserving all other unaffected items, complaints, diagnosis, and advice.
+  2. NEW PRESCRIPTION INTENT: If the doctor dictates a comprehensive new patient dialogue with presenting complaints, vitals, or describes a fresh case, replace the pad and synthesize a fresh new prescription."
+                : (input.IsAmendment ? "\nCRITICAL: This is an AMENDMENT. Apply doctor's modifications to any existing active items." : "");
 
             var systemPrompt = $@"
 You are the BanglaRx Clinical AI Engine, a medical AI deployed for hospital chambers in Bangladesh.
-You understand clinical dialogue spoken in English, Bengali, or mixed colloquial Banglish.
+You autonomously process clinical dialogue spoken in Bengali (বাংলা), English, or mixed colloquial Banglish with zero-shot code-switching.
 
-Your tasks:
+Your core clinical tasks:
 1. Extract patient Chief Complaints into concise medical symptoms.
 2. Extract Vitals (BP, Temp, Pulse, SpO2) if present or infer clinical baseline.
 3. Formulate a Differential or Clinical Diagnosis.
@@ -73,7 +82,7 @@ Your tasks:
 7. Extract Patient Dietary & Lifestyle Advice in fluent Bengali (e.g. 'পর্যাপ্ত পানি ও ডাবের পানি খাবেন').
 8. Extract Follow-up timing (e.g. '৭ দিন পর রিপোর্টসহ দেখা করবেন') and Red Flag emergency warnings.
 
-{(input.IsAmendment ? "CRITICAL: This is an AMENDMENT. The doctor is modifying an existing prescription. Apply the doctor's modifications (changing medicine, changing dosage pattern, altering duration, adding or removing medicine) while keeping all other unchanged items intact." : "")}
+{activeRxSection}
 
 Official Bangladesh Medicines Catalog:
 {medicineContext}
@@ -109,7 +118,7 @@ You MUST return a valid JSON object strictly matching this schema:
                     {
                         parts = new[]
                         {
-                            new { text = $"{systemPrompt}{amendmentContext}\n\nClinical Consultation Dialogue:\n{text}\n\nOutput Valid JSON:" }
+                            new { text = $"{systemPrompt}\n\nClinical Consultation Dialogue or Doctor Amendment Instructions:\n{text}\n\nOutput Valid JSON:" }
                         }
                     }
                 },
