@@ -154,27 +154,75 @@ flowchart TD
 
 ---
 
-## 5. Project Directory Structure
+## 5. Architectural Evolution & Project Directory Structure
+
+### 🏛️ Evolution Timeline: From Proof-of-Concept to Modular Enterprise
+
+> **Architecture Transition Policy:** Historical iterations are preserved for developmental traceability; active development builds upon the modular enterprise standard.
+
+#### 📜 Historical Architecture: Phase 1 (Single-File Prototype — Preserved Baseline)
+* **Design:** Single-file `Program.cs` Minimal API (~835 lines).
+* **Rationale:** Maximized prototyping velocity for the DCCI AI Fair showcase; validated real-time Gemini streaming, DDI rule parsing, and initial PostgreSQL tables with zero file-scaffolding overhead.
+* **Limitations Identified:** Single Responsibility Principle violations, difficult multi-developer collaboration, monolithic test barrier.
+
+#### ⚡ Current Architecture: Phase 2 (Modular Minimal APIs & Database-First Dapper — Active Standard)
+* **Design:** Decomposed into clean separation of concerns:
+  * **Routing Layer:** Modular Minimal API endpoint groups (`Endpoints/`) with source-generated routing and near-zero memory allocation.
+  * **Data Layer:** **Database-First** approach using PostgreSQL 18 scripts (`init_database.sql`) coupled with **Dapper Micro-ORM** (`Data/`) for sub-millisecond throughput ($< 1\text{ms}$) and native support for `pg_trgm` and `pgvector`.
+  * **Application Services:** Dedicated clinical safety screening and AI inference orchestration (`Services/`).
+  * **Domain & DTO Contracts:** Strongly typed domain entities and API contract records (`Models/`).
+
+---
+
+### Directory Hierarchy
 
 ```text
 BanglaRx/
 ├── .gitignore                          # Excludes secrets, bin/obj, node_modules
 ├── README.md                           # Comprehensive documentation (this file)
+├── TODO.md                             # Master enterprise roadmap & task tracker
+├── RESPONSIVE_TODO.md                  # Mobile/Tablet responsive engineering roadmap
 ├── start_banglarx.bat                  # 1-Click Launch Script for Fair Stall / Demos
 │
 ├── database/
-│   └── init_database.sql               # Single Master Script (DDL, Indexes, Seed Data)
+│   └── init_database.sql               # Database-First SQL DDL (Tables, GIN Trigram Indexes, Seed)
 │
-├── BanglaRx.Api/                       # ASP.NET Core (.NET 8) Web API
-│   ├── BanglaRx.Api.csproj             # NuGet dependencies (Dapper, Npgsql)
-│   ├── Program.cs                      # Minimal API routes, Gemini pipeline, DDI engine
+├── BanglaRx.Api/                       # Modular ASP.NET Core (.NET 8) Web API
+│   ├── Program.cs                      # Clean Host Composition & Service Wiring (~50 lines)
+│   ├── BanglaRx.Api.csproj             # Project dependencies (Dapper, Npgsql, etc.)
 │   ├── appsettings.json                # Public configuration (Placeholders only)
-│   └── appsettings.local.json          # Git-ignored local config (Real Gemini API Key)
+│   ├── appsettings.local.json          # Git-ignored local config (Real Gemini API Key)
+│   │
+│   ├── Data/                           # Database-First Connection & Migration Layer
+│   │   ├── DbConnectionFactory.cs      # Centralized IDbConnectionFactory (Npgsql)
+│   │   └── DbInitializer.cs            # Idempotent DDL verification & appointment queue seeding
+│   │
+│   ├── Endpoints/                      # Modular Minimal API Route Groups
+│   │   ├── StatusEndpoints.cs          # Health check, system telemetry & DB diagnostics
+│   │   ├── MedicineEndpoints.cs        # DGDA medicine catalog & fuzzy trigram lookup
+│   │   ├── DoctorEndpoints.cs          # Doctor credentials, BMDC reg & chamber setup
+│   │   ├── PatientEndpoints.cs         # Patient demographics & EMR registration
+│   │   ├── QueueEndpoints.cs           # Live chamber triage queue & token status transitions
+│   │   ├── PrescriptionEndpoints.cs    # BMDC e-prescription persistence & item mapping
+│   │   ├── InteractionEndpoints.cs     # Real-time Drug-Drug Interaction (DDI) checks
+│   │   └── AiConsultationEndpoints.cs  # Ambient clinical consultation synthesis
+│   │
+│   ├── Services/                       # Application Business Logic & AI Orchestration
+│   │   ├── IConsultationAiService.cs   # Gemini multimodal prompting, DGDA grounding & audit logging
+│   │   ├── ConsultationAiService.cs    # Service implementation
+│   │   ├── IDrugSafetyService.cs       # Rule-based DDI contraindication interceptor
+│   │   └── DrugSafetyService.cs        # Service implementation
+│   │
+│   └── Models/                         # Domain Entities & API Data Contracts
+│       ├── Domain/
+│       │   └── Entities.cs             # Doctor, Patient, Medicine, DrugInteraction, PrescriptionItem
+│       └── DTOs/
+│           └── RequestsAndResponses.cs # CreatePatient, AddToQueue, SaveRx, ConsultationInput, etc.
 │
 └── frontend/                           # React 19 + TypeScript + Vite Application
     ├── package.json                    # Scripts and dependencies
     ├── vite.config.ts                  # Vite configuration
-    ├── index.html                      # Entry HTML with Google Fonts
+    ├── index.html                      # Entry HTML with Hind Siliguri & Inter fonts
     └── src/
         ├── main.tsx                    # Application entry point
         ├── App.tsx                     # Main coordinator & split-screen layout
@@ -187,6 +235,9 @@ BanglaRx/
             ├── AccuracyAnalytics.tsx   # Spoken words vs accepted entities gauge
             ├── MedicineSearch.tsx      # Manual medicine directory & quick-add search
             ├── PrescriptionPad.tsx     # Official BMDC prescription pad layout & print view
+            ├── PatientRegistrationModal.tsx # Intake & triage pre-check modal
+            ├── DoctorProfileModal.tsx  # BMDC registration & letterhead setup
+            ├── ChamberQueueDrawer.tsx  # Real-time waiting room queue manager
             └── PatientQrModal.tsx      # QR Code modal with Bengali audio playback
 ```
 

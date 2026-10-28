@@ -25,6 +25,14 @@ The roadmap follows a disciplined three-tier sequence:
 ## 📋 Comprehensive Enterprise TODO Matrix
 
 ### 1. Web Application Core & Chamber Ergonomics (Current)
+- [x] **Backend Architecture Evolution (Phase 1 ➔ Phase 2 Complete):**
+  - **Phase 1 (Historical Baseline Preserved):** Rapid prototype single-file `Program.cs` Minimal API (~835 lines) created for DCCI AI Fair proof-of-concept.
+  - **Phase 2 (Active Enterprise Standard):** Decomposed into **Modular Minimal APIs (`app.MapGroup()`) with Database-First Dapper Micro-ORM**:
+    - `Data/`: `IDbConnectionFactory`, `PostgresDbConnectionFactory`, and idempotent `DbInitializer`.
+    - `Models/`: Strongly typed `Domain/Entities.cs` and `DTOs/RequestsAndResponses.cs`.
+    - `Services/`: Isolated `ConsultationAiService` (Gemini API orchestration, prompt engineering, DDI intercept, PostgreSQL audit logging) and `DrugSafetyService` (clinical rule verification).
+    - `Endpoints/`: Decoupled route groups (`StatusEndpoints`, `MedicineEndpoints`, `DoctorEndpoints`, `PatientEndpoints`, `QueueEndpoints`, `PrescriptionEndpoints`, `InteractionEndpoints`, `AiConsultationEndpoints`).
+    - `Program.cs`: Clean, 50-line DI and route composition host.
 - [x] **BMDC Institutional Prescription Pad:**
   - Standard BMDC-format header, physician credentials, and patient demographics bar.
   - Split clinical columns: Clinical findings/vitals on left, Rx medications & instructions on right.
