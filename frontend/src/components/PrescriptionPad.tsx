@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Stethoscope, ShieldAlert, Trash2, Volume2, Printer, QrCode, HeartPulse, Sparkles, AlertTriangle, Plus, X, Calendar, FileText, Clock } from 'lucide-react';
+import { Stethoscope, ShieldAlert, Trash2, Volume2, Printer, QrCode, HeartPulse, Sparkles, AlertTriangle, Plus, X, Calendar, FileText, Clock, Edit2, Check, UserCheck } from 'lucide-react';
 import type { Doctor, Patient, PrescriptionItem, DrugWarning } from '../types/index';
 
 interface PrescriptionPadProps {
@@ -15,6 +15,7 @@ interface PrescriptionPadProps {
   advice: string[];
   followUp?: string;
   emergencyRedFlags?: string;
+  referredTo?: string;
   warnings: DrugWarning[];
   onDeleteMedicine: (index: number) => void;
   onUpdateMedicine: (index: number, field: keyof PrescriptionItem, value: string) => void;
@@ -22,7 +23,13 @@ interface PrescriptionPadProps {
   onDeleteInvestigation: (index: number) => void;
   onAddPatientReport?: (report: string) => void;
   onDeletePatientReport?: (index: number) => void;
+  onAddComplaint?: (comp: string) => void;
+  onDeleteComplaint?: (index: number) => void;
+  onUpdateDiagnosis?: (diag: string) => void;
+  onAddAdvice?: (adv: string) => void;
+  onDeleteAdvice?: (index: number) => void;
   onUpdateFollowUp?: (val: string) => void;
+  onUpdateReferredTo?: (val: string) => void;
   onSpeakBangla: (text: string) => void;
   onOpenQrModal: () => void;
 }
@@ -45,6 +52,7 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
   advice,
   followUp = '৭ দিন পর রিপোর্টসহ দেখা করবেন',
   emergencyRedFlags = 'জ্বর ১০৩ ডিগ্রির বেশি হলে অথবা মাড়ি দিয়ে রক্তক্ষরণ হলে জরুরি বিভাগে যোগাযোগ করবেন',
+  referredTo = '',
   warnings,
   onDeleteMedicine,
   onUpdateMedicine,
@@ -52,20 +60,31 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
   onDeleteInvestigation,
   onAddPatientReport,
   onDeletePatientReport,
+  onAddComplaint,
+  onDeleteComplaint,
+  onUpdateDiagnosis,
+  onAddAdvice,
+  onDeleteAdvice,
   onUpdateFollowUp,
+  onUpdateReferredTo,
   onSpeakBangla,
   onOpenQrModal,
 }) => {
   const [customTest, setCustomTest] = useState('');
-  const [customReport, setCustomReport] = useState('');
+  const [customComplaint, setCustomComplaint] = useState('');
+  const [customAdvice, setCustomAdvice] = useState('');
+  const [customReferral, setCustomReferral] = useState(referredTo);
+  const [isEditingDiagnosis, setIsEditingDiagnosis] = useState(false);
+  const [tempDiagnosis, setTempDiagnosis] = useState(diagnosis);
   const [isEditingFollowUp, setIsEditingFollowUp] = useState(false);
+  const [tempFollowUp, setTempFollowUp] = useState(followUp);
 
   return (
     <div
       className="rx-paper clinical-card"
       style={{
-        padding: '32px',
-        minHeight: '840px',
+        padding: '24px 28px',
+        minHeight: '760px',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -79,36 +98,36 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
         {/* TOP OFFICIAL BMDC DOCTOR HEADER */}
         <div style={{
           borderBottom: '2px solid var(--slate-900)',
-          paddingBottom: '18px',
+          paddingBottom: '14px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'flex-start',
           flexWrap: 'wrap',
-          gap: '16px'
+          gap: '12px'
         }}>
           <div>
             <h2 style={{
-              fontSize: '1.35rem',
+              fontSize: '1.3rem',
               fontWeight: '800',
               color: 'var(--slate-900)',
               letterSpacing: '-0.02em'
             }}>
               {doctor?.name || 'Prof. Dr. M. A. Rahman'}
             </h2>
-            <p style={{ fontSize: '0.84rem', color: 'var(--teal-700)', fontWeight: '700', marginTop: '2px' }}>
+            <p style={{ fontSize: '0.82rem', color: 'var(--teal-700)', fontWeight: '700', marginTop: '1px' }}>
               {doctor?.degrees || 'MBBS, FCPS (Medicine), MD (Cardiology)'}
             </p>
-            <p style={{ fontSize: '0.8rem', color: 'var(--slate-600)', marginTop: '1px' }}>
+            <p style={{ fontSize: '0.78rem', color: 'var(--slate-600)', marginTop: '1px' }}>
               {doctor?.specialization || 'Clinical Medicine & Interventional Cardiology'}
             </p>
-            <p style={{ fontSize: '0.76rem', color: 'var(--slate-500)', marginTop: '4px' }}>
+            <p style={{ fontSize: '0.74rem', color: 'var(--slate-500)', marginTop: '3px' }}>
               BMDC Reg. No: <strong style={{ color: 'var(--slate-800)' }}>{doctor?.bmdc_reg_no || 'A-45982'}</strong> • {doctor?.hospital_name || 'Dhaka Medical College & Hospital'} • Room: {doctor?.room_no || 'Chamber 402'}
             </p>
           </div>
 
           <div style={{ textAlign: 'right' }}>
             <div style={{
-              fontSize: '0.82rem',
+              fontSize: '0.8rem',
               fontWeight: '800',
               color: 'var(--slate-900)',
               letterSpacing: '0.08em',
@@ -116,31 +135,31 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
             }}>
               Official E-Prescription
             </div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--slate-500)', marginTop: '3px' }}>
+            <div style={{ fontSize: '0.76rem', color: 'var(--slate-500)', marginTop: '2px' }}>
               Rx ID: <strong style={{ color: 'var(--slate-900)', fontFamily: 'var(--font-mono)' }}>{savedRxNumber}</strong>
             </div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--slate-500)', marginTop: '1px' }}>
+            <div style={{ fontSize: '0.76rem', color: 'var(--slate-500)', marginTop: '1px' }}>
               Date: <strong style={{ color: 'var(--slate-900)' }}>{new Date().toLocaleDateString('en-GB')}</strong>
             </div>
 
             {/* Quick Pad Action Toolbar (Hidden during print) */}
-            <div className="no-print" style={{ display: 'flex', gap: '8px', marginTop: '10px', justifyContent: 'flex-end' }}>
+            <div className="no-print" style={{ display: 'flex', gap: '8px', marginTop: '8px', justifyContent: 'flex-end' }}>
               <button
                 type="button"
                 onClick={() => window.print()}
                 className="btn-clinical btn-outline"
-                style={{ padding: '6px 12px', fontSize: '0.74rem' }}
-                title="Print Prescription Pad"
+                style={{ padding: '5px 12px', fontSize: '0.74rem' }}
+                title="Print Prescription Pad (A4)"
               >
                 <Printer size={13} />
-                <span>Print Rx</span>
+                <span>Print Rx (A4)</span>
               </button>
 
               <button
                 type="button"
                 onClick={onOpenQrModal}
                 className="btn-clinical btn-primary-slate"
-                style={{ padding: '6px 12px', fontSize: '0.74rem' }}
+                style={{ padding: '5px 12px', fontSize: '0.74rem' }}
                 title="Open Patient Mobile View"
               >
                 <QrCode size={13} />
@@ -150,37 +169,41 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
           </div>
         </div>
 
-        {/* PATIENT DEMOGRAPHICS BAR */}
+        {/* PATIENT DEMOGRAPHICS BAR (Spacious, Responsive, Non-Wrapping) */}
         <div style={{
           background: 'var(--slate-50)',
-          padding: '12px 16px',
+          padding: '8px 14px',
           borderRadius: 'var(--radius-md)',
-          marginTop: '16px',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(5, 1fr)',
-          fontSize: '0.8rem',
-          gap: '12px',
+          marginTop: '12px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          fontSize: '0.78rem',
+          gap: '6px 14px',
           border: '1px solid var(--slate-200)'
         }}>
           <div>
-            <span style={{ color: 'var(--slate-500)', fontSize: '0.74rem' }}>Patient Name:</span>
-            <div style={{ fontWeight: '700', color: 'var(--slate-900)' }}>{patient?.full_name || 'Md. Kabir Hossain'}</div>
+            <span style={{ color: 'var(--slate-500)', fontSize: '0.72rem' }}>Patient Name: </span>
+            <strong style={{ color: 'var(--slate-900)' }}>{patient?.full_name || 'Md. Kabir Hossain'}</strong>
           </div>
           <div>
-            <span style={{ color: 'var(--slate-500)', fontSize: '0.74rem' }}>Age / Sex:</span>
-            <div style={{ fontWeight: '700', color: 'var(--slate-900)' }}>{patient?.age || 45}Y / {patient?.gender || 'Male'}</div>
+            <span style={{ color: 'var(--slate-500)', fontSize: '0.72rem' }}>Age / Sex: </span>
+            <strong style={{ color: 'var(--slate-900)' }}>{patient?.age || 45}Y / {patient?.gender || 'Male'}</strong>
           </div>
           <div>
-            <span style={{ color: 'var(--slate-500)', fontSize: '0.74rem' }}>Blood Group:</span>
-            <div style={{ fontWeight: '700', color: 'var(--crimson-700)' }}>{patient?.blood_group || 'B+ Positive'}</div>
+            <span style={{ color: 'var(--slate-500)', fontSize: '0.72rem' }}>Blood Group: </span>
+            <strong style={{ color: 'var(--crimson-700)' }}>{patient?.blood_group || 'B+ Positive'}</strong>
           </div>
           <div>
-            <span style={{ color: 'var(--slate-500)', fontSize: '0.74rem' }}>Contact Phone:</span>
-            <div style={{ fontWeight: '600', color: 'var(--slate-800)' }}>{patient?.phone || '01712-XXXXXX'}</div>
+            <span style={{ color: 'var(--slate-500)', fontSize: '0.72rem' }}>Contact Phone: </span>
+            <strong style={{ color: 'var(--slate-800)' }}>{patient?.phone || '01712-XXXXXX'}</strong>
           </div>
           <div>
-            <span style={{ color: 'var(--slate-500)', fontSize: '0.74rem' }}>Known Allergies:</span>
-            <div style={{ fontWeight: '600', color: 'var(--amber-700)' }}>{patient?.allergies || 'None Reported'}</div>
+            <span style={{ color: 'var(--slate-500)', fontSize: '0.72rem' }}>Known Allergies: </span>
+            <strong style={{ color: patient?.allergies && patient.allergies !== 'None Reported' ? 'var(--amber-700)' : 'var(--slate-700)' }}>
+              {patient?.allergies || 'None Reported'}
+            </strong>
           </div>
         </div>
 
@@ -189,31 +212,31 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
           <div
             className="anim-slide-up"
             style={{
-              marginTop: '16px',
-              padding: '14px 18px',
+              marginTop: '12px',
+              padding: '12px 16px',
               background: 'var(--crimson-50)',
               border: '1px solid var(--crimson-100)',
               borderRadius: 'var(--radius-md)',
               display: 'flex',
               alignItems: 'flex-start',
-              gap: '12px'
+              gap: '10px'
             }}
           >
             <div style={{
               background: 'var(--crimson-600)',
               color: '#FFFFFF',
-              padding: '7px',
+              padding: '6px',
               borderRadius: 'var(--radius-sm)',
               display: 'flex',
               marginTop: '2px'
             }}>
-              <ShieldAlert size={18} />
+              <ShieldAlert size={16} />
             </div>
 
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                 <span style={{
-                  fontSize: '0.84rem',
+                  fontSize: '0.82rem',
                   fontWeight: '800',
                   color: 'var(--crimson-900)',
                   textTransform: 'uppercase',
@@ -227,12 +250,12 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
               </div>
 
               {warnings.map((w, i) => (
-                <div key={i} style={{ marginTop: '6px', fontSize: '0.8rem', color: 'var(--crimson-900)' }}>
+                <div key={i} style={{ marginTop: '4px', fontSize: '0.78rem', color: 'var(--crimson-900)' }}>
                   <strong>Conflict:</strong> {w.drugA} + {w.drugB}
-                  <p style={{ marginTop: '2px', color: 'var(--crimson-700)', lineHeight: 1.45 }}>
+                  <p style={{ marginTop: '2px', color: 'var(--crimson-700)', lineHeight: 1.4 }}>
                     {w.description}
                   </p>
-                  <p style={{ marginTop: '3px', fontWeight: '700', color: 'var(--crimson-900)' }}>
+                  <p style={{ marginTop: '2px', fontWeight: '700', color: 'var(--crimson-900)' }}>
                     Clinical Recommendation: {w.clinicalAdvice}
                   </p>
                 </div>
@@ -244,91 +267,174 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
         {/* MAIN CLINICAL CONTENT GRID (SPLIT COLUMN: FINDINGS VS RX) */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '270px 1fr',
-          gap: '24px',
-          marginTop: '20px',
-          minHeight: '440px'
+          gridTemplateColumns: '230px 1fr',
+          gap: '20px',
+          marginTop: '14px'
         }}>
           
           {/* LEFT CLINICAL COLUMN: VITALS, COMPLAINTS, REPORTS & INVESTIGATIONS */}
           <div style={{
             borderRight: '1px solid var(--slate-200)',
-            paddingRight: '18px',
+            paddingRight: '16px',
             display: 'flex',
             flexDirection: 'column',
-            gap: '16px'
+            gap: '14px'
           }}>
             
             {/* Vitals */}
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                <HeartPulse size={14} color="var(--teal-600)" />
-                <span style={{ fontSize: '0.74rem', fontWeight: '800', color: 'var(--slate-800)', textTransform: 'uppercase' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                <HeartPulse size={13} color="var(--teal-600)" />
+                <span style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--slate-800)', textTransform: 'uppercase' }}>
                   Recorded Vitals
                 </span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.78rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', background: 'var(--slate-50)', padding: '5px 8px', borderRadius: 'var(--radius-sm)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '0.76rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', background: 'var(--slate-50)', padding: '4px 7px', borderRadius: 'var(--radius-sm)' }}>
                   <span style={{ color: 'var(--slate-500)' }}>BP:</span>
                   <strong style={{ color: 'var(--slate-900)' }}>{vitals.bp}</strong>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', background: 'var(--slate-50)', padding: '5px 8px', borderRadius: 'var(--radius-sm)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', background: 'var(--slate-50)', padding: '4px 7px', borderRadius: 'var(--radius-sm)' }}>
                   <span style={{ color: 'var(--slate-500)' }}>Temp:</span>
                   <strong style={{ color: 'var(--crimson-700)' }}>{vitals.temp}</strong>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', background: 'var(--slate-50)', padding: '5px 8px', borderRadius: 'var(--radius-sm)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', background: 'var(--slate-50)', padding: '4px 7px', borderRadius: 'var(--radius-sm)' }}>
                   <span style={{ color: 'var(--slate-500)' }}>Pulse:</span>
                   <strong style={{ color: 'var(--slate-900)' }}>{vitals.pulse}</strong>
                 </div>
               </div>
             </div>
 
-            {/* Chief Complaints */}
+            {/* Chief Complaints with Manual Override */}
             <div>
-              <span style={{ fontSize: '0.74rem', fontWeight: '800', color: 'var(--slate-800)', textTransform: 'uppercase' }}>
-                Chief Complaints
-              </span>
-              <ul style={{ marginTop: '6px', paddingLeft: '16px', fontSize: '0.78rem', color: 'var(--slate-700)', lineHeight: 1.5 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--slate-800)', textTransform: 'uppercase' }}>
+                  Chief Complaints
+                </span>
+              </div>
+              <ul style={{ paddingLeft: '14px', fontSize: '0.76rem', color: 'var(--slate-700)', lineHeight: 1.45 }}>
                 {complaints.map((c, i) => (
-                  <li key={i}>{c}</li>
+                  <li key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
+                    <span>{c}</span>
+                    {onDeleteComplaint && (
+                      <button
+                        type="button"
+                        onClick={() => onDeleteComplaint(i)}
+                        className="no-print"
+                        style={{ border: 'none', background: 'transparent', color: 'var(--slate-400)', cursor: 'pointer', padding: '0 2px' }}
+                        title="Remove complaint"
+                      >
+                        <X size={11} />
+                      </button>
+                    )}
+                  </li>
                 ))}
               </ul>
+
+              {/* Add Custom Complaint (No-Print) */}
+              {onAddComplaint && (
+                <div className="no-print" style={{ display: 'flex', gap: '3px', marginTop: '4px' }}>
+                  <input
+                    type="text"
+                    placeholder="Add symptom..."
+                    value={customComplaint}
+                    onChange={e => setCustomComplaint(e.target.value)}
+                    className="input-clinical"
+                    style={{ padding: '3px 6px', fontSize: '0.72rem' }}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && customComplaint.trim()) {
+                        e.preventDefault();
+                        onAddComplaint(customComplaint.trim());
+                        setCustomComplaint('');
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (customComplaint.trim()) {
+                        onAddComplaint(customComplaint.trim());
+                        setCustomComplaint('');
+                      }
+                    }}
+                    className="btn-clinical btn-outline"
+                    style={{ padding: '3px 6px', fontSize: '0.72rem' }}
+                  >
+                    <Plus size={11} />
+                  </button>
+                </div>
+              )}
             </div>
 
-            {/* Diagnosis */}
+            {/* Diagnosis with Inline Edit */}
             <div>
-              <span style={{ fontSize: '0.74rem', fontWeight: '800', color: 'var(--slate-800)', textTransform: 'uppercase' }}>
-                Clinical Diagnosis
-              </span>
-              <div style={{
-                marginTop: '6px',
-                fontSize: '0.8rem',
-                fontWeight: '700',
-                color: 'var(--teal-800)',
-                background: 'var(--teal-50)',
-                padding: '6px 10px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--teal-100)'
-              }}>
-                {diagnosis}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--slate-800)', textTransform: 'uppercase' }}>
+                  Clinical Diagnosis
+                </span>
+                {onUpdateDiagnosis && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isEditingDiagnosis && tempDiagnosis.trim()) {
+                        onUpdateDiagnosis(tempDiagnosis.trim());
+                      }
+                      setIsEditingDiagnosis(!isEditingDiagnosis);
+                    }}
+                    className="no-print"
+                    style={{ border: 'none', background: 'transparent', color: 'var(--teal-700)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px', fontSize: '0.7rem', fontWeight: 600 }}
+                  >
+                    {isEditingDiagnosis ? <Check size={11} /> : <Edit2 size={11} />}
+                    <span>{isEditingDiagnosis ? 'Save' : 'Edit'}</span>
+                  </button>
+                )}
               </div>
+
+              {isEditingDiagnosis ? (
+                <input
+                  type="text"
+                  value={tempDiagnosis}
+                  onChange={e => setTempDiagnosis(e.target.value)}
+                  className="input-clinical no-print"
+                  style={{ padding: '4px 6px', fontSize: '0.78rem', width: '100%' }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      onUpdateDiagnosis?.(tempDiagnosis);
+                      setIsEditingDiagnosis(false);
+                    }
+                  }}
+                  autoFocus
+                />
+              ) : (
+                <div style={{
+                  fontSize: '0.78rem',
+                  fontWeight: '700',
+                  color: 'var(--teal-800)',
+                  background: 'var(--teal-50)',
+                  padding: '5px 8px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--teal-100)'
+                }}>
+                  {diagnosis}
+                </div>
+              )}
             </div>
 
             {/* Patient Test Reports Presented Today (পূর্ববর্তী রিপোর্ট) */}
             {patientReportsPresented.length > 0 && (
               <div style={{
                 background: 'var(--slate-50)',
-                padding: '10px 12px',
+                padding: '8px 10px',
                 borderRadius: 'var(--radius-md)',
                 border: '1px solid var(--slate-200)'
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-                  <FileText size={13} color="var(--sapphire-600)" />
-                  <span style={{ fontSize: '0.74rem', fontWeight: '800', color: 'var(--slate-800)', textTransform: 'uppercase' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '4px' }}>
+                  <FileText size={12} color="var(--sapphire-600)" />
+                  <span style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--slate-800)', textTransform: 'uppercase' }}>
                     Reports Reviewed Today
                   </span>
                 </div>
-                <ul style={{ paddingLeft: '14px', fontSize: '0.74rem', color: 'var(--slate-700)', lineHeight: 1.45 }}>
+                <ul style={{ paddingLeft: '12px', fontSize: '0.72rem', color: 'var(--slate-700)', lineHeight: 1.4 }}>
                   {patientReportsPresented.map((rep, idx) => (
                     <li key={idx}>
                       <strong>{rep}</strong>
@@ -340,14 +446,14 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
 
             {/* Investigations Advised (পরীক্ষা-নিরীক্ষা) */}
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                <span style={{ fontSize: '0.74rem', fontWeight: '800', color: 'var(--slate-800)', textTransform: 'uppercase' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--slate-800)', textTransform: 'uppercase' }}>
                   Advised Tests ({investigations.length})
                 </span>
               </div>
 
               {/* Advised Tests List with Delete Option */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', marginBottom: '8px' }}>
                 {investigations.map((inv, i) => (
                   <div
                     key={i}
@@ -356,9 +462,9 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       background: 'var(--slate-50)',
-                      padding: '4px 8px',
+                      padding: '3px 6px',
                       borderRadius: 'var(--radius-sm)',
-                      fontSize: '0.76rem',
+                      fontSize: '0.74rem',
                       border: '1px solid var(--slate-200)'
                     }}
                   >
@@ -367,27 +473,26 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
                       type="button"
                       onClick={() => onDeleteInvestigation(i)}
                       className="no-print"
-                      style={{ border: 'none', background: 'transparent', color: 'var(--slate-400)', cursor: 'pointer' }}
+                      style={{ border: 'none', background: 'transparent', color: 'var(--slate-400)', cursor: 'pointer', padding: '0 2px' }}
                       title="Remove test"
                     >
-                      <X size={12} />
+                      <X size={11} />
                     </button>
                   </div>
                 ))}
               </div>
 
               {/* Quick Add Investigation Chips (Hidden during print) */}
-              <div className="no-print" style={{ marginBottom: '8px' }}>
-                <div style={{ fontSize: '0.68rem', color: 'var(--slate-400)', marginBottom: '4px' }}>Quick Add Common Tests:</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                  {COMMON_INVESTIGATIONS.map(test => (
+              <div className="no-print" style={{ marginBottom: '6px' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px' }}>
+                  {COMMON_INVESTIGATIONS.slice(0, 5).map(test => (
                     <button
                       key={test}
                       type="button"
                       onClick={() => onAddInvestigation(test)}
                       style={{
-                        fontSize: '0.68rem',
-                        padding: '2px 6px',
+                        fontSize: '0.66rem',
+                        padding: '1px 5px',
                         borderRadius: 'var(--radius-xs)',
                         border: '1px solid var(--slate-200)',
                         background: '#FFFFFF',
@@ -402,14 +507,14 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
               </div>
 
               {/* Custom Test Adder */}
-              <div className="no-print" style={{ display: 'flex', gap: '4px' }}>
+              <div className="no-print" style={{ display: 'flex', gap: '3px' }}>
                 <input
                   type="text"
                   placeholder="Custom test name..."
                   value={customTest}
                   onChange={e => setCustomTest(e.target.value)}
                   className="input-clinical"
-                  style={{ padding: '4px 8px', fontSize: '0.74rem' }}
+                  style={{ padding: '3px 6px', fontSize: '0.72rem' }}
                   onKeyDown={e => {
                     if (e.key === 'Enter' && customTest.trim()) {
                       e.preventDefault();
@@ -427,9 +532,9 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
                     }
                   }}
                   className="btn-clinical btn-outline"
-                  style={{ padding: '4px 8px', fontSize: '0.74rem' }}
+                  style={{ padding: '3px 6px', fontSize: '0.72rem' }}
                 >
-                  <Plus size={12} />
+                  <Plus size={11} />
                 </button>
               </div>
             </div>
@@ -437,7 +542,7 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
           </div>
 
           {/* RIGHT COLUMN: OFFICIAL RX SECTION */}
-          <div style={{ paddingLeft: '4px' }}>
+          <div style={{ paddingLeft: '2px' }}>
             
             {/* Rx Symbol Header */}
             <div style={{
@@ -445,12 +550,12 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
               alignItems: 'baseline',
               justifyContent: 'space-between',
               borderBottom: '1px solid var(--slate-200)',
-              paddingBottom: '8px',
-              marginBottom: '16px'
+              paddingBottom: '6px',
+              marginBottom: '12px'
             }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
                 <span style={{
-                  fontSize: '1.8rem',
+                  fontSize: '1.6rem',
                   fontFamily: 'serif',
                   fontWeight: '800',
                   color: 'var(--slate-900)',
@@ -458,7 +563,7 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
                 }}>
                   ℞
                 </span>
-                <span style={{ fontSize: '0.76rem', color: 'var(--slate-500)', fontWeight: '600' }}>
+                <span style={{ fontSize: '0.74rem', color: 'var(--slate-500)', fontWeight: '600' }}>
                   Prescribed Pharmacotherapy ({medicines.length} Medicines)
                 </span>
               </div>
@@ -473,49 +578,48 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
                   onSpeakBangla(`ঔষধ সেবনের নির্দেশিকা: ${speech}`);
                 }}
                 className="btn-clinical btn-outline no-print"
-                style={{ padding: '4px 10px', fontSize: '0.72rem' }}
+                style={{ padding: '3px 8px', fontSize: '0.7rem' }}
                 title="Read prescription in Bengali"
               >
-                <Volume2 size={13} color="var(--teal-600)" />
+                <Volume2 size={12} color="var(--teal-600)" />
                 <span className="font-bangla">অডিও শুনুন (Bangla)</span>
               </button>
             </div>
 
-            {/* MEDICINES LIST WITH INLINE EDITORS */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {/* MEDICINES LIST WITH DUAL MODE: INTERACTIVE ON SCREEN, PRISTINE ON PRINT */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {medicines.map((med, index) => (
                 <div
                   key={index}
-                  className="anim-slide-up"
                   style={{
-                    padding: '12px 14px',
+                    padding: '8px 10px',
                     borderRadius: 'var(--radius-md)',
                     background: 'var(--slate-50)',
                     border: '1px solid var(--slate-200)',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '8px',
-                    transition: 'all 0.15s ease'
+                    gap: '4px',
+                    pageBreakInside: 'avoid'
                   }}
                 >
                   {/* Medicine Brand, Generic & Strength */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                       <span style={{
-                        fontSize: '0.76rem',
+                        fontSize: '0.72rem',
                         fontWeight: '700',
                         color: 'var(--slate-400)',
                         fontFamily: 'var(--font-mono)'
                       }}>
                         #{index + 1}
                       </span>
-                      <strong style={{ fontSize: '0.96rem', color: 'var(--slate-900)' }}>
+                      <strong style={{ fontSize: '0.92rem', color: 'var(--slate-900)' }}>
                         {med.brandName}
                       </strong>
-                      <span className="badge-clinical badge-teal" style={{ fontSize: '0.7rem' }}>
+                      <span className="badge-clinical badge-teal" style={{ fontSize: '0.68rem', padding: '1px 5px' }}>
                         {med.form} • {med.strength}
                       </span>
-                      <span style={{ fontSize: '0.74rem', color: 'var(--slate-500)' }}>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--slate-500)' }}>
                         ({med.genericName})
                       </span>
                     </div>
@@ -526,38 +630,38 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
                       onClick={() => onDeleteMedicine(index)}
                       className="no-print btn-clinical btn-outline"
                       style={{
-                        padding: '5px',
+                        padding: '3px',
                         borderRadius: 'var(--radius-sm)',
                         color: 'var(--crimson-600)',
                         borderColor: 'transparent'
                       }}
                       title="Remove medicine"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={13} />
                     </button>
                   </div>
 
-                  {/* Inline Editable Controls: Dosage, Duration, Bengali Meal Instruction */}
-                  <div style={{
+                  {/* 1. INTERACTIVE SCREEN CONTROLS (Hidden during print) */}
+                  <div className="no-print" style={{
                     display: 'grid',
                     gridTemplateColumns: '1.2fr 1fr 1.8fr',
-                    gap: '10px',
+                    gap: '8px',
                     marginTop: '2px',
                     background: '#FFFFFF',
-                    padding: '8px 10px',
+                    padding: '6px 8px',
                     borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--slate-200)'
                   }}>
                     {/* Dosage Frequency Picker */}
                     <div>
-                      <label style={{ fontSize: '0.68rem', color: 'var(--slate-400)', fontWeight: '700', textTransform: 'uppercase' }}>
+                      <label style={{ fontSize: '0.64rem', color: 'var(--slate-400)', fontWeight: '700', textTransform: 'uppercase' }}>
                         Dosage Pattern
                       </label>
                       <select
                         value={med.dosagePattern}
                         onChange={e => onUpdateMedicine(index, 'dosagePattern', e.target.value)}
                         className="select-clinical"
-                        style={{ padding: '4px 6px', fontSize: '0.78rem', marginTop: '2px', fontWeight: '700' }}
+                        style={{ padding: '3px 5px', fontSize: '0.74rem', marginTop: '1px', fontWeight: '700' }}
                       >
                         {COMMON_DOSAGES.map(d => (
                           <option key={d} value={d}>{d}</option>
@@ -570,14 +674,14 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
 
                     {/* Duration Picker */}
                     <div>
-                      <label style={{ fontSize: '0.68rem', color: 'var(--slate-400)', fontWeight: '700', textTransform: 'uppercase' }}>
+                      <label style={{ fontSize: '0.64rem', color: 'var(--slate-400)', fontWeight: '700', textTransform: 'uppercase' }}>
                         Duration
                       </label>
                       <select
                         value={med.duration}
                         onChange={e => onUpdateMedicine(index, 'duration', e.target.value)}
                         className="select-clinical"
-                        style={{ padding: '4px 6px', fontSize: '0.78rem', marginTop: '2px' }}
+                        style={{ padding: '3px 5px', fontSize: '0.74rem', marginTop: '1px' }}
                       >
                         {COMMON_DURATIONS.map(dur => (
                           <option key={dur} value={dur}>{dur}</option>
@@ -590,14 +694,14 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
 
                     {/* Instructions in Bengali */}
                     <div>
-                      <label style={{ fontSize: '0.68rem', color: 'var(--slate-400)', fontWeight: '700', textTransform: 'uppercase' }}>
+                      <label style={{ fontSize: '0.64rem', color: 'var(--slate-400)', fontWeight: '700', textTransform: 'uppercase' }}>
                         নির্দেশিকা (Timing)
                       </label>
                       <select
                         value={med.instructionsBangla}
                         onChange={e => onUpdateMedicine(index, 'instructionsBangla', e.target.value)}
                         className="select-clinical font-bangla"
-                        style={{ padding: '4px 6px', fontSize: '0.8rem', marginTop: '2px', color: 'var(--teal-800)', fontWeight: '600' }}
+                        style={{ padding: '3px 5px', fontSize: '0.76rem', marginTop: '1px', color: 'var(--teal-800)', fontWeight: '600' }}
                       >
                         {COMMON_INSTRUCTIONS.map(ins => (
                           <option key={ins} value={ins}>{ins}</option>
@@ -609,69 +713,133 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
                     </div>
                   </div>
 
+                  {/* 2. PRISTINE PRINT TYPOGRAPHY (Rendered exclusively during physical laser print) */}
+                  <div className="print-only" style={{
+                    display: 'none',
+                    fontSize: '0.84rem',
+                    color: 'var(--slate-900)',
+                    padding: '2px 0'
+                  }}>
+                    <strong style={{ color: 'var(--slate-900)' }}>{med.dosagePattern}</strong>
+                    <span style={{ margin: '0 8px', color: 'var(--slate-400)' }}>•</span>
+                    <span style={{ color: 'var(--slate-700)' }}>{med.duration}</span>
+                    <span style={{ margin: '0 8px', color: 'var(--slate-400)' }}>•</span>
+                    <span className="font-bangla" style={{ fontWeight: '600', color: 'var(--teal-900)' }}>{med.instructionsBangla}</span>
+                  </div>
+
                 </div>
               ))}
             </div>
 
-            {/* ADVICE IN BENGALI SECTION */}
+            {/* ADVICE IN BENGALI SECTION WITH MANUAL OVERRIDE */}
             <div style={{
-              marginTop: '20px',
-              paddingTop: '14px',
+              marginTop: '14px',
+              paddingTop: '10px',
               borderTop: '1px dashed var(--slate-200)'
             }}>
-              <span style={{
-                fontSize: '0.76rem',
-                fontWeight: '800',
-                color: 'var(--slate-800)',
-                textTransform: 'uppercase'
-              }}>
-                পরামর্শ ও খাদ্যবিধি (Doctor's Advice in Bengali):
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{
+                  fontSize: '0.72rem',
+                  fontWeight: '800',
+                  color: 'var(--slate-800)',
+                  textTransform: 'uppercase'
+                }}>
+                  পরামর্শ ও খাদ্যবিধি (Doctor's Advice):
+                </span>
+              </div>
               <ul className="font-bangla" style={{
-                marginTop: '6px',
-                paddingLeft: '18px',
-                fontSize: '0.86rem',
+                marginTop: '4px',
+                paddingLeft: '16px',
+                fontSize: '0.82rem',
                 color: 'var(--slate-700)',
-                lineHeight: 1.6
+                lineHeight: 1.5
               }}>
                 {advice.map((adv, i) => (
-                  <li key={i}>{adv}</li>
+                  <li key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
+                    <span>{adv}</span>
+                    {onDeleteAdvice && (
+                      <button
+                        type="button"
+                        onClick={() => onDeleteAdvice(i)}
+                        className="no-print"
+                        style={{ border: 'none', background: 'transparent', color: 'var(--slate-400)', cursor: 'pointer', padding: '0 3px' }}
+                        title="Remove advice line"
+                      >
+                        <X size={11} />
+                      </button>
+                    )}
+                  </li>
                 ))}
               </ul>
+
+              {/* Add Custom Advice (No-Print) */}
+              {onAddAdvice && (
+                <div className="no-print" style={{ display: 'flex', gap: '3px', marginTop: '4px' }}>
+                  <input
+                    type="text"
+                    placeholder="পরামর্শ টাইপ করুন (e.g. চিনি খাওয়া বর্জন করুন)..."
+                    value={customAdvice}
+                    onChange={e => setCustomAdvice(e.target.value)}
+                    className="input-clinical font-bangla"
+                    style={{ padding: '3px 6px', fontSize: '0.74rem' }}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && customAdvice.trim()) {
+                        e.preventDefault();
+                        onAddAdvice(customAdvice.trim());
+                        setCustomAdvice('');
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (customAdvice.trim()) {
+                        onAddAdvice(customAdvice.trim());
+                        setCustomAdvice('');
+                      }
+                    }}
+                    className="btn-clinical btn-outline"
+                    style={{ padding: '3px 6px', fontSize: '0.72rem' }}
+                  >
+                    <Plus size={11} />
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* FOLLOW-UP & EMERGENCY RED FLAGS */}
             <div style={{
-              marginTop: '16px',
+              marginTop: '12px',
               background: 'var(--slate-50)',
-              padding: '10px 14px',
+              padding: '8px 12px',
               borderRadius: 'var(--radius-md)',
               border: '1px solid var(--slate-200)',
               display: 'flex',
               flexDirection: 'column',
-              gap: '6px'
+              gap: '4px',
+              pageBreakInside: 'avoid'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Calendar size={13} color="var(--teal-600)" />
-                  <span style={{ fontSize: '0.74rem', fontWeight: '800', color: 'var(--slate-800)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <Calendar size={12} color="var(--teal-600)" />
+                  <span style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--slate-800)' }}>
                     পরবর্তী সাক্ষাৎ (Follow-up):
                   </span>
-                  <span className="font-bangla" style={{ fontSize: '0.8rem', color: 'var(--teal-800)', fontWeight: '700' }}>
+                  <span className="font-bangla" style={{ fontSize: '0.78rem', color: 'var(--teal-800)', fontWeight: '700' }}>
                     {followUp}
                   </span>
                 </div>
 
                 {onUpdateFollowUp && (
-                  <div className="no-print" style={{ display: 'flex', gap: '4px' }}>
+                  <div className="no-print" style={{ display: 'flex', gap: '3px' }}>
                     {['৩ দিন পর', '৭ দিন পর', '১৪ দিন পর', '১ মাস পর'].map(f => (
                       <button
                         key={f}
                         type="button"
                         onClick={() => onUpdateFollowUp(`${f} রিপোর্টসহ দেখা করবেন`)}
                         style={{
-                          fontSize: '0.68rem',
-                          padding: '1px 6px',
+                          fontSize: '0.64rem',
+                          padding: '1px 5px',
                           borderRadius: 'var(--radius-xs)',
                           border: '1px solid var(--slate-200)',
                           background: '#FFFFFF',
@@ -685,9 +853,34 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
                 )}
               </div>
 
+              {/* Referral Note if exists */}
+              {customReferral && (
+                <div style={{ fontSize: '0.72rem', color: 'var(--sapphire-700)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <UserCheck size={11} />
+                  <span><strong>Referred To:</strong> {customReferral}</span>
+                </div>
+              )}
+
+              {/* Referral Input (No-Print) */}
+              {onUpdateReferredTo && (
+                <div className="no-print" style={{ display: 'flex', gap: '3px', marginTop: '2px' }}>
+                  <input
+                    type="text"
+                    placeholder="Refer to consultant / hospital (optional)..."
+                    value={customReferral}
+                    onChange={e => {
+                      setCustomReferral(e.target.value);
+                      onUpdateReferredTo(e.target.value);
+                    }}
+                    className="input-clinical"
+                    style={{ padding: '2px 6px', fontSize: '0.7rem' }}
+                  />
+                </div>
+              )}
+
               {/* Emergency Red Flags warning */}
-              <div style={{ fontSize: '0.72rem', color: 'var(--crimson-700)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <AlertTriangle size={12} />
+              <div style={{ fontSize: '0.7rem', color: 'var(--crimson-700)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '1px' }}>
+                <AlertTriangle size={11} />
                 <span className="font-bangla">{emergencyRedFlags}</span>
               </div>
             </div>
@@ -700,35 +893,36 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
 
       {/* FOOTER OF PRESCRIPTION PAD (SIGNATURE & REGISTRATION) */}
       <div style={{
-        marginTop: '36px',
-        paddingTop: '16px',
+        marginTop: '16px',
+        paddingTop: '10px',
         borderTop: '1px solid var(--slate-200)',
         display: 'flex',
         alignItems: 'flex-end',
         justifyContent: 'space-between',
-        fontSize: '0.74rem',
-        color: 'var(--slate-500)'
+        fontSize: '0.72rem',
+        color: 'var(--slate-500)',
+        pageBreakInside: 'avoid'
       }}>
         <div>
           <div style={{ color: 'var(--slate-700)', fontWeight: '600' }}>
             Generated by <strong>BanglaRx AI™</strong>
           </div>
-          <div style={{ color: 'var(--slate-400)', fontSize: '0.7rem', marginTop: '1px' }}>
+          <div style={{ color: 'var(--slate-400)', fontSize: '0.68rem', marginTop: '1px' }}>
             Clinical Decision Support System • DGDA Standard
           </div>
         </div>
 
-        <div style={{ textAlign: 'center', minWidth: '180px' }}>
+        <div style={{ textAlign: 'center', minWidth: '160px' }}>
           <div style={{
             fontFamily: 'serif',
             fontStyle: 'italic',
-            fontSize: '1rem',
+            fontSize: '0.95rem',
             color: 'var(--teal-800)',
-            marginBottom: '4px'
+            marginBottom: '2px'
           }}>
-            {doctor?.name || 'Dr. Tanvir Ahmed'}
+            {doctor?.name || 'Prof. Dr. M. A. Rahman'}
           </div>
-          <div style={{ borderTop: '1px solid var(--slate-400)', paddingTop: '4px' }}>
+          <div style={{ borderTop: '1px solid var(--slate-400)', paddingTop: '2px', fontSize: '0.7rem' }}>
             Registered Physician's Signature
           </div>
         </div>

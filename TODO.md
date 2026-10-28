@@ -56,21 +56,23 @@ The roadmap follows a disciplined three-tier sequence:
 - [ ] **Multi-Doctor Isolation in Web Interface:**
   - Ensure doctors only see their assigned appointments in the queue.
   - Filter patient lookup and prescriptions by the authenticated physician's practice scope.
-- [ ] **Full Manual Override on Prescription Right-Side & Clinical Pad:**
+- [x] **Full Manual Override on Prescription Right-Side & Clinical Pad:**
   - Enable doctors to manually type, add, edit, or delete ANY element on the prescription pad:
     - *Advised Tests:* Free-text input to type custom lab/radiology investigations with one-click add (`➕`), in addition to preset chips.
-    - *Clinical Advice:* Inline textarea to type custom Bengali or English dietary/lifestyle advice lines.
+    - *Clinical Advice:* Inline textarea to type custom Bengali or English dietary/lifestyle advice lines with delete control (`X`).
     - *Follow-Up:* Number input, unit selector (`Day` / `Week` / `Month`), calendar date picker, and free-text remarks field.
     - *Referred To:* Manual input field for hospital/consultant referral destination.
     - *Clinical Diagnosis & Complaints:* Direct in-pad text editing for instant manual correction.
-- [ ] **Physical A4 Laser Print Calibration:**
-  - Fix `@media print` styling so print preview matches standard institutional A4 (`210mm × 297mm`) laser printer dimensions.
-  - Eliminate browser background clipping, sidebars, buttons, and scrollbars during print.
-  - Apply `page-break-inside: avoid` on the medication table, advice section, and physician signature block.
-- [ ] **Chamber & Doctor Setup Ergonomics:**
-  - Rename navbar and modal headers from *"Physician Setup"* to **"Chamber & Doctor Setup" (চেম্বার ও ডাক্তার পরিচিতি)**.
-  - Add **"Add New Physician" (নতুন ডাক্তার যুক্ত করুন)** form allowing multi-doctor clinic registration without modifying source code.
-  - Support multi-chamber schedules per physician (e.g. Morning: Popular Diagnostic, Evening: Private Chamber).
+- [x] **Physical A4 Laser Print Calibration:**
+  - Fixed `@media print` styling so print preview matches standard institutional A4 (`210mm × 297mm`) laser printer dimensions.
+  - Eliminated the 57% container squeeze by un-gridding the clinical container during print (`main { display: block !important }`).
+  - Dual-mode medicine rendering: interactive `<select>` dropdowns on screen, clean text typography on print (`1+0+1 • ৫ দিন • ভরা পেটে খাবেন`).
+  - Fixed demographics bar character-wrapping by replacing fixed grid with responsive flex layout.
+  - Applied `page-break-inside: avoid` on medication rows, advice section, and physician signature block to guarantee single-page containment.
+- [x] **Chamber & Doctor Setup Ergonomics:**
+  - Renamed navbar and modal headers from *"Physician Setup"* to **"Chamber & Doctor Setup" (চেম্বার ও ডাক্তার পরিচিতি)**.
+  - Added **"Add New Doctor" (নতুন ডাক্তার যুক্ত করুন)** form allowing multi-doctor clinic registration via `POST /api/doctors` without modifying source code.
+  - Added active doctor switcher dropdown in navbar with instant queue filtering per physician.
 - [ ] **Unified Omnibox Audio Capture (UI Simplification):**
   - Deprecate explicit language toggles (`bn-BD` vs `en-US`) and mode switchers (`Full Scribe` vs `Voice Edit`).
   - Implement a single intelligent conversational audio/text omnibox that auto-detects Banglish language mixing and autonomously classifies intent (`NEW_CONSULTATION` vs `AMEND_MEDICINE` vs `ADD_TEST`).

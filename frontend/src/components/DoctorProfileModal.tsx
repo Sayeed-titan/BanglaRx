@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Building2, Check, Stethoscope, Award } from 'lucide-react';
+import { X, Building2, Check, Stethoscope, Award, UserPlus, Edit3 } from 'lucide-react';
 import type { Doctor } from '../types/index';
 
 interface DoctorProfileModalProps {
@@ -7,6 +7,7 @@ interface DoctorProfileModalProps {
   onClose: () => void;
   doctor: Doctor | null;
   onDoctorUpdated: (updated: Doctor) => void;
+  onDoctorCreated?: (newDoc: Doctor) => void;
 }
 
 export const DoctorProfileModal: React.FC<DoctorProfileModalProps> = ({
@@ -14,7 +15,9 @@ export const DoctorProfileModal: React.FC<DoctorProfileModalProps> = ({
   onClose,
   doctor,
   onDoctorUpdated,
+  onDoctorCreated,
 }) => {
+  const [mode, setMode] = useState<'edit' | 'create'>('edit');
   const [name, setName] = useState('');
   const [degrees, setDegrees] = useState('');
   const [specialization, setSpecialization] = useState('');
@@ -26,7 +29,7 @@ export const DoctorProfileModal: React.FC<DoctorProfileModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (doctor) {
+    if (mode === 'edit' && doctor) {
       setName(doctor.name || '');
       setDegrees(doctor.degrees || '');
       setSpecialization(doctor.specialization || '');
@@ -35,8 +38,17 @@ export const DoctorProfileModal: React.FC<DoctorProfileModalProps> = ({
       setRoomNo(doctor.room_no || '');
       setPhone(doctor.phone || '');
       setEmail(doctor.email || '');
+    } else if (mode === 'create') {
+      setName('');
+      setDegrees('MBBS, FCPS');
+      setSpecialization('');
+      setBmdcRegNo('A-');
+      setHospitalName('Popular Diagnostic Center, Dhanmondi');
+      setRoomNo('Room 302');
+      setPhone('+880 1712-');
+      setEmail('');
     }
-  }, [doctor]);
+  }, [doctor, mode]);
 
   if (!isOpen) return null;
 
@@ -50,7 +62,6 @@ export const DoctorProfileModal: React.FC<DoctorProfileModalProps> = ({
     setIsSubmitting(true);
     try {
       const payload = {
-        id: doctor?.id || 1,
         name,
         degrees,
         specialization,
@@ -61,16 +72,27 @@ export const DoctorProfileModal: React.FC<DoctorProfileModalProps> = ({
         email
       };
 
-      const res = await fetch(`http://localhost:5000/api/doctors/${doctor?.id || 1}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const updated = await res.json();
-      onDoctorUpdated(updated);
+      if (mode === 'create') {
+        const res = await fetch('http://localhost:5000/api/doctors', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const created = await res.json();
+        onDoctorCreated?.(created);
+        onDoctorUpdated(created);
+      } else {
+        const res = await fetch(`http://localhost:5000/api/doctors/${doctor?.id || 1}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...payload, id: doctor?.id || 1 })
+        });
+        const updated = await res.json();
+        onDoctorUpdated(updated);
+      }
       onClose();
     } catch (err) {
-      console.error('Failed to update doctor profile:', err);
+      console.error('Failed to save doctor profile:', err);
       alert('Failed to save profile. Please check backend connection.');
     } finally {
       setIsSubmitting(false);
@@ -108,7 +130,7 @@ export const DoctorProfileModal: React.FC<DoctorProfileModalProps> = ({
       >
         {/* Header */}
         <div style={{
-          padding: '18px 24px',
+          padding: '16px 20px',
           borderBottom: '1px solid var(--slate-200)',
           display: 'flex',
           alignItems: 'center',
@@ -126,11 +148,11 @@ export const DoctorProfileModal: React.FC<DoctorProfileModalProps> = ({
               <Stethoscope size={18} />
             </div>
             <div>
-              <h3 style={{ fontSize: '0.96rem', fontWeight: '800', color: 'var(--slate-900)' }}>
-                Physician Credentials & Chamber Setup
+              <h3 style={{ fontSize: '0.94rem', fontWeight: '800', color: 'var(--slate-900)' }}>
+                Chamber & Doctor Setup (চেম্বার ও ডাক্তার)
               </h3>
-              <p style={{ fontSize: '0.74rem', color: 'var(--slate-500)' }}>
-                Official BMDC prescribing registration & hospital letterhead
+              <p style={{ fontSize: '0.72rem', color: 'var(--slate-500)' }}>
+                BMDC registration, chamber location & doctor management
               </p>
             </div>
           </div>
@@ -144,19 +166,75 @@ export const DoctorProfileModal: React.FC<DoctorProfileModalProps> = ({
           </button>
         </div>
 
+        {/* Mode Switcher Tabs */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          padding: '6px 20px 0 20px',
+          background: 'var(--slate-50)',
+          borderBottom: '1px solid var(--slate-200)',
+          gap: '8px'
+        }}>
+          <button
+            type="button"
+            onClick={() => setMode('edit')}
+            style={{
+              padding: '8px 10px',
+              border: 'none',
+              background: 'transparent',
+              borderBottom: mode === 'edit' ? '2px solid var(--teal-600)' : '2px solid transparent',
+              color: mode === 'edit' ? 'var(--teal-700)' : 'var(--slate-500)',
+              fontWeight: 700,
+              fontSize: '0.78rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+          >
+            <Edit3 size={13} />
+            <span>Edit Active Doctor</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setMode('create')}
+            style={{
+              padding: '8px 10px',
+              border: 'none',
+              background: 'transparent',
+              borderBottom: mode === 'create' ? '2px solid var(--teal-600)' : '2px solid transparent',
+              color: mode === 'create' ? 'var(--teal-700)' : 'var(--slate-500)',
+              fontWeight: 700,
+              fontSize: '0.78rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+          >
+            <UserPlus size={13} />
+            <span>+ Add New Doctor</span>
+          </button>
+        </div>
+
         {/* Form Body */}
-        <form onSubmit={handleSubmit} style={{ padding: '22px', maxHeight: '75vh', overflowY: 'auto' }}>
+        <form onSubmit={handleSubmit} style={{ padding: '20px', maxHeight: '70vh', overflowY: 'auto' }}>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             
             <div>
-              <label style={{ fontSize: '0.74rem', fontWeight: '700', color: 'var(--slate-700)' }}>Physician Full Name *</label>
+              <label style={{ fontSize: '0.74rem', fontWeight: '700', color: 'var(--slate-700)' }}>
+                {mode === 'create' ? 'New Doctor Full Name *' : 'Doctor Full Name *'}
+              </label>
               <input
                 type="text"
                 required
                 value={name}
                 onChange={e => setName(e.target.value)}
-                placeholder="Prof. Dr. M. A. Rahman"
+                placeholder="Prof. Dr. Nazmul Islam"
                 className="input-clinical"
                 style={{ marginTop: '4px' }}
               />
@@ -270,10 +348,12 @@ export const DoctorProfileModal: React.FC<DoctorProfileModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="btn-clinical btn-primary-slate"
+              className="btn-clinical btn-primary-teal"
             >
               <Check size={16} />
-              {isSubmitting ? 'Saving Profile...' : 'Save Physician Profile'}
+              {isSubmitting 
+                ? (mode === 'create' ? 'Registering Doctor...' : 'Saving Changes...') 
+                : (mode === 'create' ? 'Register & Activate Doctor' : 'Save Changes')}
             </button>
           </div>
 

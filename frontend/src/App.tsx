@@ -85,6 +85,7 @@ export default function App() {
   ]);
   const [followUp, setFollowUp] = useState('৭ দিন পর রিপোর্টসহ দেখা করবেন');
   const [emergencyRedFlags, setEmergencyRedFlags] = useState('জ্বর ১০৩ ডিগ্রির বেশি হলে অথবা মাড়ি দিয়ে রক্তক্ষরণ হলে জরুরি বিভাগে যোগাযোগ করবেন');
+  const [referredTo, setReferredTo] = useState('');
   const [warnings, setWarnings] = useState<DrugWarning[]>([]);
 
   // UI Controls
@@ -637,12 +638,19 @@ export default function App() {
             advice={advice}
             followUp={followUp}
             emergencyRedFlags={emergencyRedFlags}
+            referredTo={referredTo}
             warnings={warnings}
             onDeleteMedicine={handleDeleteMedicine}
             onUpdateMedicine={handleUpdateMedicine}
             onAddInvestigation={handleAddInvestigation}
             onDeleteInvestigation={handleDeleteInvestigation}
+            onAddComplaint={comp => setComplaints(prev => [...prev, comp])}
+            onDeleteComplaint={idx => setComplaints(prev => prev.filter((_, i) => i !== idx))}
+            onUpdateDiagnosis={diag => setDiagnosis(diag)}
+            onAddAdvice={adv => setAdvice(prev => [...prev, adv])}
+            onDeleteAdvice={idx => setAdvice(prev => prev.filter((_, i) => i !== idx))}
             onUpdateFollowUp={setFollowUp}
+            onUpdateReferredTo={ref => setReferredTo(ref)}
             onSpeakBangla={speakBangla}
             onOpenQrModal={() => setShowQrModal(true)}
           />
@@ -732,6 +740,11 @@ export default function App() {
         onClose={() => setIsDoctorProfileOpen(false)}
         doctor={selectedDoctor}
         onDoctorUpdated={handleDoctorUpdated}
+        onDoctorCreated={newDoc => {
+          setDoctors(prev => [...prev, newDoc]);
+          setSelectedDoctor(newDoc);
+          fetchQueue(newDoc.id);
+        }}
       />
 
       {/* 5. TODAY'S LIVE CHAMBER QUEUE DRAWER */}

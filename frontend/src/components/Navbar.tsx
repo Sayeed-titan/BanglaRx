@@ -198,7 +198,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Active Doctor Selector & Profile Settings */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Building2 size={14} color="var(--teal-400)" />
-            <span style={{ color: 'var(--slate-400)' }}>Physician:</span>
+            <span style={{ color: 'var(--slate-400)' }}>Doctor & Chamber:</span>
             <select
               value={selectedDoctor?.id || ''}
               onChange={e => {
@@ -236,10 +236,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                 fontSize: '0.72rem',
                 borderRadius: 'var(--radius-sm)'
               }}
-              title="Edit Physician BMDC Registration & Chamber Header"
+              title="Chamber setup & doctor credentials"
             >
               <Settings size={12} />
-              <span>Chamber Setup</span>
+              <span>Chamber & Doctor Setup</span>
             </button>
           </div>
 
