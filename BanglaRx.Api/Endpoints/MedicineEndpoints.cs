@@ -20,19 +20,26 @@ public static class MedicineEndpoints
                 return Results.Ok(all);
             }
 
+            var cleanQ = q.Trim();
             var query = @"
-                SELECT * FROM medicines 
-                WHERE brand_name ILIKE @pattern 
+                SELECT *, 
+                       GREATEST(similarity(brand_name, @cleanQ), similarity(generic_name, @cleanQ)) AS sim_score
+                FROM medicines 
+                WHERE brand_name % @cleanQ 
+                   OR generic_name % @cleanQ
+                   OR brand_name ILIKE @pattern 
                    OR generic_name ILIKE @pattern
                 ORDER BY 
                     CASE WHEN brand_name ILIKE @exact THEN 0 ELSE 1 END,
+                    sim_score DESC,
                     brand_name ASC
                 LIMIT @limit;";
 
             var results = await db.QueryAsync<Medicine>(query, new 
             { 
-                pattern = $"%{q}%", 
-                exact = $"{q}%",
+                cleanQ,
+                pattern = $"%{cleanQ}%", 
+                exact = $"{cleanQ}%",
                 limit 
             });
             return Results.Ok(results);
