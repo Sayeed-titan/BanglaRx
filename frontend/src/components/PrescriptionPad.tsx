@@ -6,7 +6,7 @@ interface PrescriptionPadProps {
   doctor: Doctor | null;
   patient: Patient | null;
   savedRxNumber: string;
-  vitals: { bp: string; temp: string; pulse: string };
+  vitals: { bp?: string; temp?: string; pulse?: string; spo2?: string; height?: string; weight?: string };
   complaints: string[];
   diagnosis: string;
   medicines: PrescriptionItem[];
@@ -78,6 +78,16 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
   const [tempDiagnosis, setTempDiagnosis] = useState(diagnosis);
   const [isEditingFollowUp, setIsEditingFollowUp] = useState(false);
   const [tempFollowUp, setTempFollowUp] = useState(followUp);
+  const [generalSigns, setGeneralSigns] = useState({
+    anaemia: 'Nil',
+    jaundice: 'Absent',
+    oedema: 'Nil',
+    cyanosis: 'Absent',
+    dehydration: 'None',
+    lymphNodes: 'Not palpable'
+  });
+  const [examNotes, setExamNotes] = useState('');
+  const [isEditingExamNotes, setIsEditingExamNotes] = useState(false);
 
   return (
     <div
@@ -289,20 +299,178 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
                   Recorded Vitals
                 </span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '0.76rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', background: 'var(--slate-50)', padding: '4px 7px', borderRadius: 'var(--radius-sm)' }}>
-                  <span style={{ color: 'var(--slate-500)' }}>BP:</span>
-                  <strong style={{ color: 'var(--slate-900)' }}>{vitals.bp}</strong>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '0.74rem' }}>
+                {vitals?.bp && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', background: 'var(--slate-50)', padding: '3px 6px', borderRadius: 'var(--radius-sm)' }}>
+                    <span style={{ color: 'var(--slate-500)' }}>BP:</span>
+                    <strong style={{ color: 'var(--slate-900)' }}>{vitals.bp}</strong>
+                  </div>
+                )}
+                {vitals?.temp && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', background: 'var(--slate-50)', padding: '3px 6px', borderRadius: 'var(--radius-sm)' }}>
+                    <span style={{ color: 'var(--slate-500)' }}>Temp:</span>
+                    <strong style={{ color: 'var(--crimson-700)' }}>{vitals.temp}</strong>
+                  </div>
+                )}
+                {vitals?.pulse && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', background: 'var(--slate-50)', padding: '3px 6px', borderRadius: 'var(--radius-sm)' }}>
+                    <span style={{ color: 'var(--slate-500)' }}>Pulse:</span>
+                    <strong style={{ color: 'var(--slate-900)' }}>{vitals.pulse}</strong>
+                  </div>
+                )}
+                {vitals?.spo2 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', background: 'var(--slate-50)', padding: '3px 6px', borderRadius: 'var(--radius-sm)' }}>
+                    <span style={{ color: 'var(--slate-500)' }}>SpO2:</span>
+                    <strong style={{ color: 'var(--teal-700)' }}>{vitals.spo2}</strong>
+                  </div>
+                )}
+                {vitals?.height && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', background: 'var(--slate-50)', padding: '3px 6px', borderRadius: 'var(--radius-sm)' }}>
+                    <span style={{ color: 'var(--slate-500)' }}>Height:</span>
+                    <strong style={{ color: 'var(--slate-800)' }}>{vitals.height}</strong>
+                  </div>
+                )}
+                {vitals?.weight && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', background: 'var(--slate-50)', padding: '3px 6px', borderRadius: 'var(--radius-sm)' }}>
+                    <span style={{ color: 'var(--slate-500)' }}>Weight:</span>
+                    <strong style={{ color: 'var(--slate-800)' }}>{vitals.weight}</strong>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* General Examination (G/E) Physical Signs Checklist */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--slate-800)', textTransform: 'uppercase' }}>
+                  General Exam (G/E)
+                </span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px', fontSize: '0.68rem' }}>
+                <div style={{ background: 'var(--slate-50)', padding: '2px 5px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--slate-200)' }}>
+                  <span style={{ color: 'var(--slate-500)' }}>Anaemia: </span>
+                  <select
+                    value={generalSigns.anaemia}
+                    onChange={e => setGeneralSigns(prev => ({ ...prev, anaemia: e.target.value }))}
+                    className="select-clinical-clean"
+                    style={{ border: 'none', background: 'transparent', fontWeight: '700', fontSize: '0.68rem', color: generalSigns.anaemia !== 'Nil' ? 'var(--crimson-700)' : 'var(--slate-800)', padding: 0 }}
+                  >
+                    <option value="Nil">Nil</option>
+                    <option value="Mild (+)">Mild (+)</option>
+                    <option value="Moderate (++)">Mod (++)</option>
+                    <option value="Severe (+++)">Sev (+++)</option>
+                  </select>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', background: 'var(--slate-50)', padding: '4px 7px', borderRadius: 'var(--radius-sm)' }}>
-                  <span style={{ color: 'var(--slate-500)' }}>Temp:</span>
-                  <strong style={{ color: 'var(--crimson-700)' }}>{vitals.temp}</strong>
+
+                <div style={{ background: 'var(--slate-50)', padding: '2px 5px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--slate-200)' }}>
+                  <span style={{ color: 'var(--slate-500)' }}>Jaundice: </span>
+                  <select
+                    value={generalSigns.jaundice}
+                    onChange={e => setGeneralSigns(prev => ({ ...prev, jaundice: e.target.value }))}
+                    className="select-clinical-clean"
+                    style={{ border: 'none', background: 'transparent', fontWeight: '700', fontSize: '0.68rem', color: generalSigns.jaundice !== 'Absent' ? 'var(--amber-700)' : 'var(--slate-800)', padding: 0 }}
+                  >
+                    <option value="Absent">Absent</option>
+                    <option value="Mild (+)">Mild (+)</option>
+                    <option value="Deep (++)">Deep (++)</option>
+                  </select>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', background: 'var(--slate-50)', padding: '4px 7px', borderRadius: 'var(--radius-sm)' }}>
-                  <span style={{ color: 'var(--slate-500)' }}>Pulse:</span>
-                  <strong style={{ color: 'var(--slate-900)' }}>{vitals.pulse}</strong>
+
+                <div style={{ background: 'var(--slate-50)', padding: '2px 5px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--slate-200)' }}>
+                  <span style={{ color: 'var(--slate-500)' }}>Oedema: </span>
+                  <select
+                    value={generalSigns.oedema}
+                    onChange={e => setGeneralSigns(prev => ({ ...prev, oedema: e.target.value }))}
+                    className="select-clinical-clean"
+                    style={{ border: 'none', background: 'transparent', fontWeight: '700', fontSize: '0.68rem', color: generalSigns.oedema !== 'Nil' ? 'var(--crimson-700)' : 'var(--slate-800)', padding: 0 }}
+                  >
+                    <option value="Nil">Nil</option>
+                    <option value="Mild (+)">Mild (+)</option>
+                    <option value="Pitting (++)">Pitting (++)</option>
+                  </select>
+                </div>
+
+                <div style={{ background: 'var(--slate-50)', padding: '2px 5px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--slate-200)' }}>
+                  <span style={{ color: 'var(--slate-500)' }}>Cyanosis: </span>
+                  <select
+                    value={generalSigns.cyanosis}
+                    onChange={e => setGeneralSigns(prev => ({ ...prev, cyanosis: e.target.value }))}
+                    className="select-clinical-clean"
+                    style={{ border: 'none', background: 'transparent', fontWeight: '700', fontSize: '0.68rem', color: generalSigns.cyanosis !== 'Absent' ? 'var(--crimson-700)' : 'var(--slate-800)', padding: 0 }}
+                  >
+                    <option value="Absent">Absent</option>
+                    <option value="Present (+)">Present (+)</option>
+                  </select>
+                </div>
+
+                <div style={{ background: 'var(--slate-50)', padding: '2px 5px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--slate-200)' }}>
+                  <span style={{ color: 'var(--slate-500)' }}>Dehydration: </span>
+                  <select
+                    value={generalSigns.dehydration}
+                    onChange={e => setGeneralSigns(prev => ({ ...prev, dehydration: e.target.value }))}
+                    className="select-clinical-clean"
+                    style={{ border: 'none', background: 'transparent', fontWeight: '700', fontSize: '0.68rem', color: generalSigns.dehydration !== 'None' ? 'var(--crimson-700)' : 'var(--slate-800)', padding: 0 }}
+                  >
+                    <option value="None">None</option>
+                    <option value="Some (+)">Some (+)</option>
+                    <option value="Severe (++)">Sev (++)</option>
+                  </select>
+                </div>
+
+                <div style={{ background: 'var(--slate-50)', padding: '2px 5px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--slate-200)' }}>
+                  <span style={{ color: 'var(--slate-500)' }}>Lymph Node: </span>
+                  <select
+                    value={generalSigns.lymphNodes}
+                    onChange={e => setGeneralSigns(prev => ({ ...prev, lymphNodes: e.target.value }))}
+                    className="select-clinical-clean"
+                    style={{ border: 'none', background: 'transparent', fontWeight: '700', fontSize: '0.68rem', color: generalSigns.lymphNodes !== 'Not palpable' ? 'var(--crimson-700)' : 'var(--slate-800)', padding: 0 }}
+                  >
+                    <option value="Not palpable">Not palpable</option>
+                    <option value="Cervical (+)">Cervical (+)</option>
+                    <option value="Enlarged (+)">Enlarged (+)</option>
+                  </select>
                 </div>
               </div>
+            </div>
+
+            {/* On Examination (O/E) Custom Findings */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '3px' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--slate-800)', textTransform: 'uppercase' }}>
+                  On Examination (O/E)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingExamNotes(!isEditingExamNotes)}
+                  className="no-print"
+                  style={{ border: 'none', background: 'transparent', color: 'var(--teal-700)', cursor: 'pointer', fontSize: '0.68rem', fontWeight: 600 }}
+                >
+                  {isEditingExamNotes ? 'Done' : '+ Add O/E'}
+                </button>
+              </div>
+
+              {isEditingExamNotes ? (
+                <textarea
+                  value={examNotes}
+                  onChange={e => setExamNotes(e.target.value)}
+                  placeholder="e.g. Chest: Clear, breath sounds vesicular. Heart: S1+S2 audible. Abdomen: Soft, non-tender..."
+                  rows={2}
+                  className="textarea-clinical no-print"
+                  style={{ fontSize: '0.72rem', padding: '4px 6px', width: '100%', lineHeight: 1.4 }}
+                />
+              ) : examNotes ? (
+                <div style={{
+                  fontSize: '0.72rem',
+                  color: 'var(--slate-700)',
+                  background: 'var(--slate-50)',
+                  padding: '4px 6px',
+                  borderRadius: 'var(--radius-xs)',
+                  border: '1px solid var(--slate-200)',
+                  lineHeight: 1.4
+                }}>
+                  {examNotes}
+                </div>
+              ) : null}
             </div>
 
             {/* Chief Complaints with Manual Override */}

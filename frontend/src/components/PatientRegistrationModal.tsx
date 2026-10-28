@@ -28,6 +28,8 @@ export const PatientRegistrationModal: React.FC<PatientRegistrationModalProps> =
   const [bpDia, setBpDia] = useState('80');
   const [temp, setTemp] = useState('98.6');
   const [pulse, setPulse] = useState('78');
+  const [spo2, setSpo2] = useState('98');
+  const [height, setHeight] = useState('168');
   const [weight, setWeight] = useState('65');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,6 +47,8 @@ export const PatientRegistrationModal: React.FC<PatientRegistrationModalProps> =
     setBpDia('');
     setTemp('');
     setPulse('');
+    setSpo2('');
+    setHeight('');
     setWeight('');
   };
 
@@ -81,6 +85,8 @@ export const PatientRegistrationModal: React.FC<PatientRegistrationModalProps> =
       else if (bpSys) triageVitals.bp = `${bpSys} mmHg`;
       if (temp) triageVitals.temp = `${temp} °F`;
       if (pulse) triageVitals.pulse = `${pulse} bpm`;
+      if (spo2) triageVitals.spo2 = `${spo2}%`;
+      if (height) triageVitals.height = `${height} cm`;
       if (weight) triageVitals.weight = `${weight} kg`;
 
       // 2. Add to Today's Chamber Queue
@@ -320,12 +326,12 @@ export const PatientRegistrationModal: React.FC<PatientRegistrationModalProps> =
 
             <div style={{
               background: 'var(--slate-50)',
-              padding: '12px',
+              padding: '10px',
               borderRadius: 'var(--radius-md)',
               border: '1px solid var(--slate-200)',
               display: 'grid',
-              gridTemplateColumns: '1.3fr 1fr 1fr 1fr',
-              gap: '8px'
+              gridTemplateColumns: '1.2fr 0.9fr 0.9fr 0.9fr 0.9fr 0.9fr',
+              gap: '6px'
             }}>
               {/* BP Systolic / Diastolic */}
               <div>
@@ -346,10 +352,10 @@ export const PatientRegistrationModal: React.FC<PatientRegistrationModalProps> =
                     value={bpSys}
                     onChange={e => setBpSys(e.target.value)}
                     style={{
-                      width: '42px',
+                      width: '38px',
                       border: 'none',
                       outline: 'none',
-                      padding: '6px 4px',
+                      padding: '6px 3px',
                       fontSize: '0.78rem',
                       textAlign: 'center'
                     }}
@@ -361,10 +367,10 @@ export const PatientRegistrationModal: React.FC<PatientRegistrationModalProps> =
                     value={bpDia}
                     onChange={e => setBpDia(e.target.value)}
                     style={{
-                      width: '42px',
+                      width: '38px',
                       border: 'none',
                       outline: 'none',
-                      padding: '6px 4px',
+                      padding: '6px 3px',
                       fontSize: '0.78rem',
                       textAlign: 'center'
                     }}
@@ -372,9 +378,9 @@ export const PatientRegistrationModal: React.FC<PatientRegistrationModalProps> =
                   <span style={{
                     background: 'var(--slate-100)',
                     color: 'var(--slate-600)',
-                    fontSize: '0.66rem',
+                    fontSize: '0.62rem',
                     fontWeight: '700',
-                    padding: '6px 6px',
+                    padding: '6px 4px',
                     borderLeft: '1px solid var(--slate-200)',
                     whiteSpace: 'nowrap'
                   }}>
@@ -386,7 +392,7 @@ export const PatientRegistrationModal: React.FC<PatientRegistrationModalProps> =
               {/* Temperature */}
               <div>
                 <label style={{ fontSize: '0.7rem', color: 'var(--slate-600)', fontWeight: '700', display: 'block', marginBottom: '3px' }}>
-                  Temperature
+                  Temp (°F)
                 </label>
                 <div style={{
                   display: 'flex',
@@ -404,19 +410,19 @@ export const PatientRegistrationModal: React.FC<PatientRegistrationModalProps> =
                     onChange={e => setTemp(e.target.value)}
                     style={{
                       width: '100%',
-                      minWidth: '40px',
+                      minWidth: '35px',
                       border: 'none',
                       outline: 'none',
-                      padding: '6px 8px',
+                      padding: '6px 6px',
                       fontSize: '0.78rem'
                     }}
                   />
                   <span style={{
                     background: 'var(--slate-100)',
                     color: 'var(--slate-600)',
-                    fontSize: '0.66rem',
+                    fontSize: '0.62rem',
                     fontWeight: '700',
-                    padding: '6px 6px',
+                    padding: '6px 4px',
                     borderLeft: '1px solid var(--slate-200)',
                     whiteSpace: 'nowrap'
                   }}>
@@ -428,7 +434,7 @@ export const PatientRegistrationModal: React.FC<PatientRegistrationModalProps> =
               {/* Pulse */}
               <div>
                 <label style={{ fontSize: '0.7rem', color: 'var(--slate-600)', fontWeight: '700', display: 'block', marginBottom: '3px' }}>
-                  Pulse Rate
+                  Pulse (bpm)
                 </label>
                 <div style={{
                   display: 'flex',
@@ -445,19 +451,19 @@ export const PatientRegistrationModal: React.FC<PatientRegistrationModalProps> =
                     onChange={e => setPulse(e.target.value)}
                     style={{
                       width: '100%',
-                      minWidth: '40px',
+                      minWidth: '35px',
                       border: 'none',
                       outline: 'none',
-                      padding: '6px 8px',
+                      padding: '6px 6px',
                       fontSize: '0.78rem'
                     }}
                   />
                   <span style={{
                     background: 'var(--slate-100)',
                     color: 'var(--slate-600)',
-                    fontSize: '0.66rem',
+                    fontSize: '0.62rem',
                     fontWeight: '700',
-                    padding: '6px 6px',
+                    padding: '6px 4px',
                     borderLeft: '1px solid var(--slate-200)',
                     whiteSpace: 'nowrap'
                   }}>
@@ -466,10 +472,92 @@ export const PatientRegistrationModal: React.FC<PatientRegistrationModalProps> =
                 </div>
               </div>
 
+              {/* SpO2 */}
+              <div>
+                <label style={{ fontSize: '0.7rem', color: 'var(--slate-600)', fontWeight: '700', display: 'block', marginBottom: '3px' }}>
+                  SpO2 (%)
+                </label>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  background: '#FFFFFF',
+                  border: '1px solid var(--slate-300)',
+                  borderRadius: 'var(--radius-sm)',
+                  overflow: 'hidden'
+                }}>
+                  <input
+                    type="number"
+                    placeholder="98"
+                    value={spo2}
+                    onChange={e => setSpo2(e.target.value)}
+                    style={{
+                      width: '100%',
+                      minWidth: '35px',
+                      border: 'none',
+                      outline: 'none',
+                      padding: '6px 6px',
+                      fontSize: '0.78rem'
+                    }}
+                  />
+                  <span style={{
+                    background: 'var(--slate-100)',
+                    color: 'var(--slate-600)',
+                    fontSize: '0.62rem',
+                    fontWeight: '700',
+                    padding: '6px 4px',
+                    borderLeft: '1px solid var(--slate-200)',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    %
+                  </span>
+                </div>
+              </div>
+
+              {/* Height */}
+              <div>
+                <label style={{ fontSize: '0.7rem', color: 'var(--slate-600)', fontWeight: '700', display: 'block', marginBottom: '3px' }}>
+                  Height (cm)
+                </label>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  background: '#FFFFFF',
+                  border: '1px solid var(--slate-300)',
+                  borderRadius: 'var(--radius-sm)',
+                  overflow: 'hidden'
+                }}>
+                  <input
+                    type="number"
+                    placeholder="168"
+                    value={height}
+                    onChange={e => setHeight(e.target.value)}
+                    style={{
+                      width: '100%',
+                      minWidth: '35px',
+                      border: 'none',
+                      outline: 'none',
+                      padding: '6px 6px',
+                      fontSize: '0.78rem'
+                    }}
+                  />
+                  <span style={{
+                    background: 'var(--slate-100)',
+                    color: 'var(--slate-600)',
+                    fontSize: '0.62rem',
+                    fontWeight: '700',
+                    padding: '6px 4px',
+                    borderLeft: '1px solid var(--slate-200)',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    cm
+                  </span>
+                </div>
+              </div>
+
               {/* Weight */}
               <div>
                 <label style={{ fontSize: '0.7rem', color: 'var(--slate-600)', fontWeight: '700', display: 'block', marginBottom: '3px' }}>
-                  Body Weight
+                  Weight (kg)
                 </label>
                 <div style={{
                   display: 'flex',
@@ -487,19 +575,19 @@ export const PatientRegistrationModal: React.FC<PatientRegistrationModalProps> =
                     onChange={e => setWeight(e.target.value)}
                     style={{
                       width: '100%',
-                      minWidth: '40px',
+                      minWidth: '35px',
                       border: 'none',
                       outline: 'none',
-                      padding: '6px 8px',
+                      padding: '6px 6px',
                       fontSize: '0.78rem'
                     }}
                   />
                   <span style={{
                     background: 'var(--slate-100)',
                     color: 'var(--slate-600)',
-                    fontSize: '0.66rem',
+                    fontSize: '0.62rem',
                     fontWeight: '700',
-                    padding: '6px 6px',
+                    padding: '6px 4px',
                     borderLeft: '1px solid var(--slate-200)',
                     whiteSpace: 'nowrap'
                   }}>

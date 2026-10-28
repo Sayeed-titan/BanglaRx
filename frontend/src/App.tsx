@@ -46,7 +46,14 @@ export default function App() {
   });
 
   // Prescription State
-  const [vitals, setVitals] = useState({ bp: '120/80 mmHg', temp: '102°F', pulse: '84 bpm' });
+  const [vitals, setVitals] = useState<{ bp?: string; temp?: string; pulse?: string; spo2?: string; height?: string; weight?: string }>({
+    bp: '120/80 mmHg',
+    temp: '102°F',
+    pulse: '84 bpm',
+    spo2: '98%',
+    height: '168 cm',
+    weight: '65 kg'
+  });
   const [complaints, setComplaints] = useState<string[]>([
     'High fever for 3 days (102°F)', 
     'Dizziness & generalized body ache', 
