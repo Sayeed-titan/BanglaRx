@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Building2, Check, Stethoscope, Award, UserPlus, Edit3 } from 'lucide-react';
+import { Check, Stethoscope } from 'lucide-react';
 import type { Doctor } from '../types/index';
+import { Button, Modal, SegmentedControl, TextField } from '../design-system';
 
 interface DoctorProfileModalProps {
   isOpen: boolean;
@@ -9,6 +10,8 @@ interface DoctorProfileModalProps {
   onDoctorUpdated: (updated: Doctor) => void;
   onDoctorCreated?: (newDoc: Doctor) => void;
 }
+
+const FORM_ID = 'doctor-profile-form';
 
 export const DoctorProfileModal: React.FC<DoctorProfileModalProps> = ({
   isOpen,
@@ -49,8 +52,6 @@ export const DoctorProfileModal: React.FC<DoctorProfileModalProps> = ({
       setEmail('');
     }
   }, [doctor, mode]);
-
-  if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,267 +100,54 @@ export const DoctorProfileModal: React.FC<DoctorProfileModalProps> = ({
     }
   };
 
+  const creating = mode === 'create';
+
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(15, 23, 42, 0.65)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 100,
-        padding: '20px'
-      }}
-      onClick={onClose}
+    <Modal
+      open={isOpen}
+      onClose={onClose}
+      size="md"
+      icon={<Stethoscope size={22} aria-hidden="true" />}
+      title="Chamber and doctor setup · চেম্বার ও ডাক্তার"
+      subtitle="BMDC registration, chamber location and doctor management"
+      footer={
+        <>
+          <Button variant="tonal" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" form={FORM_ID} icon={<Check size={18} />} disabled={isSubmitting}>
+            {isSubmitting ? (creating ? 'Registering doctor…' : 'Saving…') : creating ? 'Register and activate doctor' : 'Save changes'}
+          </Button>
+        </>
+      }
     >
-      <div
-        className="anim-scale-in"
-        style={{
-          background: '#FFFFFF',
-          borderRadius: 'var(--radius-xl)',
-          width: '100%',
-          maxWidth: '560px',
-          boxShadow: 'var(--shadow-modal)',
-          border: '1px solid var(--slate-200)',
-          overflow: 'hidden'
-        }}
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div style={{
-          padding: '16px 20px',
-          borderBottom: '1px solid var(--slate-200)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          background: 'var(--slate-50)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{
-              background: 'var(--teal-50)',
-              color: 'var(--teal-700)',
-              padding: '8px',
-              borderRadius: 'var(--radius-md)',
-              display: 'flex'
-            }}>
-              <Stethoscope size={18} />
-            </div>
-            <div>
-              <h3 style={{ fontSize: '0.94rem', fontWeight: '800', color: 'var(--slate-900)' }}>
-                Chamber & Doctor Setup (চেম্বার ও ডাক্তার)
-              </h3>
-              <p style={{ fontSize: '0.72rem', color: 'var(--slate-500)' }}>
-                BMDC registration, chamber location & doctor management
-              </p>
-            </div>
-          </div>
+      <form id={FORM_ID} onSubmit={handleSubmit} className="rx-stack">
+        <SegmentedControl
+          label="What would you like to do"
+          value={mode}
+          onChange={setMode}
+          options={[
+            { value: 'edit', label: 'Edit active doctor' },
+            { value: 'create', label: 'Add new doctor' },
+          ]}
+        />
 
-          <button
-            onClick={onClose}
-            className="btn-clinical btn-outline"
-            style={{ padding: '6px', borderRadius: 'var(--radius-sm)' }}
-          >
-            <X size={16} />
-          </button>
+        <TextField label={creating ? 'New doctor full name' : 'Doctor full name'} required value={name} onChange={(e) => setName(e.target.value)} placeholder="Prof. Dr. Nazmul Islam" />
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+          <TextField label="Medical degrees" required value={degrees} onChange={(e) => setDegrees(e.target.value)} placeholder="MBBS (DMC), FCPS, MD" />
+          <TextField label="Specialization" required value={specialization} onChange={(e) => setSpecialization(e.target.value)} placeholder="Medicine and Cardiology" />
+          <TextField label="BMDC registration number" required value={bmdcRegNo} onChange={(e) => setBmdcRegNo(e.target.value)} placeholder="A-45982" />
+          <TextField label="Chamber room" value={roomNo} onChange={(e) => setRoomNo(e.target.value)} placeholder="Chamber 402, 4th floor" />
         </div>
 
-        {/* Mode Switcher Tabs */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          padding: '6px 20px 0 20px',
-          background: 'var(--slate-50)',
-          borderBottom: '1px solid var(--slate-200)',
-          gap: '8px'
-        }}>
-          <button
-            type="button"
-            onClick={() => setMode('edit')}
-            style={{
-              padding: '8px 10px',
-              border: 'none',
-              background: 'transparent',
-              borderBottom: mode === 'edit' ? '2px solid var(--teal-600)' : '2px solid transparent',
-              color: mode === 'edit' ? 'var(--teal-700)' : 'var(--slate-500)',
-              fontWeight: 700,
-              fontSize: '0.78rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px'
-            }}
-          >
-            <Edit3 size={13} />
-            <span>Edit Active Doctor</span>
-          </button>
+        <TextField label="Hospital or chamber" required value={hospitalName} onChange={(e) => setHospitalName(e.target.value)} placeholder="Dhaka Medical College and Hospital" />
 
-          <button
-            type="button"
-            onClick={() => setMode('create')}
-            style={{
-              padding: '8px 10px',
-              border: 'none',
-              background: 'transparent',
-              borderBottom: mode === 'create' ? '2px solid var(--teal-600)' : '2px solid transparent',
-              color: mode === 'create' ? 'var(--teal-700)' : 'var(--slate-500)',
-              fontWeight: 700,
-              fontSize: '0.78rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px'
-            }}
-          >
-            <UserPlus size={13} />
-            <span>+ Add New Doctor</span>
-          </button>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+          <TextField label="Official phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+880 1819-XXXXXX" />
+          <TextField label="Chamber email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="doctor@chamber.com" />
         </div>
-
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} style={{ padding: '20px', maxHeight: '70vh', overflowY: 'auto' }}>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            
-            <div>
-              <label style={{ fontSize: '0.74rem', fontWeight: '700', color: 'var(--slate-700)' }}>
-                {mode === 'create' ? 'New Doctor Full Name *' : 'Doctor Full Name *'}
-              </label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="Prof. Dr. Nazmul Islam"
-                className="input-clinical"
-                style={{ marginTop: '4px' }}
-              />
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <div>
-                <label style={{ fontSize: '0.74rem', fontWeight: '700', color: 'var(--slate-700)' }}>Medical Degrees *</label>
-                <input
-                  type="text"
-                  required
-                  value={degrees}
-                  onChange={e => setDegrees(e.target.value)}
-                  placeholder="MBBS (DMC), FCPS, MD"
-                  className="input-clinical"
-                  style={{ marginTop: '4px' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '0.74rem', fontWeight: '700', color: 'var(--slate-700)' }}>Specialization *</label>
-                <input
-                  type="text"
-                  required
-                  value={specialization}
-                  onChange={e => setSpecialization(e.target.value)}
-                  placeholder="Medicine & Cardiology"
-                  className="input-clinical"
-                  style={{ marginTop: '4px' }}
-                />
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <div>
-                <label style={{ fontSize: '0.74rem', fontWeight: '700', color: 'var(--slate-700)' }}>BMDC Reg. Number *</label>
-                <input
-                  type="text"
-                  required
-                  value={bmdcRegNo}
-                  onChange={e => setBmdcRegNo(e.target.value)}
-                  placeholder="A-45982"
-                  className="input-clinical"
-                  style={{ marginTop: '4px' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '0.74rem', fontWeight: '700', color: 'var(--slate-700)' }}>Chamber Room No</label>
-                <input
-                  type="text"
-                  value={roomNo}
-                  onChange={e => setRoomNo(e.target.value)}
-                  placeholder="Chamber 402, 4th Floor"
-                  className="input-clinical"
-                  style={{ marginTop: '4px' }}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label style={{ fontSize: '0.74rem', fontWeight: '700', color: 'var(--slate-700)' }}>Hospital / Chamber Affiliation *</label>
-              <input
-                type="text"
-                required
-                value={hospitalName}
-                onChange={e => setHospitalName(e.target.value)}
-                placeholder="Dhaka Medical College & Hospital"
-                className="input-clinical"
-                style={{ marginTop: '4px' }}
-              />
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <div>
-                <label style={{ fontSize: '0.74rem', fontWeight: '700', color: 'var(--slate-700)' }}>Official Contact Phone</label>
-                <input
-                  type="text"
-                  value={phone}
-                  onChange={e => setPhone(e.target.value)}
-                  placeholder="+880 1819-XXXXXX"
-                  className="input-clinical"
-                  style={{ marginTop: '4px' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '0.74rem', fontWeight: '700', color: 'var(--slate-700)' }}>Chamber Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="doctor@chamber.com"
-                  className="input-clinical"
-                  style={{ marginTop: '4px' }}
-                />
-              </div>
-            </div>
-
-          </div>
-
-          {/* Action Row */}
-          <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', paddingTop: '18px', marginTop: '16px', borderTop: '1px solid var(--slate-100)' }}>
-            <button
-              type="button"
-              onClick={onClose}
-              className="btn-clinical btn-secondary"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="btn-clinical btn-primary-teal"
-            >
-              <Check size={16} />
-              {isSubmitting 
-                ? (mode === 'create' ? 'Registering Doctor...' : 'Saving Changes...') 
-                : (mode === 'create' ? 'Register & Activate Doctor' : 'Save Changes')}
-            </button>
-          </div>
-
-        </form>
-
-      </div>
-    </div>
+      </form>
+    </Modal>
   );
 };

@@ -1,0 +1,76 @@
+/* ============================================================================
+ * The prescription sheet. Everything inside is sized in em so the screen
+ * (14px) and the A4 print (9.5pt) stay in proportion. .rx-paper keeps the
+ * print rules in index.css working, and always uses the LIGHT tokens.
+ * ========================================================================== */
+
+.rx-pad {
+  background: var(--rx-surface); color: var(--rx-ink);
+  border: 1px solid var(--rx-outline); border-radius: 12px; box-shadow: var(--rx-shadow-paper);
+  padding: 28px 32px; font-size: 14px; line-height: 1.45;
+  display: flex; flex-direction: column; gap: 18px; min-width: 0;
+}
+
+.rx-pad__head { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; padding-bottom: 16px; border-bottom: 2px solid var(--rx-ink); }
+.rx-pad__doctor { display: flex; flex-direction: column; gap: 2px; }
+.rx-pad__doctor h2 { margin: 0; font-size: 1.7em; letter-spacing: -0.01em; line-height: 1.2; }
+.rx-pad__degrees { font-size: 1.05em; font-weight: 600; color: var(--rx-primary); }
+.rx-pad__small { font-size: 0.93em; color: var(--rx-ink-2); }
+.rx-pad__meta { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-size: 0.93em; color: var(--rx-ink-2); text-align: right; }
+.rx-pad__meta strong.rx-pad__official { font-size: 1em; letter-spacing: 0.08em; color: var(--rx-ink); }
+.rx-pad__mono { font-family: var(--rx-font-mono); color: var(--rx-ink); font-weight: 700; }
+
+.rx-pad__cols { display: grid; grid-template-columns: minmax(200px, 270px) minmax(0, 1fr); gap: 24px; align-items: start; }
+.rx-pad__findings { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.rx-pad__rx { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.rx-pad__sec { display: flex; flex-direction: column; gap: 8px; }
+.rx-pad__h { margin: 0; font-size: 0.93em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--rx-ink-2); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.rx-pad__hint { font-size: 0.93em; color: var(--rx-ink-2); margin: 0; line-height: 1.5; }
+
+.rx-pad__list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.rx-pad__item { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 4px 4px 4px 12px; border-radius: 10px; border: 1px solid var(--rx-outline); font-size: 1em; }
+.rx-pad__dx { padding: 10px 14px; border-radius: 12px; background: var(--rx-primary-container); color: var(--rx-on-primary-container); font-size: 1.07em; font-weight: 600; line-height: 1.4; }
+.rx-pad__note { padding: 8px 12px; border-radius: 10px; background: var(--rx-bg); border: 1px solid var(--rx-outline); line-height: 1.5; }
+.rx-pad__grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.rx-pad__sign-lbl { display: flex; flex-direction: column; gap: 2px; font-size: 0.93em; color: var(--rx-ink-2); }
+
+.rx-pad__rxmark { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.rx-pad__rxsym { font-size: 2.8em; font-weight: 700; color: var(--rx-primary); line-height: 1; }
+.rx-pad__tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rx-pad__meds { display: flex; flex-direction: column; gap: 10px; }
+.rx-pad__empty { padding: 24px 20px; border-radius: 18px; border: 1.5px dashed var(--rx-outline); text-align: center; color: var(--rx-ink-2); line-height: 1.55; }
+.rx-pad__row { display: flex; gap: 8px; align-items: center; }
+.rx-pad__row > :first-child { flex: 1; min-width: 0; }
+.rx-pad__follow { padding: 12px 16px; border-radius: 14px; background: var(--rx-bg); border: 1px solid var(--rx-outline); display: flex; flex-direction: column; gap: 8px; }
+.rx-pad__ctl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 4px; }
+.rx-pad__ctl label { display: flex; flex-direction: column; gap: 3px; font-size: 0.93em; font-weight: 600; color: var(--rx-ink-2); }
+.rx-select--sm { min-height: var(--rx-tap); padding: 0 8px; font-size: 1em; font-weight: 600; border-radius: 12px; }
+.rx-pad__print { display: none; }
+.rx-pad__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding-top: 16px; border-top: 1px solid var(--rx-outline); }
+.rx-pad__sig { text-align: center; min-width: 190px; }
+.rx-pad__sig strong { display: block; font-family: serif; font-style: italic; font-size: 1.3em; font-weight: 500; color: var(--rx-primary); }
+.rx-pad__sig span { display: block; border-top: 1px solid var(--rx-ink-3); padding-top: 3px; font-size: 0.93em; color: var(--rx-ink-2); }
+.rx-pad__actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+/* A pad notice (formulary match) sits inside a medicine row */
+.rx-med__notice { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 10px; background: var(--rx-attention); color: var(--rx-on-attention); font-size: 0.93em; }
+
+@media (max-width: 900px) { .rx-pad__cols { grid-template-columns: minmax(0, 1fr); } .rx-pad__ctl { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 560px) { .rx-pad { padding: 20px 16px; } }
+
+@media print {
+  .rx-pad { font-size: 9.5pt; box-shadow: none; border: 0; border-radius: 0; padding: 0; gap: 10px; }
+  .rx-pad__cols { grid-template-columns: 200px minmax(0, 1fr); gap: 16px; }
+  .rx-pad__print { display: block; font-size: 1em; padding: 2px 0; }
+  .rx-pad .rx-med { border: 0; border-bottom: 1px solid var(--rx-outline); border-radius: 0; padding: 4px 0; page-break-inside: avoid; }
+  .rx-pad .rx-med__n { background: none; }
+  .rx-pad__follow, .rx-pad__foot, .rx-pad__sec { page-break-inside: avoid; }
+  .rx-pad__nop { display: none; }
+  .rx-pad select { appearance: none; -webkit-appearance: none; border: 0; background: none; padding: 0; min-height: 0; border-radius: 0; font-weight: 700; }
+  .rx-pad__item { border: 0; border-radius: 0; padding: 1px 0; }
+}
+
+/* While editing on screen, the dropdowns show the values; printing shows the dose, duration and timing as text. */
+@media screen {
+  .rx-med--edit .rx-med__chips, .rx-med--edit .rx-med__note { display: none; }
+}

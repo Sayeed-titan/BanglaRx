@@ -1,0 +1,6 @@
+/* The whole design system as one stylesheet. Import this once, at the app root. */
+@import './tokens.css';
+@import './legacy.css';
+@import './components.css';
+@import './pages.css';
+@import './pad.css';

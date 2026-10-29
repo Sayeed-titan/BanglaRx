@@ -1,0 +1,52 @@
+[
+  {
+    "id": "en-5",
+    "ms": 6034,
+    "err": null,
+    "medOk": 1,
+    "medTotal": 1,
+    "doseOk": 1,
+    "doseTotal": 1,
+    "daysOk": 1,
+    "daysTotal": 1,
+    "notes": []
+  },
+  {
+    "id": "en-6",
+    "ms": 5174,
+    "err": null,
+    "medOk": 1,
+    "medTotal": 1,
+    "doseOk": 1,
+    "doseTotal": 1,
+    "daysOk": 1,
+    "daysTotal": 1,
+    "notes": []
+  },
+  {
+    "id": "neg-3",
+    "ms": 4734,
+    "err": null,
+    "medOk": 0,
+    "medTotal": 0,
+    "doseOk": 0,
+    "doseTotal": 0,
+    "daysOk": 0,
+    "daysTotal": 0,
+    "notes": [
+      "INVENTED: advice"
+    ]
+  },
+  {
+    "id": "unk-1",
+    "ms": 6732,
+    "err": null,
+    "medOk": 1,
+    "medTotal": 1,
+    "doseOk": 1,
+    "doseTotal": 1,
+    "daysOk": 1,
+    "daysTotal": 1,
+    "notes": []
+  }
+]

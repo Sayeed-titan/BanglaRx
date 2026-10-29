@@ -1,0 +1,60 @@
+/* ============================================================================
+ * Page structure from the design canvas: Workbench, Queue, Registration.
+ * ========================================================================== */
+
+.rx-page { min-height: 100vh; display: flex; flex-direction: column; background: var(--rx-bg); color: var(--rx-ink); }
+
+/* ---- Page bar (queue, registration): back, title, actions ---------------- */
+.rx-pagebar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 16px; padding: 12px 24px; background: var(--rx-surface); border-bottom: 1px solid var(--rx-outline); }
+.rx-pagebar__title { display: flex; flex-direction: column; line-height: 1.2; }
+.rx-pagebar__title h1 { margin: 0; font-size: var(--rx-fs-title); letter-spacing: -0.01em; }
+.rx-pagebar__title span { font-size: var(--rx-fs-label); color: var(--rx-ink-2); }
+.rx-pagebar__spacer { flex: 1 1 20px; }
+.rx-live { display: inline-flex; align-items: center; gap: 8px; font-size: var(--rx-fs-label); color: var(--rx-ink-2); }
+.rx-live::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--rx-success-solid); animation: rx-live 1.8s infinite; }
+@keyframes rx-live { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--rx-success-solid) 50%, transparent); } 70% { box-shadow: 0 0 0 9px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+
+/* ---- Workbench: patient + voice on the left, the prescription on the right - */
+.rx-workbench { flex: 1; display: flex; flex-wrap: wrap; gap: 20px; padding: 20px 24px 28px; align-items: flex-start; width: 100%; max-width: 1680px; margin: 0 auto; }
+.rx-workbench__side { flex: 1 1 380px; max-width: 460px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.rx-workbench__main { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+
+.rx-patientcard { display: flex; flex-direction: column; gap: 12px; }
+.rx-patientcard__who { display: flex; align-items: center; gap: 14px; }
+.rx-patientcard__token { flex: none; width: 58px; height: 58px; border-radius: 18px; background: var(--rx-primary); color: var(--rx-on-primary); display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; }
+.rx-patientcard__token small { font-size: 13px; letter-spacing: 0.06em; opacity: 0.85; }
+.rx-patientcard__token strong { font-size: 24px; }
+.rx-patientcard__name { font-size: 19px; font-weight: 700; line-height: 1.25; }
+.rx-patientcard__meta { font-size: var(--rx-fs-label); color: var(--rx-ink-2); }
+
+/* ---- Queue and registration: main column + side column ---------------------- */
+.rx-split { flex: 1; display: flex; flex-wrap: wrap; gap: 20px; padding: 20px 24px 28px; align-items: flex-start; width: 100%; max-width: 1680px; margin: 0 auto; }
+.rx-split__main { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.rx-split__side { flex: 1 1 280px; max-width: 380px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.rx-split__side--sticky { position: sticky; top: 16px; }
+.rx-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.rx-queuelist { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.rx-callrow { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 16px 20px; border-radius: 22px; background: var(--rx-surface); border: 1.5px solid var(--rx-primary); }
+
+.rx-step { display: flex; flex-direction: column; gap: 16px; }
+.rx-step__head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.rx-step__num { flex: none; width: 32px; height: 32px; border-radius: 50%; background: var(--rx-primary); color: var(--rx-on-primary); display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.rx-step__head h2 { margin: 0; font-size: 18px; }
+.rx-tokencard { background: var(--rx-primary); color: var(--rx-on-primary); border-radius: 28px; padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+.rx-tokencard__label { font-size: var(--rx-fs-caption); letter-spacing: 0.08em; opacity: 0.85; }
+.rx-tokencard__num { font-size: 64px; font-weight: 700; line-height: 1; }
+.rx-tokencard hr { border: 0; height: 1px; margin: 0; background: color-mix(in srgb, currentColor 30%, transparent); }
+
+@media (max-width: 720px) {
+  .rx-pagebar, .rx-workbench, .rx-split { padding-left: 16px; padding-right: 16px; }
+  .rx-stats { grid-template-columns: 1fr; }
+  .rx-split__side--sticky { position: static; }
+}
+
+@media print {
+  .rx-page { background: #fff; }
+  .rx-workbench { display: block; padding: 0; max-width: none; }
+  .rx-workbench__main { display: block; }
+}
+
+.rx-appfoot { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; padding: 10px 24px; border-top: 1px solid var(--rx-outline); background: var(--rx-surface); font-size: var(--rx-fs-caption); color: var(--rx-ink-2); }

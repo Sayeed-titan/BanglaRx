@@ -1,0 +1,134 @@
+/* ============================================================================
+ * BanglaRx Design System, tokens (v0.1)
+ * Light values apply everywhere. data-theme="dark" on <body> swaps them for night duty.
+ * .rx-paper (the prescription sheet) always re-applies the LIGHT values: a document
+ * is never dark, on screen or in print.
+ * ========================================================================== */
+
+:root,
+.rx,
+.rx-paper {
+  /* type */
+  --rx-font: 'Figtree', 'Hind Siliguri', system-ui, sans-serif;
+  --rx-font-bn: 'Hind Siliguri', 'Figtree', system-ui, sans-serif;
+  --rx-font-mono: ui-monospace, 'JetBrains Mono', monospace;
+  --rx-fs-caption: 13px;
+  --rx-fs-label: 14px;
+  --rx-fs-body: 16px;
+  --rx-fs-title: 22px;
+  --rx-fs-display: 40px;
+
+  /* colour: light */
+  --rx-primary: #0F6B5C;
+  --rx-on-primary: #FFFFFF;
+  --rx-primary-container: color-mix(in srgb, var(--rx-primary) 16%, #fff);
+  --rx-on-primary-container: #08413A;
+  --rx-bg: #F3F6F1;
+  --rx-surface: #FFFFFF;
+  --rx-surface-2: #EAF0EB;
+  --rx-surface-3: #E0E8E2;
+  --rx-ink: #171D1A;
+  --rx-ink-2: #44504A;
+  --rx-ink-3: #5A665F;
+  --rx-outline: #D0D9D3;
+
+  --rx-accent: #FFE6B5;
+  --rx-on-accent: #4A3200;
+  --rx-success: #C9EFD6;
+  --rx-on-success: #0B3D20;
+  --rx-success-solid: #1E7B4A;
+  --rx-attention: #FFE6B5;
+  --rx-on-attention: #4A3200;
+  --rx-danger: #FFDAD6;
+  --rx-on-danger: #7A1210;
+  --rx-danger-solid: #B3261E;
+  --rx-info: #D6E6FA;
+  --rx-on-info: #0F3358;
+
+  /* shape */
+  --rx-r-sm: 10px;
+  --rx-r-md: 16px;
+  --rx-r-lg: 24px;
+  --rx-r-pill: 999px;
+
+  /* lift */
+  --rx-shadow-rest: 0 1px 2px rgba(23, 29, 26, 0.08);
+  --rx-shadow-paper: 0 6px 24px rgba(23, 29, 26, 0.12);
+  --rx-focus: color-mix(in srgb, var(--rx-primary) 60%, #fff);
+
+  /* space (4px base) */
+  --rx-s1: 4px;
+  --rx-s2: 8px;
+  --rx-s3: 12px;
+  --rx-s4: 16px;
+  --rx-s5: 24px;
+  --rx-s6: 32px;
+  --rx-s7: 48px;
+
+  /* density: clinic is the default */
+  --rx-control-h: 48px;
+  --rx-control-h-sm: 40px;
+  --rx-tap: 44px;
+
+  /* motion */
+  --rx-ease: cubic-bezier(0.2, 0, 0, 1);
+  --rx-dur: 160ms;
+
+  font-family: var(--rx-font);
+  font-size: var(--rx-fs-body);
+  line-height: 1.5;
+  color: var(--rx-ink);
+  background: var(--rx-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+.rx *, .rx *::before, .rx *::after { box-sizing: border-box; }
+
+/* dark, for night duty. Never applied when printing: the A4 prescription is always light. */
+@media not print {
+:root[data-theme='dark'],
+.rx[data-theme='dark'] {
+  --rx-primary: #7FD6C2;
+  --rx-on-primary: #06241D;
+  --rx-primary-container: #1F4A41;
+  --rx-on-primary-container: #C8F2E8;
+  --rx-bg: #12201C;
+  --rx-surface: #1B2D28;
+  --rx-surface-2: #223630;
+  --rx-surface-3: #2A413A;
+  --rx-ink: #E4EEE9;
+  --rx-ink-2: #A9BBB3;
+  --rx-ink-3: #A2B4AC;
+  --rx-outline: #2F443D;
+  --rx-accent: #4A3B16;
+  --rx-on-accent: #FFE6B5;
+  --rx-success: #1D4A30;
+  --rx-on-success: #C9EFD6;
+  --rx-success-solid: #6FD39A;
+  --rx-attention: #4A3B16;
+  --rx-on-attention: #FFE6B5;
+  --rx-danger: #5A2B27;
+  --rx-on-danger: #FFDAD6;
+  --rx-danger-solid: #F2877E;
+  --rx-info: #1F3A5A;
+  --rx-on-info: #D6E6FA;
+  --rx-shadow-rest: none;
+  --rx-shadow-paper: 0 6px 24px rgba(0, 0, 0, 0.4);
+}
+}
+
+/* density: patients and elders get big and calm, managers get compact */
+.rx[data-density='patient'] { --rx-control-h: 56px; --rx-control-h-sm: 48px; --rx-fs-body: 17px; }
+.rx[data-density='compact'] { --rx-control-h: 40px; --rx-control-h-sm: 36px; --rx-fs-body: 14px; --rx-fs-label: 13px; }
+
+/* the A+ switch adds three pixels to reading text */
+.rx[data-text='large'] { --rx-fs-body: 19px; --rx-fs-label: 16px; }
+.rx[data-density='patient'][data-text='large'] { --rx-fs-body: 20px; }
+
+/* Bangla text wants more air */
+.rx :lang(bn), .rx .rx-bn { font-family: var(--rx-font-bn); line-height: 1.6; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rx { --rx-dur: 0ms; }
+  .rx *, .rx *::before, .rx *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
+}

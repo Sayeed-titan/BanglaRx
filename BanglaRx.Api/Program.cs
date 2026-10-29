@@ -3,6 +3,9 @@ using BanglaRx.Api.Data;
 using BanglaRx.Api.Endpoints;
 using BanglaRx.Api.Services;
 
+// Dapper: map snake_case columns (brand_name) onto PascalCase properties (BrandName)
+Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
 
@@ -34,6 +37,7 @@ builder.Services.AddSingleton<IDbConnectionFactory>(new PostgresDbConnectionFact
 
 // 5. Clinical Application & Intelligence Services
 builder.Services.AddScoped<IDrugSafetyService, DrugSafetyService>();
+builder.Services.AddScoped<IClinicalSafetyService, ClinicalSafetyService>();
 builder.Services.AddScoped<IConsultationAiService, ConsultationAiService>();
 
 var app = builder.Build();
@@ -51,6 +55,7 @@ app.MapDoctorEndpoints();
 app.MapPatientEndpoints();
 app.MapQueueEndpoints();
 app.MapPrescriptionEndpoints();
+app.MapTemplateEndpoints();
 app.MapInteractionEndpoints();
 app.MapAiConsultationEndpoints();
 
