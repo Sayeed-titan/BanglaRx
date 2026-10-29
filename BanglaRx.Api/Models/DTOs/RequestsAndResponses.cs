@@ -38,6 +38,23 @@ public class SavePrescriptionRequest
     public List<string> AdviceBangla { get; set; } = new();
     public List<string>? InteractionWarnings { get; set; }
     public List<PrescriptionItem>? Items { get; set; }
+    public string? FollowUp { get; set; }
+    public string? ReferredTo { get; set; }
+    public Dictionary<string, string>? GeneralSigns { get; set; }
+    public string? ExamNotes { get; set; }
+    public string? RedFlags { get; set; }
+    public List<string>? PatientReports { get; set; }
+}
+
+public record SafetyAlert(string Type, string Severity, string Title, string Detail, List<string> Drugs);
+
+public class SafetyCheckRequest
+{
+    public int? PatientId { get; set; }
+    public string? Allergies { get; set; }
+    public int? Age { get; set; }
+    public string? WeightKg { get; set; }
+    public List<PrescriptionItem>? Items { get; set; }
 }
 
 public class CheckInteractionsRequest
@@ -51,6 +68,8 @@ public class ConsultationInput
     public string? DoctorNotes { get; set; }
     public bool IsAmendment { get; set; } = false;
     public string? CurrentPrescriptionJson { get; set; }
+    public int? PatientId { get; set; }
+    public string? WeightKg { get; set; }
 }
 
 public class ClinicalAiResponse

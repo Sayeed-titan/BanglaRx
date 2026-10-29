@@ -54,6 +54,25 @@ export interface PrescriptionItem {
   dosagePattern: string;
   duration: string;
   instructionsBangla: string;
+  matchStatus?: 'exact' | 'ambiguous' | 'fuzzy' | 'strength_unavailable' | 'unmatched';
+  matchOptions?: MedicineOption[];
+}
+
+export interface MedicineOption {
+  id: number;
+  brandName: string;
+  genericName: string;
+  form: string;
+  strength: string;
+}
+
+export interface GeneralSigns {
+  anaemia?: string;
+  jaundice?: string;
+  oedema?: string;
+  cyanosis?: string;
+  dehydration?: string;
+  lymphNodes?: string;
 }
 
 export interface DrugWarning {
@@ -65,14 +84,19 @@ export interface DrugWarning {
 }
 
 export interface AccuracyMetrics {
-  spokenWordsCount: number;
-  acceptedEntitiesCount: number;
-  conversionRate: number;
-  confidenceScore: number;
+  unmatchedMedicines: number;
   detectedCategories: {
     symptoms: number;
     vitals: number;
     medications: number;
     instructions: number;
   };
+}
+
+export interface SafetyAlert {
+  type: string;
+  severity: string;
+  title: string;
+  detail: string;
+  drugs: string[];
 }

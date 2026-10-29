@@ -1,0 +1,123 @@
+/* ============================================================================
+ * Page structure from the design canvas: Workbench, Queue, Registration.
+ * ========================================================================== */
+
+.rx-page { min-height: 100vh; display: flex; flex-direction: column; background: var(--rx-bg); color: var(--rx-ink); }
+
+/* ---- Page bar (queue, registration): back, title, actions ---------------- */
+.rx-pagebar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 16px; padding: 12px 24px; background: var(--rx-surface); border-bottom: 1px solid var(--rx-outline); }
+.rx-pagebar__title { display: flex; flex-direction: column; line-height: 1.2; }
+.rx-pagebar__title h1 { margin: 0; font-size: var(--rx-fs-title); letter-spacing: -0.01em; }
+.rx-pagebar__title span { font-size: var(--rx-fs-label); color: var(--rx-ink-2); }
+.rx-pagebar__spacer { flex: 1 1 20px; }
+.rx-live { display: inline-flex; align-items: center; gap: 8px; font-size: var(--rx-fs-label); color: var(--rx-ink-2); }
+.rx-live::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--rx-success-solid); animation: rx-live 1.8s infinite; }
+@keyframes rx-live { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--rx-success-solid) 50%, transparent); } 70% { box-shadow: 0 0 0 9px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+
+/* ---- Workbench: patient + voice on the left, the prescription on the right - */
+.rx-workbench { flex: 1; display: flex; flex-wrap: wrap; gap: 20px; padding: 20px 24px 28px; align-items: flex-start; width: 100%; max-width: 1680px; margin: 0 auto; }
+.rx-workbench__side { flex: 1 1 380px; max-width: 460px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.rx-workbench__main { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+
+.rx-patientcard { display: flex; flex-direction: column; gap: 12px; }
+.rx-patientcard__who { display: flex; align-items: center; gap: 14px; }
+.rx-patientcard__token { flex: none; width: 58px; height: 58px; border-radius: 18px; background: var(--rx-primary); color: var(--rx-on-primary); display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; }
+.rx-patientcard__token small { font-size: 13px; letter-spacing: 0.06em; opacity: 0.85; }
+.rx-patientcard__token strong { font-size: 24px; }
+.rx-patientcard__name { font-size: 19px; font-weight: 700; line-height: 1.25; }
+.rx-patientcard__meta { font-size: var(--rx-fs-label); color: var(--rx-ink-2); }
+
+/* ---- Queue and registration: main column + side column ---------------------- */
+.rx-split { flex: 1; display: flex; flex-wrap: wrap; gap: 20px; padding: 20px 24px 28px; align-items: flex-start; width: 100%; max-width: 1680px; margin: 0 auto; }
+.rx-split__main { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.rx-split__side { flex: 1 1 280px; max-width: 380px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.rx-split__side--sticky { position: sticky; top: 16px; }
+.rx-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.rx-queuelist { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.rx-callrow { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 16px 20px; border-radius: 22px; background: var(--rx-surface); border: 1.5px solid var(--rx-primary); }
+
+.rx-step { display: flex; flex-direction: column; gap: 16px; }
+.rx-step__head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.rx-step__num { flex: none; width: 32px; height: 32px; border-radius: 50%; background: var(--rx-primary); color: var(--rx-on-primary); display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.rx-step__head h2 { margin: 0; font-size: 18px; }
+.rx-tokencard { background: var(--rx-primary); color: var(--rx-on-primary); border-radius: 28px; padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+.rx-tokencard__label { font-size: var(--rx-fs-caption); letter-spacing: 0.08em; opacity: 0.85; }
+.rx-tokencard__num { font-size: 64px; font-weight: 700; line-height: 1; }
+.rx-tokencard hr { border: 0; height: 1px; margin: 0; background: color-mix(in srgb, currentColor 30%, transparent); }
+
+@media (max-width: 720px) {
+  .rx-pagebar, .rx-workbench, .rx-split { padding-left: 16px; padding-right: 16px; }
+  .rx-stats { grid-template-columns: 1fr; }
+  .rx-split__side--sticky { position: static; }
+}
+
+@media print {
+  .rx-page { background: #fff; }
+  .rx-workbench { display: block; padding: 0; max-width: none; }
+  .rx-workbench__main { display: block; }
+}
+
+.rx-appfoot { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; padding: 10px 24px; border-top: 1px solid var(--rx-outline); background: var(--rx-surface); font-size: var(--rx-fs-caption); color: var(--rx-ink-2); }
+
+/* ---- Back-office shell: left menu + content (dashboard) ---------------------- */
+.rx-shell { flex: 1; display: flex; flex-wrap: wrap; }
+.rx-navrail { flex: 0 1 240px; min-width: 0; background: var(--rx-surface-2); padding: 20px 14px; display: flex; flex-direction: column; gap: 18px; }
+.rx-navrail__list { display: flex; flex-direction: column; gap: 2px; }
+.rx-navrail__link { min-height: 48px; padding: 0 16px; border-radius: 16px; display: flex; align-items: center; color: var(--rx-ink); text-decoration: none; font-size: 15px; font-weight: 500; }
+.rx-navrail__link:hover { background: var(--rx-surface-3); }
+.rx-navrail__link--on { background: color-mix(in srgb, var(--rx-primary) 18%, var(--rx-surface)); font-weight: 700; }
+.rx-shell__main { flex: 999 1 640px; min-width: 0; padding: 22px 28px 32px; display: flex; flex-direction: column; gap: 18px; }
+.rx-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.rx-row2 { display: flex; flex-wrap: wrap; gap: 18px; align-items: stretch; }
+.rx-row2 > .rx-card { min-width: 0; }
+.rx-bars { display: flex; align-items: flex-end; gap: 10px; height: 170px; padding-top: 8px; border-bottom: 1px solid var(--rx-outline); }
+.rx-bar { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; font-size: var(--rx-fs-caption); color: var(--rx-ink-2); }
+.rx-bar__fill { width: 100%; min-height: 4px; border-radius: 8px 8px 0 0; background: color-mix(in srgb, var(--rx-primary) 40%, var(--rx-surface)); }
+.rx-bar--peak { color: var(--rx-ink); font-weight: 700; }
+.rx-bar--peak .rx-bar__fill { background: var(--rx-primary); }
+.rx-bars__axis { display: flex; gap: 10px; font-size: var(--rx-fs-caption); color: var(--rx-ink-2); }
+.rx-bars__axis span { flex: 1; text-align: center; }
+.rx-docrow { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; background: var(--rx-bg); }
+.rx-docrow__dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--rx-success-solid); }
+.rx-docrow__dot--idle { background: var(--rx-ink-3); }
+.rx-check { width: 26px; height: 26px; flex: none; margin: 0; accent-color: var(--rx-primary); }
+.rx-checkrow { display: flex; align-items: center; gap: 14px; min-height: var(--rx-tap); cursor: pointer; }
+.rx-recent { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.rx-recent__btn { width: 100%; min-height: var(--rx-tap); padding: 10px 12px; border: 0; border-radius: var(--rx-r-sm); background: transparent; color: var(--rx-ink); font: inherit; text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
+.rx-recent__btn:hover, .rx-recent__btn[aria-current='true'] { background: var(--rx-surface-2); }
+@media (max-width: 720px) { .rx-shell__main { padding: 16px; } }
+@media print { .rx-navrail { display: none; } }
+
+/* ---- Sign-in (the canvas "Sign in" page): brand panel + form ---------------------- */
+.rx-login { min-height: 100vh; display: flex; flex-wrap: wrap; background: var(--rx-bg); color: var(--rx-ink); }
+.rx-login__brand { flex: 1 1 420px; min-width: 0; background: #0F6B5C; color: #fff; padding: 56px; display: flex; flex-direction: column; justify-content: space-between; gap: 40px; }
+.rx-login__brand .rx-brand__mark { background: rgba(255, 255, 255, 0.16); color: #fff; }
+.rx-login__tagline { margin: 0; font-size: 46px; line-height: 1.15; letter-spacing: -0.02em; }
+.rx-login__form { flex: 1 1 520px; min-width: 0; padding: 48px 56px; display: flex; flex-direction: column; justify-content: center; gap: 24px; }
+@media (max-width: 720px) { .rx-login__brand { padding: 32px 24px; } .rx-login__tagline { font-size: 34px; } .rx-login__form { padding: 32px 24px; } }
+
+/* ---- Who is signed in: a small pill, never printed ------------------------------- */
+.rx-account { position: fixed; left: 16px; bottom: 16px; z-index: 40; display: flex; align-items: center; gap: 6px; padding: 6px 8px 6px 16px; border-radius: var(--rx-r-pill); background: var(--rx-surface); border: 1px solid var(--rx-outline); box-shadow: var(--rx-shadow-paper); font-size: var(--rx-fs-label); max-width: calc(100vw - 32px); }
+.rx-account__who { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+.rx-account__who span { font-size: var(--rx-fs-caption); color: var(--rx-ink-2); }
+@media print { .rx-account { display: none; } }
+
+/* leave room under the content for the signed-in pill */
+.rx-split, .rx-workbench, .rx-shell__main { padding-bottom: 88px; }
+
+/* ---- Patient app (#/patient): big, calm, phone-first ---- */
+.rx-pt { min-height: 100vh; background: var(--rx-bg); color: var(--rx-ink); }
+.rx-pt__bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 12px 16px; background: var(--rx-surface); border-bottom: 1px solid var(--rx-outline); }
+.rx-pt__brand { font-size: 20px; }
+.rx-pt__main { max-width: 640px; margin: 0 auto; padding: 20px 16px 64px; }
+.rx-pt__h1 { margin: 0; font-size: 26px; line-height: 1.3; }
+.rx-pt__h2 { margin: 0; font-size: 19px; line-height: 1.3; }
+.rx-pt__lead { margin: 0; font-size: 17px; line-height: 1.6; color: var(--rx-ink-2); }
+.rx-pt__note { margin: 0; font-size: var(--rx-fs-label); color: var(--rx-ink-2); }
+.rx-pt__meta { font-size: var(--rx-fs-label); color: var(--rx-ink-2); line-height: 1.5; }
+.rx-pt__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.rx-pt__booking { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.rx-pt__chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.rx-pt__big { display: flex; flex-direction: column; gap: 2px; }
+.rx-pt__big span { font-size: var(--rx-fs-label); color: var(--rx-ink-2); }
+.rx-pt__big strong { font-size: 28px; }

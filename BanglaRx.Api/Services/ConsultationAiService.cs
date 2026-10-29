@@ -20,17 +20,20 @@ public class ConsultationAiService : IConsultationAiService
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IDbConnectionFactory _connectionFactory;
     private readonly IDrugSafetyService _drugSafetyService;
+    private readonly IClinicalSafetyService _safetyService;
 
     public ConsultationAiService(
         IConfiguration configuration,
         IHttpClientFactory httpClientFactory,
         IDbConnectionFactory connectionFactory,
-        IDrugSafetyService drugSafetyService)
+        IDrugSafetyService drugSafetyService,
+        IClinicalSafetyService safetyService)
     {
         _configuration = configuration;
         _httpClientFactory = httpClientFactory;
         _connectionFactory = connectionFactory;
         _drugSafetyService = drugSafetyService;
+        _safetyService = safetyService;
     }
 
     public async Task<object> AnalyzeConsultationAsync(ConsultationInput input)
@@ -49,6 +52,20 @@ public class ConsultationAiService : IConsultationAiService
 
         var sw = Stopwatch.StartNew();
 
+        // Patient context (allergies, age, chronic) so the model and safety checks know who is being treated
+        Patient? patient = null;
+        if (input.PatientId.HasValue)
+        {
+            patient = await db.QuerySingleOrDefaultAsync<Patient>("SELECT * FROM patients WHERE id = @id;", new { id = input.PatientId });
+        }
+        var patientContext = patient == null ? "" : $@"
+
+PATIENT CONTEXT (for your awareness only):
+- Age/Sex: {patient.age}Y / {patient.gender}
+- Known allergies: {patient.allergies}
+- Chronic conditions: {patient.chronic_conditions}
+Extract EXACTLY what the doctor prescribes, even if it conflicts with the context above: the doctor decides; a separate safety engine will flag conflicts. Never silently drop or substitute a medicine.";
+
         // --- STAGE 1: Fast PostgreSQL pg_trgm Candidate Retrieval (<3ms across 15,000+ medicines) ---
         var tokens = Regex.Matches(text + " " + (input.CurrentPrescriptionJson ?? ""), @"[\p{L}\p{N}]+")
             .Select(m => m.Value)
@@ -57,30 +74,12 @@ public class ConsultationAiService : IConsultationAiService
             .Take(25)
             .ToList();
 
-        var transliterations = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        // Bangla/Banglish spellings -> brand/generic names, from the medicine_aliases table (extendable without code changes)
+        var aliasTerms = await db.QueryAsync<string>(
+            "SELECT DISTINCT target FROM medicine_aliases WHERE @text ILIKE '%' || alias || '%';", new { text });
+        foreach (var target in aliasTerms)
         {
-            { "নাপা", "Napa" },
-            { "সেকলো", "Seclo" },
-            { "সার্জেল", "Sergel" },
-            { "মোনাস", "Monas" },
-            { "প্যারাসিটামল", "Paracetamol" },
-            { "অ্যাজিথ্রো", "Azithromycin" },
-            { "অ্যাভলো", "Avelox" },
-            { "ডায়াপ্র", "Diapro" },
-            { "বাইজোরাল", "Bizoran" },
-            { "এটোভা", "Atova" },
-            { "সিপ্রোসিন", "Ciprocin" },
-            { "ফ্লেক্সো", "Flexi" },
-            { "রোসুভা", "Rosuva" },
-            { "রেনিটিডিন", "Ranitidine" }
-        };
-
-        foreach (var kvp in transliterations)
-        {
-            if (text.Contains(kvp.Key, StringComparison.OrdinalIgnoreCase) && !tokens.Contains(kvp.Value, StringComparer.OrdinalIgnoreCase))
-            {
-                tokens.Add(kvp.Value);
-            }
+            if (!tokens.Contains(target, StringComparer.OrdinalIgnoreCase)) tokens.Add(target);
         }
 
         var candidateMedicines = new List<Medicine>();
@@ -161,15 +160,18 @@ You autonomously process clinical dialogue spoken in Bengali (বাংলা), 
 
 Your core clinical tasks:
 1. Extract patient Chief Complaints into concise medical symptoms.
-2. Extract Vitals (BP, Temp, Pulse, SpO2) if present or infer clinical baseline.
-3. Formulate a Differential or Clinical Diagnosis.
+2. Extract Vitals (BP, Temp, Pulse, SpO2) ONLY if explicitly stated. Never estimate or infer vitals; omit any that are not stated.
+3. Record the diagnosis the doctor stated. If none was stated, return an empty string.
+STRICT RULE: Never invent medicines, doses, tests, advice, follow-up or red flags that the doctor did not say. If a section was not mentioned, return an empty list or empty string for it.
 4. Extract all prescribed medications. Ground each medicine to genuine Bangladeshi pharmaceutical brands from the inventory below whenever possible.
+   - CRITICAL: Include EVERY medicine the doctor names, even if it is NOT in the inventory below. Never drop a medicine. If it is not in the inventory, use the name exactly as spoken for brandName (and the generic name if the doctor said it, otherwise empty). The system will flag it for the doctor to verify.
    - For dosage pattern, capture precise instructions: e.g. '1+0+1', '1+1+1', '1+0+0', '0+0+1', or interval-based patterns like '৪ ঘণ্টা পর পর' (every 4 hrs), '৬ ঘণ্টা পর পর' (every 6 hrs), '৮ ঘণ্টা পর পর' (every 8 hrs), 'জর আসলে ১টি' (as needed / PRN / SOS).
 5. Extract Laboratory Investigations Advised by doctor (e.g. 'CBC with ESR', 'Dengue NS1 Antigen', 'Serum Creatinine', 'USG of Whole Abdomen').
 6. Extract Patient's Prior Test Reports presented today (e.g. 'Dengue NS1: Positive', 'Platelet: 95,000/μL', 'HbA1c: 8.5%').
 7. Extract Patient Dietary & Lifestyle Advice in fluent Bengali (e.g. 'পর্যাপ্ত পানি ও ডাবের পানি খাবেন').
 8. Extract Follow-up timing (e.g. '৭ দিন পর রিপোর্টসহ দেখা করবেন') and Red Flag emergency warnings.
 
+{patientContext}
 {activeRxSection}
 
 Official Bangladesh Medicines Catalog:
@@ -254,46 +256,23 @@ You MUST return a valid JSON object strictly matching this schema:
             {
                 foreach (var item in aiResult.Medicines)
                 {
-                    var brandClean = item.BrandName?.Trim() ?? "";
-                    var firstWord = brandClean.Split(' ')[0];
-
-                    // First check in candidateMedicines
-                    var matched = candidateMedicines.FirstOrDefault(m => 
-                        string.Equals(m.brand_name, brandClean, StringComparison.OrdinalIgnoreCase) ||
-                        m.brand_name.StartsWith(firstWord, StringComparison.OrdinalIgnoreCase));
-
-                    // If not found in candidates, run direct PostgreSQL lookup with pg_trgm
-                    if (matched == null && !string.IsNullOrWhiteSpace(brandClean))
-                    {
-                        matched = await db.QueryFirstOrDefaultAsync<Medicine>(@"
-                            SELECT * FROM medicines 
-                            WHERE brand_name ILIKE @brand
-                               OR brand_name % @brand
-                               OR generic_name ILIKE @generic
-                            ORDER BY 
-                                CASE WHEN brand_name ILIKE @brand THEN 0 ELSE 1 END,
-                                similarity(brand_name, @brand) DESC
-                            LIMIT 1;", new { brand = brandClean, generic = item.GenericName ?? brandClean });
-                    }
-
-                    enrichedMedicines.Add(new PrescriptionItem
-                    {
-                        MedicineId = matched?.id,
-                        BrandName = matched?.brand_name ?? item.BrandName ?? "Unspecified",
-                        GenericName = matched?.generic_name ?? item.GenericName ?? "Generic",
-                        Form = matched?.form ?? item.Form ?? "Tablet",
-                        Strength = matched?.strength ?? item.Strength ?? "Standard",
-                        DosagePattern = string.IsNullOrWhiteSpace(item.DosagePattern) ? (matched?.standard_dosage ?? "1+0+1") : item.DosagePattern,
-                        Duration = string.IsNullOrWhiteSpace(item.Duration) ? "7 days" : item.Duration,
-                        InstructionsBangla = string.IsNullOrWhiteSpace(item.InstructionsBangla) ? (matched?.instructions_bangla ?? "খাওয়ার পরে") : item.InstructionsBangla
-                    });
-
-                    detectedGenerics.Add(matched?.generic_name ?? item.GenericName ?? "");
+                    // Strength-aware resolution; ambiguous/unknown stays flagged for the doctor instead of being guessed
+                    var resolved = await MedicineResolver.ResolveAsync(db, item, candidateMedicines);
+                    enrichedMedicines.Add(resolved);
+                    detectedGenerics.Add(resolved.GenericName);
                 }
             }
 
             // 3. Clinical Safety Intercept: Check Drug-Drug Interactions
             var warnings = await _drugSafetyService.CheckInteractionsAsync(detectedGenerics);
+            var safetyAlerts = await _safetyService.CheckAsync(new SafetyCheckRequest
+            {
+                PatientId = input.PatientId,
+                Allergies = patient?.allergies,
+                Age = patient?.age,
+                WeightKg = input.WeightKg,
+                Items = enrichedMedicines
+            });
 
             sw.Stop();
 
@@ -315,17 +294,19 @@ You MUST return a valid JSON object strictly matching this schema:
 
             return new
             {
-                ChiefComplaints = aiResult.ChiefComplaints ?? new List<string> { "Clinical Consultation" },
-                Vitals = aiResult.Vitals ?? new Dictionary<string, string> { ["bp"] = "120/80 mmHg", ["temp"] = "98.6 F", ["pulse"] = "76 bpm" },
-                Diagnosis = aiResult.Diagnosis ?? "Clinical Evaluation",
+                // Only what the doctor actually said: missing sections stay empty, never invented.
+                ChiefComplaints = aiResult.ChiefComplaints ?? new List<string>(),
+                Vitals = aiResult.Vitals ?? new Dictionary<string, string>(),
+                Diagnosis = aiResult.Diagnosis ?? "",
                 Medicines = enrichedMedicines,
-                Investigations = aiResult.Investigations ?? new List<string> { "CBC with ESR" },
+                Investigations = aiResult.Investigations ?? new List<string>(),
                 PatientReportsPresented = aiResult.PatientReportsPresented ?? new List<string>(),
-                AdviceBangla = aiResult.AdviceBangla ?? new List<string> { "পর্যাপ্ত বিশ্রাম ও তরল খাবার গ্রহণ করুন।" },
-                FollowUp = aiResult.FollowUp ?? "৭ দিন পর রিপোর্টসহ দেখা করবেন",
-                EmergencyRedFlags = aiResult.EmergencyRedFlags ?? "জ্বর ১০৩ ডিগ্রির বেশি হলে দ্রুত হাসপাতালে যাবেন",
+                AdviceBangla = aiResult.AdviceBangla ?? new List<string>(),
+                FollowUp = aiResult.FollowUp ?? "",
+                EmergencyRedFlags = aiResult.EmergencyRedFlags ?? "",
                 InteractionWarnings = warnings,
-                ConfidenceScore = 0.98,
+                SafetyAlerts = safetyAlerts,
+                UnmatchedMedicineCount = enrichedMedicines.Count(m => m.MatchStatus != MedicineResolver.Exact),
                 ExecutionTimeMs = sw.ElapsedMilliseconds,
                 Model = "BanglaRx Multimodal Neural Intelligence (CDSS)"
             };
