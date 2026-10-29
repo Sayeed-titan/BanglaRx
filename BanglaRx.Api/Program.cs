@@ -3,6 +3,7 @@ using BanglaRx.Api.Auth;
 using BanglaRx.Api.Booking;
 using BanglaRx.Api.Data;
 using BanglaRx.Api.PatientApp;
+using BanglaRx.Api.Rubina;
 using BanglaRx.Api.Endpoints;
 using BanglaRx.Api.Services;
 
@@ -55,6 +56,12 @@ switch (smsOptions.Provider.ToLowerInvariant())
 }
 builder.Services.AddSingleton<PatientAuthService>();
 
+// 2e. Rubina, the public booking helper (limits live in the Rubina section of settings)
+var rubinaOptions = new RubinaOptions();
+builder.Configuration.GetSection("Rubina").Bind(rubinaOptions);
+builder.Services.AddSingleton(rubinaOptions);
+builder.Services.AddSingleton<RubinaService>();
+
 // 3. HTTP Client Factory
 builder.Services.AddHttpClient();
 
@@ -81,6 +88,7 @@ await ScheduleSchema.EnsureAsync(dbFactory);
 await app.InitBanglaRxAuthAsync();
 await BookingSchema.EnsureAsync(dbFactory);
 await PatientSchema.EnsureAsync(dbFactory);
+await RubinaSchema.EnsureAsync(dbFactory);
 
 // 7. Register Modular Minimal API Endpoint Groups
 app.MapStatusEndpoints();
@@ -97,6 +105,7 @@ app.MapAuthEndpoints();
 app.MapPharmacyEndpoints();
 app.MapBookingEndpoints();
 app.MapPatientAppEndpoints();
+app.MapRubinaEndpoints();
 if (smsOptions.Provider.Equals("test", StringComparison.OrdinalIgnoreCase))
     // tests only: lets a test read the code it asked for. Exists only when Sms:Provider is "test".
     app.MapGet("/api/_test/sms", (string phone) => TestSmsSender.Last.TryGetValue(phone, out var m) ? Results.Ok(new { message = m }) : Results.NotFound());

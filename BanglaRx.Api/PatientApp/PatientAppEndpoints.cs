@@ -9,6 +9,8 @@ namespace BanglaRx.Api.PatientApp;
 public record PhoneInput(string? Phone);
 public record VerifyInput(string? Phone, string? Code);
 public record ProfileInput(string? FullName, int? Age, string? Gender);
+public record NextFreeSlot(string Date, string Time, string Branch);
+public record DoctorCardOut(int Id, string Name, string Degrees, string Specialization, string HospitalName, decimal? ConsultationFee, NextFreeSlot? NextFree);
 public record ConsentInput(bool? RecordVisit, bool? Reminders, bool? StoreReports);
 public record ConsentView(bool? RecordVisit, bool Reminders, bool StoreReports, DateTime? UpdatedAt);
 public record PatientBookingInput(int? DoctorId, string? Date, string? Time, int? ProfileId, string? Reason, string? Channel);
@@ -61,6 +63,31 @@ public static class PatientAppEndpoints
     private static string? DemoCode(SmsOptions sms, string phone) =>
         sms.Provider.Equals("demo", StringComparison.OrdinalIgnoreCase) && DemoSmsSender.Last.TryGetValue(phone, out var m)
             ? System.Text.RegularExpressions.Regex.Match(m, @"\d{6}").Value : null;
+
+    /// <summary>Doctors who take online bookings and have a schedule, each with the next free time. Used by the patient app and the public chat.</summary>
+    public static async Task<List<DoctorCardOut>> DoctorCardsAsync(NpgsqlConnection db, ClinicClock clock)
+    {
+        var docs = (await db.QueryAsync<DoctorCard>(@"
+            SELECT d.id AS Id, d.name AS Name, d.degrees AS Degrees, d.specialization AS Specialization, d.hospital_name AS HospitalName,
+                   d.consultation_fee AS ConsultationFee
+            FROM doctors d
+            WHERE d.accepts_online_booking AND EXISTS (SELECT 1 FROM doctor_schedules s WHERE s.doctor_id = d.id)
+            ORDER BY d.name;")).ToList();
+        var result = new List<DoctorCardOut>();
+        foreach (var d in docs)
+        {
+            SlotInfo? next = null;
+            string? nextDate = null;
+            for (var i = 0; i <= clock.Options.MaxDaysAhead && next is null; i++)
+            {
+                var day = await SlotService.BuildAsync(db, clock, d.Id, clock.Today.AddDays(i));
+                next = day.Slots.FirstOrDefault(s => s.State == "open");
+                if (next is not null) nextDate = day.Date;
+            }
+            result.Add(new DoctorCardOut(d.Id, d.Name, d.Degrees, d.Specialization, d.HospitalName, d.ConsultationFee, next is null ? null : new NextFreeSlot(nextDate!, next.Time, next.BranchName)));
+        }
+        return result;
+    }
 
     public static void MapPatientAppEndpoints(this IEndpointRouteBuilder app)
     {
@@ -172,26 +199,7 @@ public static class PatientAppEndpoints
         {
             using var db = f.CreateConnection();
             await db.OpenAsync();
-            var docs = (await db.QueryAsync<DoctorCard>(@"
-                SELECT d.id AS Id, d.name AS Name, d.degrees AS Degrees, d.specialization AS Specialization, d.hospital_name AS HospitalName,
-                       d.consultation_fee AS ConsultationFee
-                FROM doctors d
-                WHERE d.accepts_online_booking AND EXISTS (SELECT 1 FROM doctor_schedules s WHERE s.doctor_id = d.id)
-                ORDER BY d.name;")).ToList();
-            var result = new List<object>();
-            foreach (var d in docs)
-            {
-                SlotInfo? next = null;
-                string? nextDate = null;
-                for (var i = 0; i <= clock.Options.MaxDaysAhead && next is null; i++)
-                {
-                    var day = await SlotService.BuildAsync(db, clock, d.Id, clock.Today.AddDays(i));
-                    next = day.Slots.FirstOrDefault(s => s.State == "open");
-                    if (next is not null) nextDate = day.Date;
-                }
-                result.Add(new { d.Id, d.Name, d.Degrees, d.Specialization, d.HospitalName, d.ConsultationFee, nextFree = next is null ? null : new { date = nextDate, time = next.Time, branch = next.BranchName } });
-            }
-            return Results.Ok(result);
+            return Results.Ok(await DoctorCardsAsync(db, clock));
         });
 
         g.MapGet("/slots", async (int doctorId, string date, IDbConnectionFactory f, ClinicClock clock) =>

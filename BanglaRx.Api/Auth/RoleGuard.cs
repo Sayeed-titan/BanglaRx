@@ -32,6 +32,9 @@ public static class RoleRules
         new("GET", "/api/status", null),
         // the patient app signs in with its own tokens and checks them itself (see PatientApp/PatientAppEndpoints.cs)
         new("*", "/api/patient/**", null),
+        new("*", "/api/public/**", null),
+        new("*", "/api/inbox", new[] { Roles.Receptionist, Roles.Manager }),
+        new("*", "/api/inbox/**", new[] { Roles.Receptionist, Roles.Manager }),
         new("GET", "/api/_test/sms", null),
         new("GET", "/api/auth/status", null),
         new("POST", "/api/auth/login", null),
