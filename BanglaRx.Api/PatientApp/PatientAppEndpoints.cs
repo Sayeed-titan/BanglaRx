@@ -27,12 +27,17 @@ public static class PatientAppEndpoints
 
     private static IResult Fail(int status, string message) => Results.Json(new { errors = new[] { message } }, statusCode: status);
 
+    /// <summary>Showcase mode only (Sms:Provider = demo): the code just sent, so the screen can show it. Null otherwise.</summary>
+    private static string? DemoCode(SmsOptions sms, string phone) =>
+        sms.Provider.Equals("demo", StringComparison.OrdinalIgnoreCase) && DemoSmsSender.Last.TryGetValue(phone, out var m)
+            ? System.Text.RegularExpressions.Regex.Match(m, @"\d{6}").Value : null;
+
     public static void MapPatientAppEndpoints(this IEndpointRouteBuilder app)
     {
         // ---- signing in (no token needed) ----
         var auth = app.MapGroup("/api/patient/auth").WithTags("Patient sign-in");
 
-        auth.MapPost("/request-code", async (PhoneInput req, HttpContext ctx, IDbConnectionFactory f, PatientAuthService svc) =>
+        auth.MapPost("/request-code", async (PhoneInput req, HttpContext ctx, IDbConnectionFactory f, PatientAuthService svc, SmsOptions sms) =>
         {
             var phone = Phones.Normalize(req.Phone);
             if (phone is null) return Fail(400, "Enter a Bangladesh mobile number, like 01712345678.");
@@ -43,7 +48,7 @@ public static class PatientAppEndpoints
             await Audit(db, ip, phone, result == 200 ? "patient_code_sent" : result == 429 ? "patient_code_limited" : "patient_code_send_failed");
             return result switch
             {
-                200 => Results.Ok(new { sent = true, expiresInSeconds = svc.Options.OtpSeconds }),
+                200 => Results.Ok(new { sent = true, expiresInSeconds = svc.Options.OtpSeconds, demoCode = DemoCode(sms, phone) }),
                 429 => Fail(429, "Too many codes were asked for. Please wait a few minutes and try again."),
                 _ => Fail(503, "We couldn't send the code right now. Please try again in a moment."),
             };

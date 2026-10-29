@@ -50,6 +50,7 @@ switch (smsOptions.Provider.ToLowerInvariant())
 {
     case "http": builder.Services.AddSingleton<ISmsSender, HttpSmsSender>(); break;
     case "test": builder.Services.AddSingleton<ISmsSender, TestSmsSender>(); break;
+    case "demo": builder.Services.AddSingleton<ISmsSender, DemoSmsSender>(); break;
     default: builder.Services.AddSingleton<ISmsSender, LogSmsSender>(); break;
 }
 builder.Services.AddSingleton<PatientAuthService>();

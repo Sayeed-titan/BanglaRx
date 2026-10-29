@@ -78,7 +78,7 @@ export async function pcall<T>(method: 'GET' | 'POST', path: string, body?: unkn
   }
 }
 
-export const requestCode = (phone: string) => pcall<{ sent: boolean; expiresInSeconds: number }>('POST', '/patient/auth/request-code', { phone });
+export const requestCode = (phone: string) => pcall<{ sent: boolean; expiresInSeconds: number; demoCode?: string }>('POST', '/patient/auth/request-code', { phone });
 
 export async function verifyCode(phone: string, code: string): Promise<Reply<PatientSession>> {
   const r = await pcall<PatientSession>('POST', '/patient/auth/verify', { phone, code });

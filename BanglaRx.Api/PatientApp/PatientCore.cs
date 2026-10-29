@@ -28,7 +28,7 @@ public class PatientOptions
 
 public class SmsOptions
 {
-    /// <summary>"log" (default, development: the message is printed in the API window), "http" (a gateway you configure), or "test" (tests only).</summary>
+    /// <summary>"log" (default, development: the message is printed in the API window), "http" (a gateway you configure), or "test" (tests only), or "demo" (showcase: also shows the code on screen; never for real patients).</summary>
     public string Provider { get; set; } = "log";
     public string? Url { get; set; }
     /// <summary>Request body with {to} and {message} filled in. Example: {"to":"{to}","text":"{message}"}</summary>
@@ -76,6 +76,18 @@ public class LogSmsSender : ISmsSender
     public Task<bool> SendAsync(string toPhone, string message)
     {
         Console.WriteLine($"[SMS (development log) to {toPhone}] {message}");
+        return Task.FromResult(true);
+    }
+}
+
+/// <summary>Showcase only: prints the message in the API window AND keeps the newest one so the sign-in screen can show the code. Never use with real patients.</summary>
+public class DemoSmsSender : ISmsSender
+{
+    public static readonly ConcurrentDictionary<string, string> Last = new();
+    public Task<bool> SendAsync(string toPhone, string message)
+    {
+        Last[toPhone] = message;
+        Console.WriteLine($"[SMS (demo) to {toPhone}] {message}");
         return Task.FromResult(true);
     }
 }

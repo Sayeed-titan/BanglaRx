@@ -92,6 +92,7 @@ const SignIn: React.FC<{ lang: Lang }> = ({ lang }) => {
   const [code, setCode] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [demoCode, setDemoCode] = useState<string | null>(null);
 
   const send = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -101,6 +102,7 @@ const SignIn: React.FC<{ lang: Lang }> = ({ lang }) => {
     setBusy(false);
     if (r.ok) {
       setCode('');
+      setDemoCode(r.data?.demoCode ?? null);
       setStep('code');
     } else setErrors(say(lang, r.errors));
   };
@@ -132,6 +134,11 @@ const SignIn: React.FC<{ lang: Lang }> = ({ lang }) => {
           <p className="rx-pt__lead">
             {tr(lang, 'codeLead')} <strong>{phone}</strong>
           </p>
+          {demoCode && (
+            <Callout tone="attention" title="Demo mode: no real SMS is sent">
+              Your code is <strong style={{ fontSize: 22, letterSpacing: 4 }}>{demoCode}</strong>
+            </Callout>
+          )}
           <TextField label={tr(lang, 'code')} inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} required />
           {errors.length > 0 && <Callout tone="danger">{errors.join(' ')}</Callout>}
           <Button size="lg" type="submit" disabled={busy || code.length !== 6} fullWidth>
