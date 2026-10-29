@@ -82,7 +82,7 @@ public static class RoleRules
         new("*", "/api/bookings", new[] { Roles.Receptionist, Roles.Manager }),
         new("*", "/api/bookings/**", new[] { Roles.Receptionist, Roles.Manager }),
         // pharmacy sees only signed prescriptions, with no diagnosis or notes
-        new("GET", "/api/pharmacy/**", new[] { Roles.Pharmacist, Roles.Manager }),
+        new("*", "/api/pharmacy/**", new[] { Roles.Pharmacist, Roles.Manager }),
     };
 
     public static Rule? Find(string method, string path) =>

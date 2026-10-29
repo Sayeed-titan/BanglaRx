@@ -3,6 +3,7 @@ import { Volume2, Printer, QrCode, Plus, X, Calendar, FileText, Edit2, Check, Us
 import type { Doctor, Patient, PrescriptionItem, GeneralSigns, SafetyAlert, MedicineOption } from '../types/index';
 import { useSession } from '../auth/session';
 import { Badge, Button, Callout, Chip, IconButton, MedicineRow, PatientBanner, Textarea, VitalRow } from '../design-system';
+import { RxHistoryModal } from './RxHistoryModal';
 
 interface PrescriptionPadProps {
   doctor: Doctor | null;
@@ -43,6 +44,8 @@ interface PrescriptionPadProps {
   onUpdateExamNotes: (val: string) => void;
   rxVersion?: number;
   isSavedRx?: boolean;
+  /** database id of the saved prescription, for the history list */
+  rxId?: number | null;
   onSpeakBangla: (text: string) => void;
   onOpenQrModal: () => void;
   /** signs and saves the prescription (new version when it was already saved) */
@@ -158,6 +161,7 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
   onUpdateExamNotes,
   rxVersion = 1,
   isSavedRx = false,
+  rxId = null,
   onSpeakBangla,
   onOpenQrModal,
   onSign,
@@ -174,6 +178,7 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
   const [isEditingDiagnosis, setIsEditingDiagnosis] = useState(false);
   const [tempDiagnosis, setTempDiagnosis] = useState(diagnosis);
   const [isEditingExamNotes, setIsEditingExamNotes] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const tempHot = vitals.temp ? parseFloat(vitals.temp) >= 100 : false;
 
@@ -200,6 +205,9 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
             Rx ID <span className="rx-pad__mono">{savedRxNumber || 'Draft (not saved)'}</span>
             {isSavedRx && rxVersion > 1 ? ` · v${rxVersion}` : ''}
           </span>
+          {isSavedRx && rxId ? (
+            <Button variant="text" className="no-print" onClick={() => setHistoryOpen(true)}>History</Button>
+          ) : null}
           <span>{new Date().toLocaleDateString('en-GB')}</span>
         </div>
       </header>
@@ -560,6 +568,7 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
           <span>Registered physician's signature</span>
         </div>
       </footer>
+      <RxHistoryModal open={historyOpen} onClose={() => setHistoryOpen(false)} rxId={rxId} />
     </article>
   );
 };

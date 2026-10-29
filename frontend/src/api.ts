@@ -20,9 +20,9 @@ export interface SendResult<T> {
 }
 
 /** POST / PUT json. Never throws: the page gets { ok, errors } and can show them next to the form. */
-export async function sendJson<T>(method: 'POST' | 'PUT', path: string, body: unknown): Promise<SendResult<T>> {
+export async function sendJson<T>(method: 'POST' | 'PUT' | 'DELETE', path: string, body?: unknown): Promise<SendResult<T>> {
   try {
-    const res = await fetch(`${API_BASE}${path}`, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const res = await fetch(`${API_BASE}${path}`, { method, headers: { 'Content-Type': 'application/json' }, body: method === 'DELETE' ? undefined : JSON.stringify(body) });
     const data = (await res.json().catch(() => null)) as (T & { errors?: string[]; Errors?: string[] }) | null;
     if (res.ok) return { ok: true, status: res.status, data, errors: [] };
     return { ok: false, status: res.status, data: null, errors: data?.errors ?? data?.Errors ?? [`The server answered ${res.status}.`] };

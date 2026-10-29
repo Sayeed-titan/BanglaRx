@@ -805,6 +805,7 @@ export default function App() {
             examNotes={examNotes}
             onUpdateExamNotes={setExamNotes}
             rxVersion={rxVersion}
+            rxId={savedRxId}
             isSavedRx={savedRxId !== null}
             safetyAlerts={safetyAlerts}
             onDeleteMedicine={handleDeleteMedicine}

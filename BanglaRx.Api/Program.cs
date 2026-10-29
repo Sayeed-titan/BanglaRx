@@ -90,6 +90,7 @@ await app.InitBanglaRxAuthAsync();
 await BookingSchema.EnsureAsync(dbFactory);
 await PatientSchema.EnsureAsync(dbFactory);
 await RubinaSchema.EnsureAsync(dbFactory);
+await PharmacySchema.EnsureAsync(dbFactory);
 
 // 7. Register Modular Minimal API Endpoint Groups
 app.MapStatusEndpoints();

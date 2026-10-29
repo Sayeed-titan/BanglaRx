@@ -122,6 +122,37 @@ public static class PrescriptionEndpoints
             }
         });
 
+        // What each earlier version said, from the copies kept every time the prescription was changed
+        group.MapGet("/{id:int}/history", async (int id, IDbConnectionFactory connectionFactory) =>
+        {
+            using var db = connectionFactory.CreateConnection();
+            var current = await db.QuerySingleOrDefaultAsync<dynamic>("SELECT rx_number, version, created_at, updated_at FROM prescriptions WHERE id = @id;", new { id });
+            if (current == null) return Results.NotFound(new { errors = new[] { "Prescription not found." } });
+            var rows = await db.QueryAsync<(DateTime CreatedAt, string Details)>(
+                "SELECT created_at, details::text FROM audit_logs WHERE event_type = 'PRESCRIPTION_REVISED' AND (details->>'prescription_id')::int = @id ORDER BY id;", new { id });
+            var versions = new List<object>();
+            foreach (var (at, details) in rows)
+            {
+                using var doc = JsonDocument.Parse(details);
+                var root = doc.RootElement;
+                string? Text(JsonElement e, string n) => e.ValueKind == JsonValueKind.Object && e.TryGetProperty(n, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
+                var prev = root.TryGetProperty("previous", out var pv) ? pv : default;
+                var meds = new List<object>();
+                if (root.TryGetProperty("previous_items", out var items) && items.ValueKind == JsonValueKind.Array)
+                    foreach (var it in items.EnumerateArray())
+                        meds.Add(new { brandName = Text(it, "BrandName") ?? Text(it, "brandName"), dosagePattern = Text(it, "DosagePattern") ?? Text(it, "dosagePattern"), duration = Text(it, "Duration") ?? Text(it, "duration") });
+                versions.Add(new
+                {
+                    version = root.TryGetProperty("previous_version", out var ver) && ver.ValueKind == JsonValueKind.Number ? ver.GetInt32() : 0,
+                    replacedAt = at,
+                    diagnosis = Text(prev, "diagnosis"),
+                    followUp = Text(prev, "follow_up"),
+                    medicines = meds,
+                });
+            }
+            return Results.Ok(new { rxNumber = (string)current.rx_number, currentVersion = (int)current.version, savedAt = (DateTime)current.created_at, lastChangedAt = (DateTime?)current.updated_at, earlier = versions });
+        });
+
         // Edit after save: replaces content, bumps version, keeps the previous version in audit_logs
         group.MapPut("/{id:int}", async (int id, SavePrescriptionRequest req, IDbConnectionFactory connectionFactory) =>
         {

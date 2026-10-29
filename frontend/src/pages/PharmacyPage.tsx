@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ShieldCheck, ShieldAlert } from 'lucide-react';
-import { Badge, Callout, Card, EmptyState, PageHeader, PatientBanner, TextField } from '../design-system';
-import { getJson } from '../api';
+import { Badge, Button, Callout, Card, EmptyState, PageHeader, PatientBanner, TextField } from '../design-system';
+import { getJson, sendJson } from '../api';
 
 interface RxListRow {
   id: number;
@@ -11,9 +11,21 @@ interface RxListRow {
   created_at: string;
   patient_name: string;
   doctor_name: string;
+  item_count?: number;
+  dispensed_count?: number;
+}
+
+interface Dispensed {
+  id: number;
+  prescriptionVersion: number;
+  brandName: string;
+  dispensedBy: string;
+  dispensedAt: string;
 }
 
 interface RxDetail {
+  dispensed: Dispensed[];
+  revisedAfterDispense: boolean;
   prescription: {
     id: number;
     rx_number: string;
@@ -48,6 +60,9 @@ export const PharmacyPage: React.FC = () => {
   const [selected, setSelected] = useState<number | null>(null);
   const [detail, setDetail] = useState<RxDetail | null>(null);
   const [given, setGiven] = useState<Record<number, boolean>>({});
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<{ tone: 'success' | 'danger'; text: string } | null>(null);
+  const [refresh, setRefresh] = useState(0);
 
   // the pharmacist's view: signed prescriptions only, searched on the server
   useEffect(() => {
@@ -66,12 +81,11 @@ export const PharmacyPage: React.FC = () => {
       clearTimeout(timer);
       ctl.abort();
     };
-  }, [query]);
+  }, [query, refresh]);
 
   useEffect(() => {
     if (selected === null) return;
     const ctl = new AbortController();
-    setDetail(null);
     setGiven({});
     getJson<RxDetail>(`/pharmacy/prescriptions/${selected}`, ctl.signal)
       .then(setDetail)
@@ -79,12 +93,37 @@ export const PharmacyPage: React.FC = () => {
         if (e?.name !== 'AbortError') setError(true);
       });
     return () => ctl.abort();
-  }, [selected]);
+  }, [selected, refresh]);
 
   const matches = list ?? [];
 
   const rx = detail?.prescription;
-  const markedCount = detail ? detail.items.filter((_, i) => given[i]).length : 0;
+  // a medicine is handed over for the CURRENT version when a record says so
+  const recordFor = (brand: string) => detail?.dispensed.find((d) => d.brandName.toLowerCase() === brand.toLowerCase() && d.prescriptionVersion === (rx?.version ?? 1));
+  const markedCount = detail ? detail.items.filter((m, i) => given[i] || recordFor(m.brandName)).length : 0;
+  const tickedNew = detail ? detail.items.filter((m, i) => given[i] && !recordFor(m.brandName)) : [];
+  const canUndo = (d: Dispensed) => Date.now() - new Date(d.dispensedAt).getTime() < 15 * 60 * 1000;
+
+  const record = async () => {
+    if (!rx || tickedNew.length === 0) return;
+    setBusy(true);
+    setMessage(null);
+    const r = await sendJson<{ recorded: number }>('POST', `/pharmacy/prescriptions/${rx.id}/dispense`, { items: tickedNew.map((m) => ({ brandName: m.brandName })) });
+    setBusy(false);
+    if (r.ok) {
+      setMessage({ tone: 'success', text: `Recorded ${r.data?.recorded ?? tickedNew.length} medicine(s) as handed over.` });
+      setGiven({});
+      setRefresh((n) => n + 1);
+    } else setMessage({ tone: 'danger', text: r.errors.join(' ') });
+  };
+
+  const undo = async (d: Dispensed) => {
+    setBusy(true);
+    const r = await sendJson<unknown>('DELETE', `/pharmacy/dispense/${d.id}`);
+    setBusy(false);
+    setMessage(r.ok ? { tone: 'success', text: `${d.brandName} is no longer marked as handed over.` } : { tone: 'danger', text: r.errors.join(' ') });
+    setRefresh((n) => n + 1);
+  };
 
   return (
     <div className="rx-page">
@@ -111,6 +150,7 @@ export const PharmacyPage: React.FC = () => {
                       <strong style={{ fontFamily: 'var(--rx-font-mono)', fontSize: 14 }}>{r.rx_number}</strong>
                       <span style={{ fontSize: 'var(--rx-fs-caption)', color: 'var(--rx-ink-2)' }}>
                         {r.patient_name} · {r.doctor_name} · {new Date(r.created_at).toLocaleDateString('en-GB')}
+                        {r.item_count ? ` · ${r.dispensed_count ?? 0}/${r.item_count} handed over` : ''}
                       </span>
                     </button>
                   </li>
@@ -143,6 +183,13 @@ export const PharmacyPage: React.FC = () => {
                 </Callout>
               )}
 
+              {detail!.revisedAfterDispense && (
+                <Callout tone="attention" icon={<ShieldAlert size={24} />} title="Changed after hand-over">
+                  The doctor changed this prescription after some medicines were handed over. Check the new version carefully before handing over anything else.
+                </Callout>
+              )}
+              {message && <Callout tone={message.tone}>{message.text}</Callout>}
+
               <PatientBanner
                 name={rx.patient_name}
                 ageSex={`${rx.patient_age}Y / ${rx.patient_gender}`}
@@ -151,11 +198,13 @@ export const PharmacyPage: React.FC = () => {
               />
 
               <ul className="rx-queuelist" aria-label="Medicines">
-                {detail!.items.map((m, i) => (
+                {detail!.items.map((m, i) => {
+                  const done = recordFor(m.brandName);
+                  return (
                   <li key={i}>
                     <Card style={{ padding: '14px 18px' }}>
                       <label className="rx-checkrow">
-                        <input type="checkbox" className="rx-check" checked={!!given[i]} onChange={(e) => setGiven({ ...given, [i]: e.target.checked })} />
+                        <input type="checkbox" className="rx-check" checked={!!done || !!given[i]} disabled={!!done} onChange={(e) => setGiven({ ...given, [i]: e.target.checked })} />
                         <span style={{ flex: 1, minWidth: 0, lineHeight: 1.35 }}>
                           <strong style={{ fontSize: 18 }}>{m.brandName}</strong>
                           <span style={{ display: 'block', fontSize: 'var(--rx-fs-caption)', color: 'var(--rx-ink-2)' }}>
@@ -168,17 +217,27 @@ export const PharmacyPage: React.FC = () => {
                         </span>
                       </label>
                       {m.instructionsBangla && <div className="rx-bn" style={{ marginTop: 6, paddingLeft: 40, color: 'var(--rx-ink-2)' }}>{m.instructionsBangla}</div>}
+                      {done && (
+                        <div className="rx-row" style={{ marginTop: 6, paddingLeft: 40, gap: 8, justifyContent: 'space-between' }}>
+                          <Badge tone="success">Handed over by {done.dispensedBy} · {new Date(done.dispensedAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</Badge>
+                          {canUndo(done) && <Button variant="text" disabled={busy} onClick={() => undo(done)}>Undo</Button>}
+                        </div>
+                      )}
                     </Card>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
 
               <div className="rx-row" style={{ justifyContent: 'space-between' }}>
                 <Badge tone={markedCount === detail!.items.length ? 'success' : 'neutral'}>
                   {markedCount} of {detail!.items.length} ticked
                 </Badge>
-                <span style={{ fontSize: 'var(--rx-fs-caption)', color: 'var(--rx-ink-2)' }}>Ticks help you check the bag. They are not saved yet.</span>
+                <Button onClick={record} disabled={busy || tickedNew.length === 0}>
+                  {tickedNew.length === 0 ? 'Tick the medicines you hand over' : `Record ${tickedNew.length} as handed over`}
+                </Button>
               </div>
+              <span style={{ fontSize: 'var(--rx-fs-caption)', color: 'var(--rx-ink-2)' }}>Once recorded, the doctor's office can see what was handed over and by whom. A mistake can be undone for 15 minutes.</span>
             </>
           )}
         </section>
