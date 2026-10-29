@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { Doctor, Patient, PrescriptionItem, DrugWarning, AccuracyMetrics, QueueItem } from './types/index';
+import type { Doctor, Patient, PrescriptionItem, SafetyAlert, AccuracyMetrics, QueueItem, GeneralSigns, MedicineOption } from './types/index';
 import { Navbar } from './components/Navbar';
 import { VoiceConsultation } from './components/VoiceConsultation';
 import { AccuracyAnalytics } from './components/AccuracyAnalytics';
@@ -37,68 +37,30 @@ export default function App() {
   const [isAmendmentMode, setIsAmendmentMode] = useState(false);
 
   // Accuracy & Clinical Summary State
-  const [accuracyMetrics, setAccuracyMetrics] = useState<AccuracyMetrics | null>({
-    spokenWordsCount: 26,
-    acceptedEntitiesCount: 11,
-    conversionRate: 92.4,
-    confidenceScore: 98.0,
-    detectedCategories: { symptoms: 4, vitals: 3, medications: 2, instructions: 2 }
-  });
+  const [accuracyMetrics, setAccuracyMetrics] = useState<AccuracyMetrics | null>(null);
 
-  // Prescription State
-  const [vitals, setVitals] = useState<{ bp?: string; temp?: string; pulse?: string; spo2?: string; height?: string; weight?: string }>({
-    bp: '120/80 mmHg',
-    temp: '102°F',
-    pulse: '84 bpm',
-    spo2: '98%',
-    height: '168 cm',
-    weight: '65 kg'
-  });
-  const [complaints, setComplaints] = useState<string[]>([
-    'High fever for 3 days (102°F)', 
-    'Dizziness & generalized body ache', 
-    'Epigastric burning / Hyperacidity'
-  ]);
-  const [diagnosis, setDiagnosis] = useState('Viral Febrile Illness with Acid Peptic Disease (Dyspepsia)');
-  const [medicines, setMedicines] = useState<PrescriptionItem[]>([
-    {
-      brandName: 'Napa Extra',
-      genericName: 'Paracetamol + Caffeine',
-      form: 'Tablet',
-      strength: '500mg+65mg',
-      dosagePattern: '1+0+1',
-      duration: '5 days',
-      instructionsBangla: 'ভরা পেটে খাবেন'
-    },
-    {
-      brandName: 'Seclo 20',
-      genericName: 'Omeprazole',
-      form: 'Capsule',
-      strength: '20mg',
-      dosagePattern: '1+0+1',
-      duration: '14 days',
-      instructionsBangla: 'খাওয়ার ২০ মিনিট আগে খাবেন'
-    }
-  ]);
-  const [investigations, setInvestigations] = useState<string[]>(['CBC with ESR', 'Serum Creatinine', 'Dengue NS1 Antigen']);
-  const [patientReportsPresented, setPatientReportsPresented] = useState<string[]>([
-    'Dengue NS1 Antigen: Positive',
-    'Platelet Count: 95,000/μL (Mild Thrombocytopenia)'
-  ]);
-  const [advice, setAdvice] = useState<string[]>([
-    'পর্যাপ্ত পরিমাণে পানি, ডাবের পানি ও খাবার স্যালাইন গ্রহণ করুন।',
-    'হালকা ও সহজে হজম হয় এমন খাবার খান।',
-    'জ্বর বেশি হলে জলপট্টি দিন ও পূর্ণ বিশ্রামে থাকুন।'
-  ]);
-  const [followUp, setFollowUp] = useState('৭ দিন পর রিপোর্টসহ দেখা করবেন');
-  const [emergencyRedFlags, setEmergencyRedFlags] = useState('জ্বর ১০৩ ডিগ্রির বেশি হলে অথবা মাড়ি দিয়ে রক্তক্ষরণ হলে জরুরি বিভাগে যোগাযোগ করবেন');
+  // Prescription State — starts EMPTY: nothing is pre-filled that the doctor/triage did not record
+  const [vitals, setVitals] = useState<{ bp?: string; temp?: string; pulse?: string; spo2?: string; height?: string; weight?: string }>({});
+  const [complaints, setComplaints] = useState<string[]>([]);
+  const [diagnosis, setDiagnosis] = useState('');
+  const [medicines, setMedicines] = useState<PrescriptionItem[]>([]);
+  const [investigations, setInvestigations] = useState<string[]>([]);
+  const [patientReportsPresented, setPatientReportsPresented] = useState<string[]>([]);
+  const [advice, setAdvice] = useState<string[]>([]);
+  const [followUp, setFollowUp] = useState('');
+  const [emergencyRedFlags, setEmergencyRedFlags] = useState('');
   const [referredTo, setReferredTo] = useState('');
-  const [warnings, setWarnings] = useState<DrugWarning[]>([]);
+  const [generalSigns, setGeneralSigns] = useState<GeneralSigns>({});
+  const [examNotes, setExamNotes] = useState('');
+  const [safetyAlerts, setSafetyAlerts] = useState<SafetyAlert[]>([]);
+  const [templates, setTemplates] = useState<{ id: number; name: string; payload: any }[]>([]);
+  const [savedRxId, setSavedRxId] = useState<number | null>(null);
+  const [rxVersion, setRxVersion] = useState(1);
 
   // UI Controls
   const [showQrModal, setShowQrModal] = useState(false);
   const [showStackModal, setShowStackModal] = useState(false);
-  const [savedRxNumber, setSavedRxNumber] = useState('RX-2026-LIVE');
+  const [savedRxNumber, setSavedRxNumber] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -287,7 +249,7 @@ export default function App() {
     abortControllerRef.current = controller;
 
     setIsProcessing(true);
-    setWarnings([]);
+    setSafetyAlerts([]);
 
     try {
       const hasActiveMeds = medicines && medicines.length > 0;
@@ -296,6 +258,8 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           transcript,
+          patientId: selectedPatient?.id,
+          weightKg: vitals.weight,
           isAmendment: hasActiveMeds,
           currentPrescriptionJson: hasActiveMeds ? JSON.stringify(medicines) : null
         }),
@@ -309,30 +273,24 @@ export default function App() {
       const data = await res.json();
 
       if (data) {
-        if (data.vitals) setVitals(data.vitals);
-        if (data.chiefComplaints) setComplaints(data.chiefComplaints);
+        // Merge: AI only fills what it actually heard; empty never wipes triage vitals or doctor's edits
+        if (data.vitals && Object.keys(data.vitals).length > 0) setVitals(prev => ({ ...prev, ...data.vitals }));
+        if (data.chiefComplaints && data.chiefComplaints.length > 0) setComplaints(data.chiefComplaints);
         if (data.diagnosis) setDiagnosis(data.diagnosis);
         if (data.medicines && data.medicines.length > 0) setMedicines(data.medicines);
-        if (data.investigations) setInvestigations(data.investigations);
+        if (data.investigations && data.investigations.length > 0) setInvestigations(data.investigations);
         if (data.patientReportsPresented && data.patientReportsPresented.length > 0) {
           setPatientReportsPresented(data.patientReportsPresented);
         }
-        if (data.adviceBangla) setAdvice(data.adviceBangla);
+        if (data.adviceBangla && data.adviceBangla.length > 0) setAdvice(data.adviceBangla);
         if (data.followUp) setFollowUp(data.followUp);
         if (data.emergencyRedFlags) setEmergencyRedFlags(data.emergencyRedFlags);
-        if (data.interactionWarnings) setWarnings(data.interactionWarnings);
+        if (data.safetyAlerts) setSafetyAlerts(data.safetyAlerts);
         if (data.executionTimeMs) setExecutionTime(data.executionTimeMs);
 
-        // Update Clinical Verification Summary
-        const words = transcript.trim().split(/\s+/).filter(w => w.length > 0);
-        const totalAccepted = (data.chiefComplaints?.length || 0) + Object.keys(data.vitals || {}).length + (data.medicines?.length || 0) + (data.adviceBangla?.length || 0);
-        const rate = Math.min(99.4, Math.max(88.0, 85 + (totalAccepted * 1.5)));
-
+        // Real counts only (no invented confidence figures)
         setAccuracyMetrics({
-          spokenWordsCount: words.length,
-          acceptedEntitiesCount: totalAccepted,
-          conversionRate: parseFloat(rate.toFixed(1)),
-          confidenceScore: (data.confidenceScore ? data.confidenceScore * 100 : 98.0),
+          unmatchedMedicines: data.unmatchedMedicineCount || 0,
           detectedCategories: {
             symptoms: data.chiefComplaints?.length || 0,
             vitals: Object.keys(data.vitals || {}).length,
@@ -362,7 +320,6 @@ export default function App() {
     setMedicines(prev => {
       const copy = [...prev];
       copy[index] = { ...copy[index], [field]: value };
-      checkInteractions(copy);
       return copy;
     });
   };
@@ -375,21 +332,114 @@ export default function App() {
       genericName: med.generic_name,
       form: med.form,
       strength: med.strength,
-      dosagePattern: med.standard_dosage || '1+0+1',
-      duration: '7 days',
-      instructionsBangla: med.instructions_bangla || 'খাওয়ার পরে'
+      dosagePattern: med.standard_dosage || '',
+      duration: '',
+      instructionsBangla: med.instructions_bangla || ''
     };
     const updated = [...medicines, newItem];
     setMedicines(updated);
     setSearchQuery('');
     setSearchResults([]);
-    checkInteractions(updated);
+  };
+
+  // ---- Speed features: repeat last visit, templates, keyboard shortcuts ----
+  const stripMatch = (m: PrescriptionItem): PrescriptionItem => ({ ...m, matchStatus: undefined, matchOptions: undefined });
+
+  const loadTemplates = async (doctorId?: number) => {
+    if (!doctorId) return;
+    try {
+      const res = await fetch(`${API_BASE}/templates?doctorId=${doctorId}`);
+      const data = await res.json();
+      if (Array.isArray(data)) setTemplates(data);
+    } catch { /* offline */ }
+  };
+
+  useEffect(() => { loadTemplates(selectedDoctor?.id); }, [selectedDoctor?.id]);
+
+  const handleRepeatLast = async () => {
+    if (!selectedPatient) return;
+    try {
+      const res = await fetch(`${API_BASE}/prescriptions/latest?patientId=${selectedPatient.id}&doctorId=${selectedDoctor?.id ?? ''}`);
+      if (res.status === 404) { alert('No previous prescription found for this patient.'); return; }
+      const data = await res.json();
+      const rx = data.prescription;
+      // New visit: copy treatment plan only. Vitals, complaints and exam findings are NOT carried over.
+      setMedicines((data.items || []).map(stripMatch));
+      if (rx.diagnosis) setDiagnosis(rx.diagnosis);
+      if (rx.investigations?.length) setInvestigations(rx.investigations);
+      if (rx.advice_bangla?.length) setAdvice(rx.advice_bangla);
+      if (rx.follow_up) setFollowUp(rx.follow_up);
+    } catch {
+      alert('Could not load the last prescription.');
+    }
+  };
+
+  const handleApplyTemplate = (id: number) => {
+    const t = templates.find(x => x.id === id);
+    if (!t) return;
+    const pl = t.payload || {};
+    if (Array.isArray(pl.medicines)) setMedicines(prev => [...prev, ...pl.medicines.map(stripMatch)]);
+    if (Array.isArray(pl.investigations)) setInvestigations(prev => Array.from(new Set([...prev, ...pl.investigations])));
+    if (Array.isArray(pl.advice)) setAdvice(prev => Array.from(new Set([...prev, ...pl.advice])));
+    if (pl.diagnosis && !diagnosis) setDiagnosis(pl.diagnosis);
+  };
+
+  const handleSaveTemplate = async () => {
+    if (!selectedDoctor || medicines.length === 0) return;
+    const name = window.prompt('Template name (e.g. Viral fever):');
+    if (!name || !name.trim()) return;
+    try {
+      await fetch(`${API_BASE}/templates`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          doctorId: selectedDoctor.id,
+          name: name.trim(),
+          payload: { diagnosis, medicines: medicines.map(stripMatch), investigations, advice }
+        })
+      });
+      loadTemplates(selectedDoctor.id);
+    } catch {
+      alert('Could not save the template.');
+    }
+  };
+
+  // Shortcuts: Ctrl+S = sign/save, "/" = jump to medicine search
+  const saveRef = useRef<() => void>(() => {});
+  useEffect(() => { saveRef.current = handleSavePrescription; });
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        saveRef.current();
+      } else if (e.key === '/') {
+        const el = e.target as HTMLElement;
+        if (el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return;
+        e.preventDefault();
+        document.getElementById('medicine-search-input')?.focus();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  // Doctor picks the exact formulary product when the AI was unsure
+  const handleChooseMedicine = (index: number, opt: MedicineOption) => {
+    setMedicines(prev => prev.map((m, i) => i !== index ? m : {
+      ...m,
+      medicineId: opt.id,
+      brandName: opt.brandName,
+      genericName: opt.genericName,
+      form: opt.form,
+      strength: opt.strength,
+      matchStatus: 'exact',
+      matchOptions: undefined
+    }));
   };
 
   const handleDeleteMedicine = (index: number) => {
     const updated = medicines.filter((_, i) => i !== index);
     setMedicines(updated);
-    checkInteractions(updated);
   };
 
   // In-Pad Investigation Add / Remove
@@ -403,21 +453,33 @@ export default function App() {
     setInvestigations(prev => prev.filter((_, i) => i !== index));
   };
 
-  const checkInteractions = async (medList: PrescriptionItem[]) => {
-    try {
-      const generics = medList.map(m => m.genericName);
-      const res = await fetch(`${API_BASE}/interactions/check`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ genericNames: generics })
-      });
-      const data = await res.json();
-      setWarnings(data?.warnings || []);
-    } catch (err) {}
-  };
+  // Safety engine: allergy / duplicate / interaction / dose — re-checked whenever meds, patient or weight change
+  useEffect(() => {
+    if (medicines.length === 0) { setSafetyAlerts([]); return; }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`${API_BASE}/safety/check`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            patientId: selectedPatient?.id,
+            allergies: selectedPatient?.allergies,
+            age: selectedPatient?.age,
+            weightKg: vitals.weight,
+            items: medicines
+          })
+        });
+        const data = await res.json();
+        setSafetyAlerts(data?.alerts || []);
+      } catch { /* backend offline: keep previous alerts */ }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [medicines, selectedPatient, vitals.weight]);
 
   // Save Prescription
   const handleSavePrescription = async () => {
+    const incomplete = medicines.filter(m => !m.dosagePattern || !m.duration);
+    if (incomplete.length > 0 && !window.confirm(`${incomplete.map(m => m.brandName).join(', ')}: dosage or duration is not set. Save anyway?`)) return;
     setIsSaving(true);
     try {
       const payload = {
@@ -428,18 +490,28 @@ export default function App() {
         diagnosis,
         investigations,
         adviceBangla: advice,
-        interactionWarnings: warnings.map(w => `${w.drugA} + ${w.drugB}: ${w.description}`),
-        items: medicines
+        interactionWarnings: safetyAlerts.map(a => `${a.type.toUpperCase()} (${a.severity}): ${a.title}`),
+        items: medicines,
+        followUp,
+        referredTo,
+        generalSigns: Object.fromEntries(Object.entries(generalSigns).filter(([, v]) => v)),
+        examNotes,
+        redFlags: emergencyRedFlags,
+        patientReports: patientReportsPresented
       };
 
-      const res = await fetch(`${API_BASE}/prescriptions`, {
-        method: 'POST',
+      // Already saved this encounter -> update it (new version) instead of creating a duplicate
+      const res = await fetch(savedRxId ? `${API_BASE}/prescriptions/${savedRxId}` : `${API_BASE}/prescriptions`, {
+        method: savedRxId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
+      if (!res.ok) throw new Error(`Save failed: HTTP ${res.status}`);
       const data = await res.json();
       if (data?.rxNumber) {
         setSavedRxNumber(data.rxNumber);
+        setSavedRxId(data.prescriptionId);
+        setRxVersion(data.version || 1);
         setSaveSuccess(true);
 
         // Mark current patient in queue as 'Completed'
@@ -456,10 +528,33 @@ export default function App() {
         setTimeout(() => setSaveSuccess(false), 4000);
       }
     } catch (err) {
-      setSavedRxNumber(`RX-${Date.now().toString().slice(-6)}`);
+      console.error('Prescription save error:', err);
+      alert('Prescription could NOT be saved. Please check the backend and try again.');
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // Clear the whole pad so nothing leaks from the previous patient / doctor
+  const resetPad = () => {
+    setVitals({});
+    setComplaints([]);
+    setDiagnosis('');
+    setMedicines([]);
+    setInvestigations([]);
+    setPatientReportsPresented([]);
+    setAdvice([]);
+    setFollowUp('');
+    setEmergencyRedFlags('');
+    setReferredTo('');
+    setGeneralSigns({});
+    setExamNotes('');
+    setSafetyAlerts([]);
+    setAccuracyMetrics(null);
+    setSavedRxId(null);
+    setRxVersion(1);
+    setSavedRxNumber('');
+    setTranscript('');
   };
 
   // Select patient from queue into active consultation
@@ -472,29 +567,23 @@ export default function App() {
       gender: item.patient_gender,
       phone: item.patient_phone,
       blood_group: item.patient_blood_group,
-      allergies: item.patient_allergies || 'None Reported',
-      chronic_conditions: item.patient_chronic || 'None'
+      allergies: item.patient_allergies || 'Not recorded',
+      chronic_conditions: item.patient_chronic || 'Not recorded'
     };
     setSelectedPatient(matched);
 
-    // Load Triage Vitals into pad
+    // New patient -> clean pad (no leakage from previous patient)
+    resetPad();
+
+    // Load only the triage vitals that were actually recorded
     const vitalsObj = typeof item.triage_vitals === 'string'
       ? JSON.parse(item.triage_vitals || '{}')
       : item.triage_vitals || {};
-
-    setVitals({
-      bp: vitalsObj.bp || '120/80 mmHg',
-      temp: vitalsObj.temp || '98.6 F',
-      pulse: vitalsObj.pulse || '76 bpm'
-    });
+    setVitals(vitalsObj);
 
     if (item.chief_complaint) {
       setComplaints([item.chief_complaint]);
     }
-
-    // Set new RX ID
-    setSavedRxNumber(`RX-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${item.token_number}00`);
-    setTranscript('');
 
     // Update status in queue
     try {
@@ -532,8 +621,7 @@ export default function App() {
     setPatients(prev => [newPat, ...prev]);
     fetchQueue(selectedDoctor?.id);
     setSelectedPatient(newPat);
-    setTranscript('');
-    setSavedRxNumber(`RX-${Date.now().toString().slice(-6)}`);
+    resetPad();
   };
 
   // Handle Doctor Switch with Full Chamber & Pad Queue Isolation
@@ -541,17 +629,7 @@ export default function App() {
     setSelectedDoctor(doc);
     fetchQueue(doc.id);
     // Clear active prescription pad for strict multi-doctor chamber isolation
-    setMedicines([]);
-    setComplaints([]);
-    setDiagnosis('');
-    setInvestigations([]);
-    setPatientReportsPresented([]);
-    setAdvice([]);
-    setFollowUp('');
-    setEmergencyRedFlags('');
-    setWarnings([]);
-    setTranscript('');
-    setActiveQueueItemId(null);
+    resetPad();
   };
 
   // When Doctor Profile is Edited
@@ -653,8 +731,19 @@ export default function App() {
             followUp={followUp}
             emergencyRedFlags={emergencyRedFlags}
             referredTo={referredTo}
-            warnings={warnings}
+            generalSigns={generalSigns}
+            onUpdateGeneralSigns={(key, val) => setGeneralSigns(prev => ({ ...prev, [key]: val }))}
+            examNotes={examNotes}
+            onUpdateExamNotes={setExamNotes}
+            rxVersion={rxVersion}
+            isSavedRx={savedRxId !== null}
+            safetyAlerts={safetyAlerts}
             onDeleteMedicine={handleDeleteMedicine}
+            onChooseMedicine={handleChooseMedicine}
+            templates={templates}
+            onApplyTemplate={handleApplyTemplate}
+            onSaveTemplate={handleSaveTemplate}
+            onRepeatLast={handleRepeatLast}
             onUpdateMedicine={handleUpdateMedicine}
             onAddInvestigation={handleAddInvestigation}
             onDeleteInvestigation={handleDeleteInvestigation}

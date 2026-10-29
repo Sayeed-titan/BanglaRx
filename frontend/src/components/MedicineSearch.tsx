@@ -64,6 +64,7 @@ export const MedicineSearch: React.FC<MedicineSearchProps> = ({
         </div>
 
         <input
+          id="medicine-search-input"
           type="text"
           placeholder="Search by brand name (e.g. Napa, Seclo, Monas, Bizoran)..."
           value={searchQuery}

@@ -18,19 +18,19 @@ export const PatientRegistrationModal: React.FC<PatientRegistrationModalProps> =
   const [age, setAge] = useState<number | ''>('');
   const [gender, setGender] = useState('Male');
   const [phone, setPhone] = useState('+880 ');
-  const [bloodGroup, setBloodGroup] = useState('B+');
+  const [bloodGroup, setBloodGroup] = useState('Unknown');
   const [allergies, setAllergies] = useState('');
   const [chronicConditions, setChronicConditions] = useState('');
   const [chiefComplaint, setChiefComplaint] = useState('');
   
   // Triage Vitals (Numeric inputs with fixed suffix badges)
-  const [bpSys, setBpSys] = useState('120');
-  const [bpDia, setBpDia] = useState('80');
-  const [temp, setTemp] = useState('98.6');
-  const [pulse, setPulse] = useState('78');
-  const [spo2, setSpo2] = useState('98');
-  const [height, setHeight] = useState('168');
-  const [weight, setWeight] = useState('65');
+  const [bpSys, setBpSys] = useState('');
+  const [bpDia, setBpDia] = useState('');
+  const [temp, setTemp] = useState('');
+  const [pulse, setPulse] = useState('');
+  const [spo2, setSpo2] = useState('');
+  const [height, setHeight] = useState('');
+  const [weight, setWeight] = useState('');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -39,7 +39,7 @@ export const PatientRegistrationModal: React.FC<PatientRegistrationModalProps> =
     setAge('');
     setGender('Male');
     setPhone('+880 ');
-    setBloodGroup('B+');
+    setBloodGroup('Unknown');
     setAllergies('');
     setChronicConditions('');
     setChiefComplaint('');
@@ -73,8 +73,8 @@ export const PatientRegistrationModal: React.FC<PatientRegistrationModalProps> =
           gender,
           phone,
           bloodGroup,
-          allergies: allergies.trim() || 'None Reported',
-          chronicConditions: chronicConditions.trim() || 'None'
+          allergies: allergies.trim() || 'Not recorded',
+          chronicConditions: chronicConditions.trim() || 'Not recorded'
         })
       });
       const newPatient = await patRes.json();
@@ -252,6 +252,7 @@ export const PatientRegistrationModal: React.FC<PatientRegistrationModalProps> =
                   className="select-clinical"
                   style={{ marginTop: '4px' }}
                 >
+                  <option value="Unknown">Unknown / Not recorded</option>
                   <option value="A+">A+ Positive</option>
                   <option value="A-">A- Negative</option>
                   <option value="B+">B+ Positive</option>

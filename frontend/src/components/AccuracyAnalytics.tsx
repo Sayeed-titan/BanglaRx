@@ -34,12 +34,18 @@ export const AccuracyAnalytics: React.FC<AccuracyAnalyticsProps> = ({ metrics })
               <span style={{ fontSize: '0.84rem', fontWeight: '700', color: 'var(--slate-900)' }}>
                 Clinical Verification:
               </span>
-              <span className="badge-clinical badge-emerald">
-                High Confidence
-              </span>
+              {metrics.unmatchedMedicines > 0 ? (
+                <span className="badge-clinical badge-amber">
+                  {metrics.unmatchedMedicines} medicine(s) not matched — please verify
+                </span>
+              ) : (
+                <span className="badge-clinical badge-emerald">
+                  All medicines matched to formulary
+                </span>
+              )}
             </div>
             <p style={{ fontSize: '0.72rem', color: 'var(--slate-500)', marginTop: '1px' }}>
-              Prescription entities cross-verified with DGDA national drug formulary
+              AI draft only — review every field before signing
             </p>
           </div>
         </div>
