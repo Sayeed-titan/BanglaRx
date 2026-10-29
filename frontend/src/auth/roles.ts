@@ -10,6 +10,7 @@ const ROUTES: Array<{ prefix: string; roles: Role[] }> = [
   { prefix: '#/queue', roles: FRONT },
   { prefix: '#/register', roles: FRONT },
   { prefix: '#/bookings', roles: FRONT },
+  { prefix: '#/inbox', roles: ['receptionist', 'manager'] },
   { prefix: '#/dashboard', roles: ['manager'] },
   { prefix: '#/schedules', roles: ['manager'] },
   { prefix: '#/users', roles: ['manager'] },

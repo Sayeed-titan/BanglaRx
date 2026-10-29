@@ -15,6 +15,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { PharmacyPage } from './pages/PharmacyPage';
 import { SchedulesPage } from './pages/SchedulesPage';
 import { BookingsPage } from './pages/BookingsPage';
+import { InboxPage } from './pages/InboxPage';
 import { Button, Callout, LinkButton } from './design-system';
 import { getSession } from './auth/session';
 import { API_BASE } from './api';
@@ -695,6 +696,7 @@ export default function App() {
   if (route.startsWith('#/pharmacy')) return <PharmacyPage />;
   if (route.startsWith('#/schedules')) return <SchedulesPage />;
   if (route.startsWith('#/bookings')) return <BookingsPage />;
+  if (route.startsWith('#/inbox')) return <InboxPage />;
 
   // ---- Queue page: today's chamber queue ----
   if (route.startsWith('#/queue')) {

@@ -6,11 +6,13 @@ import type { Lang } from './i18n';
 import { pcall } from './session';
 
 /** The emergency screen: no booking talk, one big call button. Shown from the home screen, and by Rubina when a red flag is typed. */
-export const Emergency: React.FC<{ lang: Lang; onBack: () => void }> = ({ lang, onBack }) => (
+export const EmergencyCard: React.FC<{ lang: Lang; onBack?: () => void }> = ({ lang, onBack }) => (
   <div className="rx-stack" style={{ gap: 18 }}>
-    <div className="rx-row" style={{ justifyContent: 'flex-end' }}>
-      <Button variant="text" onClick={onBack}>{tr(lang, 'back')}</Button>
-    </div>
+    {onBack && (
+      <div className="rx-row" style={{ justifyContent: 'flex-end' }}>
+        <Button variant="text" onClick={onBack}>{tr(lang, 'back')}</Button>
+      </div>
+    )}
     <Callout tone="danger" icon={<TriangleAlert size={28} />} title={tr(lang, 'emergencyTitle')}>
       <span className="rx-bn">{tr(lang, 'emergencyLead')}</span>
     </Callout>
@@ -35,6 +37,8 @@ export const Emergency: React.FC<{ lang: Lang; onBack: () => void }> = ({ lang, 
     <span className="rx-pt__meta">{tr(lang, 'notADiagnosis')}</span>
   </div>
 );
+
+export const Emergency = EmergencyCard;
 
 interface Consent {
   recordVisit: boolean | null;

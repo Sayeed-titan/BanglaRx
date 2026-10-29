@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { CalendarCheck, CalendarPlus, CheckCircle2, FileText, LogOut, Phone, ShieldCheck, TriangleAlert, UserPlus } from 'lucide-react';
+import { CalendarCheck, CalendarPlus, CheckCircle2, FileText, Headset, LogOut, Phone, ShieldCheck, TriangleAlert, UserPlus } from 'lucide-react';
 import { Badge, Button, Callout, Card, Chip, EmptyState, Rx, SegmentedControl, Select, TextField } from '../design-system';
 import { fmtDate, fmtTime, num, setLang, tr, useLang } from './i18n';
 import type { Key, Lang } from './i18n';
 import { pcall, requestCode, setProfiles, signOut, usePatientSession, verifyCode } from './session';
 import type { Profile } from './session';
 import { MyPrescriptions } from './MyPrescriptions';
+import { PENDING_DOCTOR_KEY } from '../rubina/RubinaChat';
 import { ConsentScreen, Emergency } from './SafetyScreens';
 
 interface Doctor {
@@ -274,6 +275,7 @@ const Home: React.FC<{ lang: Lang; onBook: () => void; onRx: () => void; onConse
         {tr(lang, 'myRxBtn')}
       </Button>
       <Button variant="text" icon={<ShieldCheck size={18} />} onClick={onConsent}>{tr(lang, 'consentBtn')}</Button>
+      <Button variant="text" icon={<Headset size={18} />} onClick={() => (window.location.hash = '#/rubina')}>{tr(lang, 'askRubina')}</Button>
 
       <Card>
         <div className="rx-stack" style={{ gap: 12 }}>
@@ -329,7 +331,22 @@ const Book: React.FC<{ lang: Lang; onDone: () => void }> = ({ lang, onDone }) =>
   const [booked, setBooked] = useState<Booking | null>(null);
 
   useEffect(() => {
-    pcall<Doctor[]>('GET', '/patient/doctors').then((r) => (r.ok ? setDoctors(r.data ?? []) : setErrors(say(lang, r.errors))));
+    pcall<Doctor[]>('GET', '/patient/doctors').then((r) => {
+      if (!r.ok) return setErrors(say(lang, r.errors));
+      const list = r.data ?? [];
+      setDoctors(list);
+      // Rubina sent the visitor here with a doctor already chosen
+      try {
+        const pending = sessionStorage.getItem(PENDING_DOCTOR_KEY);
+        if (pending) {
+          sessionStorage.removeItem(PENDING_DOCTOR_KEY);
+          const d = list.find((x) => String(x.id) === pending);
+          if (d) pickDoctor(d);
+        }
+      } catch {
+        /* nothing was chosen */
+      }
+    });
   }, [lang]);
 
   useEffect(() => {
@@ -455,7 +472,13 @@ const Book: React.FC<{ lang: Lang; onDone: () => void }> = ({ lang, onDone }) =>
 export const PatientApp: React.FC = () => {
   const lang = useLang();
   const session = usePatientSession();
-  const [screen, setScreen] = useState<'home' | 'book' | 'rx' | 'consent' | 'emergency'>('home');
+  const [screen, setScreen] = useState<'home' | 'book' | 'rx' | 'consent' | 'emergency'>(() => {
+    try {
+      return sessionStorage.getItem(PENDING_DOCTOR_KEY) ? 'book' : 'home';
+    } catch {
+      return 'home';
+    }
+  });
 
   if (!session) {
     return (

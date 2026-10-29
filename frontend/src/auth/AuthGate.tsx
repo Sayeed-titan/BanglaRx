@@ -5,6 +5,7 @@ import { UsersPage } from '../pages/UsersPage';
 import { fetchStatus, getSession, logout, refreshMe, useSession } from './session';
 import type { AuthStatus } from './session';
 import { PatientApp } from '../patient/PatientApp';
+import { RubinaChat } from '../rubina/RubinaChat';
 import { LANDING, ROLE_LABEL, canOpen } from './roles';
 
 /** The small "who is signed in" pill. */
@@ -54,6 +55,8 @@ export const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
   // patients have their own sign-in (a phone code) and never see the staff gate
   if (hash.startsWith('#/patient')) return <PatientApp />;
+  // Rubina is public: anyone may ask which doctor to see without signing in
+  if (hash.startsWith('#/rubina')) return <RubinaChat />;
 
   if (status === 'loading') return <div className="rx-page" aria-busy="true" />;
 
