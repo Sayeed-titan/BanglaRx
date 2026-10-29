@@ -14,6 +14,34 @@ public record PatientBookingInput(int? DoctorId, string? Date, string? Time, int
 public record ProfileView(int Id, string FullName, int Age, string Gender, string PatientUid, string Link);
 public record PatientBookingView(BookingView Booking, bool CanCancel);
 
+public class RxMedicineView
+{
+    public string BrandName { get; set; } = "";
+    public string GenericName { get; set; } = "";
+    public string Form { get; set; } = "";
+    public string Strength { get; set; } = "";
+    public string DosagePattern { get; set; } = "";
+    public string Duration { get; set; } = "";
+    public string InstructionsBangla { get; set; } = "";
+    /// <summary>Other brands in our catalogue with the same ingredient, strength and form. Names only: no price is held.</summary>
+    public List<string> SameIngredient { get; set; } = new();
+}
+public class PatientRxView
+{
+    public int Id { get; set; }
+    public string RxNumber { get; set; } = "";
+    public int Version { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public string DoctorName { get; set; } = "";
+    public string Specialization { get; set; } = "";
+    public string PatientName { get; set; } = "";
+    public string? Diagnosis { get; set; }
+    public string[] AdviceBangla { get; set; } = Array.Empty<string>();
+    public string? FollowUp { get; set; }
+    public string? ReferredTo { get; set; }
+    public List<RxMedicineView> Medicines { get; set; } = new();
+}
+
 /// <summary>
 /// What a patient can do for themselves and their family. Everything here needs a patient token, and
 /// only ever reaches the people linked to that phone number.
@@ -174,6 +202,44 @@ public static class PatientAppEndpoints
             var day = await SlotService.BuildAsync(db, clock, doctorId, d);
             // a patient sees only what they can book: no other patient's name, no taken times
             return Results.Ok(day with { Slots = day.Slots.Where(s => s.State == "open").Select(s => s with { BookingId = null }).ToList() });
+        });
+
+        // ---- prescriptions: what the doctor signed for the people on this account ----
+        g.MapGet("/prescriptions", async (HttpContext ctx, IDbConnectionFactory f) =>
+        {
+            using var db = f.CreateConnection();
+            var list = (await db.QueryAsync<PatientRxView>(@"
+                SELECT rx.id AS Id, rx.rx_number AS RxNumber, rx.version AS Version, rx.created_at AS CreatedAt,
+                       d.name AS DoctorName, d.specialization AS Specialization, p.full_name AS PatientName,
+                       rx.diagnosis AS Diagnosis, COALESCE(rx.advice_bangla, ARRAY[]::text[]) AS AdviceBangla,
+                       rx.follow_up AS FollowUp, rx.referred_to AS ReferredTo
+                FROM prescriptions rx
+                JOIN doctors d ON d.id = rx.doctor_id
+                JOIN patients p ON p.id = rx.patient_id
+                WHERE rx.is_signed AND rx.patient_id IN (SELECT patient_id FROM patient_account_profiles WHERE account_id = @id)
+                ORDER BY rx.created_at DESC LIMIT 30;", new { id = Me(ctx).Id })).ToList();
+            if (list.Count == 0) return Results.Ok(list);
+
+            var rows = await db.QueryAsync(@"
+                SELECT i.prescription_id, i.medicine_id, i.brand_name, i.generic_name, i.form, i.strength,
+                       i.dosage_pattern, i.duration, i.instructions_bangla
+                FROM prescription_items i WHERE i.prescription_id = ANY(@ids) ORDER BY i.id;", new { ids = list.Select(x => x.Id).ToArray() });
+            var byId = list.ToDictionary(x => x.Id);
+            foreach (var r in rows)
+            {
+                var m = new RxMedicineView
+                {
+                    BrandName = (string)r.brand_name, GenericName = (string)r.generic_name, Form = (string)r.form, Strength = (string)r.strength,
+                    DosagePattern = (string)r.dosage_pattern, Duration = (string)r.duration, InstructionsBangla = (string)r.instructions_bangla,
+                };
+                m.SameIngredient = (await db.QueryAsync<string>(@"
+                    SELECT brand_name FROM medicines
+                    WHERE is_active AND lower(generic_name) = lower(@g) AND lower(strength) = lower(@s) AND lower(form) = lower(@f)
+                      AND lower(brand_name) <> lower(@b)
+                    ORDER BY brand_name LIMIT 4;", new { g = m.GenericName, s = m.Strength, f = m.Form, b = m.BrandName })).ToList();
+                byId[(int)r.prescription_id].Medicines.Add(m);
+            }
+            return Results.Ok(list);
         });
 
         // ---- bookings ----
