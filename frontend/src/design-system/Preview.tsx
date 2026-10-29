@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import {
   AppBar, Avatar, Badge, Button, LinkButton, Callout, Card, Chip, Composer, EmptyState, IconButton, MedicineRow, MessageBubble, MicPod,
-  Modal, PageHeader, PatientBanner, QueueCard, Rx, SegmentedControl, Select, StatTile, Switch, TextField, Textarea, TokenBadge,
+  Modal, NavRail, PageHeader, PatientBanner, QueueCard, Rx, SegmentedControl, Select, StatTile, Switch, TextField, Textarea, TokenBadge,
   TypingDots, VitalRow,
 } from './index';
 
@@ -131,6 +131,9 @@ export default function Preview() {
             </div>
             <div style={{ border: '1px solid var(--rx-outline)', borderRadius: 'var(--rx-r-md)', overflow: 'hidden' }}>
               <PageHeader title="Today's chamber queue" subtitle="Dr. A. Rahman · Room 302" backHref="#/" backLabel="Back to workbench" live actions={<Button variant="tonal">New patient</Button>} />
+            </div>
+            <div style={{ border: '1px solid var(--rx-outline)', borderRadius: 'var(--rx-r-md)', overflow: 'hidden' }}>
+              <NavRail label="Example menu" items={[{ href: '#/dashboard', label: 'Overview', current: true }, { href: '#/pharmacy', label: 'Pharmacy' }]} />
             </div>
             <Modal open={modal} onClose={() => setModal(false)} title="Example dialog" subtitle="Esc closes it, Tab stays inside" size="sm" footer={<Button onClick={() => setModal(false)}>Done</Button>}>
               Dialogs return focus to the button that opened them.

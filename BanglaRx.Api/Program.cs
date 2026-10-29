@@ -47,6 +47,7 @@ app.UseCors("AllowAll");
 // 6. Database-First Schema Initialization & Seeding Validation
 var dbFactory = app.Services.GetRequiredService<IDbConnectionFactory>();
 await DbInitializer.EnsureDatabaseSchemaAsync(dbFactory);
+await ScheduleSchema.EnsureAsync(dbFactory);
 
 // 7. Register Modular Minimal API Endpoint Groups
 app.MapStatusEndpoints();
@@ -58,5 +59,7 @@ app.MapPrescriptionEndpoints();
 app.MapTemplateEndpoints();
 app.MapInteractionEndpoints();
 app.MapAiConsultationEndpoints();
+app.MapScheduleEndpoints();
 
-app.Run("http://localhost:5000");
+// ASPNETCORE_URLS / --urls can override the address (the API tests use another port); the default is unchanged
+app.Run(builder.Configuration["urls"] ?? builder.Configuration["ASPNETCORE_URLS"] ?? "http://localhost:5000");

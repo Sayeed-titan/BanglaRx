@@ -67,6 +67,9 @@ Add a component in the matching file, export it from `index.ts`, show it in `Pre
 | `#/` | Workbench: app bar, patient card and voice on the left, the prescription sheet on the right | `components/Navbar`, `PatientCard`, `VoiceConsultation`, `AccuracyAnalytics`, `PrescriptionPad`, `MedicineSearch` |
 | `#/queue` | Today's chamber queue: stat tiles, call next, list, "what patients see" | `pages/QueuePage` |
 | `#/register` | New patient and token: three steps, sticky token card | `pages/RegistrationPage` |
+| `#/dashboard` | Manager overview: counts, arrivals by hour, doctors right now. Read-only, counted from the real queue and prescriptions | `pages/DashboardPage` |
+| `#/schedules` | Doctors, branches and weekly sessions. Reads and saves through the API (`/api/schedules`), validated on the server | `pages/SchedulesPage` |
+| `#/pharmacy` | Find a signed prescription by Rx number and tick medicines off. Shows no diagnosis or notes. Ticks are not saved yet | `pages/PharmacyPage` |
 
 Routing is a plain hash route in `App.tsx`. All state and handlers still live in `App.tsx`, so every function works across pages. Page layout classes are in `pages.css`; the prescription sheet is in `pad.css` and is sized in `em` so the screen (14px) and A4 print (9.5pt) stay in proportion. Keep `.rx-paper`, `no-print` and `main > section:last-child` intact: `index.css` print rules depend on them.
 
@@ -74,4 +77,4 @@ Routing is a plain hash route in `App.tsx`. All state and handlers still live in
 
 Every screen now uses the design components and the page structure from the canvas. The guard's legacy count is 6, all inside `index.css` (the print stylesheet keeps its own colours on purpose).
 
-Not built yet (designed on the canvas): NavRail, BottomNav, Sheet, DdiAlert, AuditTrail, QueueTrack, ConsentSheet, Toast, Skeleton, and the other canvas pages (login, dashboard, inbox, schedules, pharmacy, patient app).
+Not built yet (designed on the canvas): NavRail, BottomNav, Sheet, DdiAlert, AuditTrail, QueueTrack, ConsentSheet, Toast, Skeleton, and the canvas pages that need backend features that do not exist yet: sign-in and roles (RBAC), Rubina inbox and booking, dispense records, and the patient app. See `FULLSTACK_WORKFLOW.md` at the repo root: each of these is built as a slice, database + API + tests + screen together. Build their tables and endpoints first, then the screens, so no page shows invented data.

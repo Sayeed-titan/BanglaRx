@@ -11,7 +11,10 @@ import { StackInfoModal } from './components/StackInfoModal';
 import { DoctorProfileModal } from './components/DoctorProfileModal';
 import { QueuePage } from './pages/QueuePage';
 import { RegistrationPage } from './pages/RegistrationPage';
-import { Button } from './design-system';
+import { DashboardPage } from './pages/DashboardPage';
+import { PharmacyPage } from './pages/PharmacyPage';
+import { SchedulesPage } from './pages/SchedulesPage';
+import { Button, LinkButton } from './design-system';
 import { Info } from 'lucide-react';
 
 const API_BASE = 'http://localhost:5000/api';
@@ -662,6 +665,11 @@ export default function App() {
   const waitingCount = queue.filter(q => q.status === 'Waiting').length;
   const activeQueueItem = queue.find(q => q.patient_id === selectedPatient?.id && q.status !== 'Completed');
 
+  // ---- Manager overview and pharmacy lookup (read-only pages) ----
+  if (route.startsWith('#/dashboard')) return <DashboardPage doctors={doctors} />;
+  if (route.startsWith('#/pharmacy')) return <PharmacyPage />;
+  if (route.startsWith('#/schedules')) return <SchedulesPage />;
+
   // ---- Queue page: today's chamber queue ----
   if (route.startsWith('#/queue')) {
     return (
@@ -787,9 +795,13 @@ export default function App() {
 
       <footer className="rx-appfoot no-print">
         <span>BanglaRx AI · Clinical decision support for Bangladesh · Grounded on the DGDA formulary</span>
-        <Button variant="text" icon={<Info size={16} />} onClick={() => setShowStackModal(true)} title="System architecture and technical specifications">
-          Architecture and stack
-        </Button>
+        <span className="rx-row" style={{ gap: 4 }}>
+          <LinkButton href="#/dashboard" variant="text">Overview</LinkButton>
+          <LinkButton href="#/pharmacy" variant="text">Pharmacy</LinkButton>
+          <Button variant="text" icon={<Info size={16} />} onClick={() => setShowStackModal(true)} title="System architecture and technical specifications">
+            Architecture and stack
+          </Button>
+        </span>
       </footer>
 
       <PatientQrModal

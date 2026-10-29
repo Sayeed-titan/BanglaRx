@@ -9,7 +9,8 @@
     "check:ds": "node scripts/check-design-system.mjs",
     "prebuild": "node scripts/check-design-system.mjs",
     "build": "node node_modules/vite/bin/vite.js build",
-    "preview": "node node_modules/vite/bin/vite.js preview"
+    "preview": "node node_modules/vite/bin/vite.js preview",
+    "test:api": "node ../tests/run-api-tests.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.61.0",

@@ -1,6 +1,6 @@
 import type { ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react';
 import { useId } from 'react';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Stethoscope } from 'lucide-react';
 import { cx } from './utils';
 
 /* ---- AppBar: brand on the left, actions on the right, optional second row ---- */
@@ -108,5 +108,31 @@ export function PageHeader({ title, subtitle, backHref, backLabel, actions, live
       {live && <span className="rx-live">Live</span>}
       {actions}
     </header>
+  );
+}
+
+/* ---- NavRail: the left menu for manager and back-office pages ----------------- */
+export interface NavRailProps {
+  label: string;
+  items: Array<{ href: string; label: string; current?: boolean }>;
+}
+
+export function NavRail({ label, items }: NavRailProps) {
+  return (
+    <aside className="rx-navrail no-print">
+      <div className="rx-brand">
+        <div className="rx-brand__mark" aria-hidden="true">
+          <Stethoscope size={24} />
+        </div>
+        <div className="rx-brand__name">BanglaRx</div>
+      </div>
+      <nav aria-label={label} className="rx-navrail__list">
+        {items.map((it) => (
+          <a key={it.href} href={it.href} aria-current={it.current ? 'page' : undefined} className={cx('rx-navrail__link', it.current && 'rx-navrail__link--on')}>
+            {it.label}
+          </a>
+        ))}
+      </nav>
+    </aside>
   );
 }
