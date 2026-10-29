@@ -134,7 +134,7 @@ export const PatientRegistrationModal: React.FC<PatientRegistrationModalProps> =
           background: '#FFFFFF',
           borderRadius: 'var(--radius-xl)',
           width: '100%',
-          maxWidth: '580px',
+          maxWidth: '780px',
           boxShadow: 'var(--shadow-modal)',
           border: '1px solid var(--slate-200)',
           overflow: 'hidden'
@@ -352,7 +352,7 @@ export const PatientRegistrationModal: React.FC<PatientRegistrationModalProps> =
                     value={bpSys}
                     onChange={e => setBpSys(e.target.value)}
                     style={{
-                      width: '38px',
+                      width: '58px',
                       border: 'none',
                       outline: 'none',
                       padding: '6px 3px',
