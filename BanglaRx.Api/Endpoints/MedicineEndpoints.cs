@@ -1,3 +1,4 @@
+using BanglaRx.Api.Services;
 using BanglaRx.Api.Data;
 using BanglaRx.Api.Models.Domain;
 using Dapper;
@@ -42,6 +43,16 @@ public static class MedicineEndpoints
                 exact = $"{cleanQ}%",
                 limit 
             });
+            return Results.Ok(results);
+        });
+
+        // Resolve spoken/typed medicine names to formulary rows (strength-aware). Used by tests and manual entry.
+        group.MapPost("/resolve", async (List<PrescriptionItem> items, IDbConnectionFactory connectionFactory) =>
+        {
+            using var db = connectionFactory.CreateConnection();
+            var results = new List<PrescriptionItem>();
+            foreach (var item in items)
+                results.Add(await MedicineResolver.ResolveAsync(db, item, new List<Medicine>()));
             return Results.Ok(results);
         });
     }

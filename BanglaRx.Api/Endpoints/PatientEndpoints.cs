@@ -37,8 +37,8 @@ public static class PatientEndpoints
                 req.Gender,
                 req.Phone,
                 req.BloodGroup,
-                Allergies = req.Allergies ?? "None Reported",
-                ChronicConditions = req.ChronicConditions ?? "None"
+                Allergies = string.IsNullOrWhiteSpace(req.Allergies) ? "Not recorded" : req.Allergies,
+                ChronicConditions = string.IsNullOrWhiteSpace(req.ChronicConditions) ? "Not recorded" : req.ChronicConditions
             });
 
             var created = await db.QuerySingleAsync<Patient>("SELECT * FROM patients WHERE id = @newId;", new { newId });

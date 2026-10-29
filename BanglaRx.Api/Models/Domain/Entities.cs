@@ -59,4 +59,17 @@ public class PrescriptionItem
     public string DosagePattern { get; set; } = "";
     public string Duration { get; set; } = "";
     public string InstructionsBangla { get; set; } = "";
+
+    // Formulary match result (not stored in DB): exact | ambiguous | fuzzy | strength_unavailable | unmatched
+    public string? MatchStatus { get; set; }
+    public List<MedicineOption>? MatchOptions { get; set; }
+}
+
+public class MedicineOption
+{
+    public int Id { get; set; }
+    public string BrandName { get; set; } = "";
+    public string GenericName { get; set; } = "";
+    public string Form { get; set; } = "";
+    public string Strength { get; set; } = "";
 }
