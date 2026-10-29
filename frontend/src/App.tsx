@@ -15,7 +15,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { PharmacyPage } from './pages/PharmacyPage';
 import { SchedulesPage } from './pages/SchedulesPage';
 import { BookingsPage } from './pages/BookingsPage';
-import { Button, LinkButton } from './design-system';
+import { Button, Callout, LinkButton } from './design-system';
 import { getSession } from './auth/session';
 import { API_BASE } from './api';
 import { Info } from 'lucide-react';
@@ -27,6 +27,18 @@ export default function App() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  // what the patient said about recording the visit: agreed / declined / not_asked
+  const [recordConsent, setRecordConsent] = useState<'agreed' | 'declined' | 'not_asked'>('not_asked');
+  useEffect(() => {
+    setRecordConsent('not_asked');
+    if (!selectedPatient?.id) return;
+    let live = true;
+    fetch(`${API_BASE}/patients/${selectedPatient.id}/consent`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (live && d?.recordVisit) setRecordConsent(d.recordVisit); })
+      .catch(() => {});
+    return () => { live = false; };
+  }, [selectedPatient?.id]);
 
   // Chamber Queue State (The Full Operational Picture)
   const [queue, setQueue] = useState<QueueItem[]>([]);
@@ -213,6 +225,7 @@ export default function App() {
       }
       setIsRecording(false);
     } else {
+      if (recordConsent === 'declined') return;
       isRecordingRef.current = true;
       accumulatedTranscriptRef.current = transcript ? transcript.trim() + ' ' : '';
       startSpeechEngine(speechLanguage);
@@ -730,6 +743,11 @@ export default function App() {
             onSelectPatient={setSelectedPatient}
           />
 
+          {recordConsent === 'declined' && (
+            <Callout tone="danger" title="Patient declined recording">
+              The microphone is off for this patient. You can still type notes below, or write the prescription by hand.
+            </Callout>
+          )}
           <VoiceConsultation
             isRecording={isRecording}
             onToggleRecording={toggleRecording}

@@ -18,6 +18,19 @@ public static class PatientEndpoints
             return Results.Ok(patients);
         });
 
+        // Is the doctor allowed to record this patient's visit? agreed / declined / not_asked (no app account or no answer).
+        // Declined wins: if anyone with this patient on their account said no, we do not record.
+        group.MapGet("/{id:int}/consent", async (int id, IDbConnectionFactory connectionFactory) =>
+        {
+            using var db = connectionFactory.CreateConnection();
+            var answers = (await db.QueryAsync<bool?>(@"
+                SELECT c.record_visit FROM patient_account_profiles l
+                JOIN patient_consents c ON c.account_id = l.account_id
+                WHERE l.patient_id = @id;", new { id })).ToList();
+            var status = answers.Any(a => a == false) ? "declined" : answers.Any(a => a == true) ? "agreed" : "not_asked";
+            return Results.Ok(new { recordVisit = status });
+        });
+
         group.MapPost("/", async (CreatePatientRequest req, IDbConnectionFactory connectionFactory) =>
         {
             using var db = connectionFactory.CreateConnection();

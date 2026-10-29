@@ -9,6 +9,8 @@ namespace BanglaRx.Api.PatientApp;
 public record PhoneInput(string? Phone);
 public record VerifyInput(string? Phone, string? Code);
 public record ProfileInput(string? FullName, int? Age, string? Gender);
+public record ConsentInput(bool? RecordVisit, bool? Reminders, bool? StoreReports);
+public record ConsentView(bool? RecordVisit, bool Reminders, bool StoreReports, DateTime? UpdatedAt);
 public record PatientBookingInput(int? DoctorId, string? Date, string? Time, int? ProfileId, string? Reason, string? Channel);
 
 public record ProfileView(int Id, string FullName, int Age, string Gender, string PatientUid, string Link);
@@ -202,6 +204,37 @@ public static class PatientAppEndpoints
             var day = await SlotService.BuildAsync(db, clock, doctorId, d);
             // a patient sees only what they can book: no other patient's name, no taken times
             return Results.Ok(day with { Slots = day.Slots.Where(s => s.State == "open").Select(s => s with { BookingId = null }).ToList() });
+        });
+
+        // ---- consent: what the patient allows (recording the visit, reminders, keeping reports) ----
+        g.MapGet("/consent", async (HttpContext ctx, IDbConnectionFactory f) =>
+        {
+            using var db = f.CreateConnection();
+            var row = await db.QueryFirstOrDefaultAsync<ConsentView>(
+                "SELECT record_visit AS RecordVisit, reminders AS Reminders, store_reports AS StoreReports, updated_at AS UpdatedAt FROM patient_consents WHERE account_id = @id;",
+                new { id = Me(ctx).Id });
+            return Results.Ok(row ?? new ConsentView(null, false, false, null));
+        });
+
+        g.MapPost("/consent", async (ConsentInput req, HttpContext ctx, IDbConnectionFactory f) =>
+        {
+            if (req.RecordVisit is null) return Fail(400, "Please answer whether the visit may be recorded.");
+            var reminders = req.Reminders ?? false;
+            var reports = req.StoreReports ?? false;
+            var ip = ctx.Connection.RemoteIpAddress?.ToString();
+            using var db = f.CreateConnection();
+            await db.OpenAsync();
+            await using var tx = await db.BeginTransactionAsync();
+            await db.ExecuteAsync(@"
+                INSERT INTO patient_consents (account_id, record_visit, reminders, store_reports, updated_at)
+                VALUES (@id, @rec, @rem, @rep, now())
+                ON CONFLICT (account_id) DO UPDATE SET record_visit = @rec, reminders = @rem, store_reports = @rep, updated_at = now();",
+                new { id = Me(ctx).Id, rec = req.RecordVisit, rem = reminders, rep = reports }, tx);
+            await db.ExecuteAsync(
+                "INSERT INTO patient_consent_log (account_id, record_visit, reminders, store_reports, ip) VALUES (@id, @rec, @rem, @rep, @ip);",
+                new { id = Me(ctx).Id, rec = req.RecordVisit, rem = reminders, rep = reports, ip }, tx);
+            await tx.CommitAsync();
+            return Results.Ok(new ConsentView(req.RecordVisit, reminders, reports, DateTime.UtcNow));
         });
 
         // ---- prescriptions: what the doctor signed for the people on this account ----

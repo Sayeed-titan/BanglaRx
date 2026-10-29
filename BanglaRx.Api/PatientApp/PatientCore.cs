@@ -181,6 +181,25 @@ public static class PatientSchema
                 );
                 CREATE INDEX IF NOT EXISTS idx_otp_phone ON otp_codes (phone, created_at DESC);
                 CREATE INDEX IF NOT EXISTS idx_otp_ip ON otp_codes (ip, created_at DESC);
+
+                -- what the patient allowed. record_visit NULL means not answered yet (treated as not allowed).
+                CREATE TABLE IF NOT EXISTS patient_consents (
+                    account_id INT PRIMARY KEY REFERENCES patient_accounts(id) ON DELETE CASCADE,
+                    record_visit BOOLEAN,
+                    reminders BOOLEAN NOT NULL DEFAULT FALSE,
+                    store_reports BOOLEAN NOT NULL DEFAULT FALSE,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                );
+                -- every choice ever made, with its date, so we can show what was agreed and when
+                CREATE TABLE IF NOT EXISTS patient_consent_log (
+                    id BIGSERIAL PRIMARY KEY,
+                    account_id INT NOT NULL REFERENCES patient_accounts(id) ON DELETE CASCADE,
+                    record_visit BOOLEAN,
+                    reminders BOOLEAN NOT NULL,
+                    store_reports BOOLEAN NOT NULL,
+                    ip TEXT,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                );
             ");
         }
         catch (Exception ex)

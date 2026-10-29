@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { CalendarCheck, CalendarPlus, CheckCircle2, FileText, LogOut, Phone, UserPlus } from 'lucide-react';
+import { CalendarCheck, CalendarPlus, CheckCircle2, FileText, LogOut, Phone, ShieldCheck, TriangleAlert, UserPlus } from 'lucide-react';
 import { Badge, Button, Callout, Card, Chip, EmptyState, Rx, SegmentedControl, Select, TextField } from '../design-system';
 import { fmtDate, fmtTime, num, setLang, tr, useLang } from './i18n';
 import type { Key, Lang } from './i18n';
 import { pcall, requestCode, setProfiles, signOut, usePatientSession, verifyCode } from './session';
 import type { Profile } from './session';
 import { MyPrescriptions } from './MyPrescriptions';
+import { ConsentScreen, Emergency } from './SafetyScreens';
 
 interface Doctor {
   id: number;
@@ -196,7 +197,7 @@ const AddPerson: React.FC<{ lang: Lang; onDone: () => void; onCancel: () => void
   );
 };
 
-const Home: React.FC<{ lang: Lang; onBook: () => void; onRx: () => void }> = ({ lang, onBook, onRx }) => {
+const Home: React.FC<{ lang: Lang; onBook: () => void; onRx: () => void; onConsent: () => void; onEmergency: () => void }> = ({ lang, onBook, onRx, onConsent, onEmergency }) => {
   const session = usePatientSession()!;
   const [rows, setRows] = useState<BookingRow[] | null>(null);
   const [queue, setQueue] = useState<QueuePos[]>([]);
@@ -246,7 +247,10 @@ const Home: React.FC<{ lang: Lang; onBook: () => void; onRx: () => void }> = ({ 
 
   return (
     <div className="rx-stack" style={{ gap: 20 }}>
-      <h1 className="rx-pt__h1 rx-bn">{tr(lang, 'hello')}</h1>
+      <div className="rx-row" style={{ justifyContent: 'space-between' }}>
+        <h1 className="rx-pt__h1 rx-bn">{tr(lang, 'hello')}</h1>
+        <Button variant="outlined" icon={<TriangleAlert size={18} />} onClick={onEmergency} style={{ color: 'var(--rx-danger-solid)' }}>{tr(lang, 'emergencyBtn')}</Button>
+      </div>
 
       {notice && <Callout tone={notice.tone}>{notice.text}</Callout>}
 
@@ -269,6 +273,7 @@ const Home: React.FC<{ lang: Lang; onBook: () => void; onRx: () => void }> = ({ 
       <Button variant="outlined" size="lg" icon={<FileText size={20} />} onClick={onRx} disabled={session.profiles.length === 0} fullWidth>
         {tr(lang, 'myRxBtn')}
       </Button>
+      <Button variant="text" icon={<ShieldCheck size={18} />} onClick={onConsent}>{tr(lang, 'consentBtn')}</Button>
 
       <Card>
         <div className="rx-stack" style={{ gap: 12 }}>
@@ -450,7 +455,7 @@ const Book: React.FC<{ lang: Lang; onDone: () => void }> = ({ lang, onDone }) =>
 export const PatientApp: React.FC = () => {
   const lang = useLang();
   const session = usePatientSession();
-  const [screen, setScreen] = useState<'home' | 'book' | 'rx'>('home');
+  const [screen, setScreen] = useState<'home' | 'book' | 'rx' | 'consent' | 'emergency'>('home');
 
   if (!session) {
     return (
@@ -461,7 +466,11 @@ export const PatientApp: React.FC = () => {
   }
   return (
     <Shell lang={lang} signedIn>
-      {screen === 'home' ? <Home lang={lang} onBook={() => setScreen('book')} onRx={() => setScreen('rx')} /> : screen === 'book' ? <Book lang={lang} onDone={() => setScreen('home')} /> : <MyPrescriptions lang={lang} onBack={() => setScreen('home')} />}
+      {screen === 'home' && <Home lang={lang} onBook={() => setScreen('book')} onRx={() => setScreen('rx')} onConsent={() => setScreen('consent')} onEmergency={() => setScreen('emergency')} />}
+      {screen === 'book' && <Book lang={lang} onDone={() => setScreen('home')} />}
+      {screen === 'rx' && <MyPrescriptions lang={lang} onBack={() => setScreen('home')} />}
+      {screen === 'consent' && <ConsentScreen lang={lang} onBack={() => setScreen('home')} />}
+      {screen === 'emergency' && <Emergency lang={lang} onBack={() => setScreen('home')} />}
     </Shell>
   );
 };

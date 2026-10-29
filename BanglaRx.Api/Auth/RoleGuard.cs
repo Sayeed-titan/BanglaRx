@@ -56,6 +56,7 @@ public static class RoleRules
         new("GET", "/api/schedules", Front),
         new("GET", "/api/patients", Front),
         new("POST", "/api/patients", Front),
+        new("GET", "/api/patients/{id}/consent", Clinical),
         new("*", "/api/queue", Front),
         new("*", "/api/queue/**", Front),
         // prescriptions: the doctor writes, the doctor's team and the manager read. Pharmacists use /api/pharmacy instead.
