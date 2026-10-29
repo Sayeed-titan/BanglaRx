@@ -74,6 +74,7 @@ builder.Services.AddSingleton<IDbConnectionFactory>(new PostgresDbConnectionFact
 builder.Services.AddScoped<IDrugSafetyService, DrugSafetyService>();
 builder.Services.AddScoped<IClinicalSafetyService, ClinicalSafetyService>();
 builder.Services.AddScoped<IConsultationAiService, ConsultationAiService>();
+builder.Services.AddScoped<SathiService>();
 
 var app = builder.Build();
 
@@ -100,6 +101,7 @@ app.MapPrescriptionEndpoints();
 app.MapTemplateEndpoints();
 app.MapInteractionEndpoints();
 app.MapAiConsultationEndpoints();
+app.MapSathiEndpoints();
 app.MapScheduleEndpoints();
 app.MapAuthEndpoints();
 app.MapPharmacyEndpoints();

@@ -74,6 +74,7 @@ public static class RoleRules
         new("POST", "/api/interactions/check", new[] { Roles.Doctor, Roles.Assistant }),
         new("POST", "/api/safety/check", new[] { Roles.Doctor, Roles.Assistant }),
         new("POST", "/api/ai/analyze-consultation", new[] { Roles.Doctor, Roles.Assistant }),
+        new("POST", "/api/sathi/chat", new[] { Roles.Doctor, Roles.Assistant }),
         // booking: the front desk and manager book; the doctor's team can read their own doctor's bookings
         new("GET", "/api/slots", Front),
         new("GET", "/api/booking/info", Front),

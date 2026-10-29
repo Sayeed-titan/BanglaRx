@@ -16,6 +16,7 @@ import { PharmacyPage } from './pages/PharmacyPage';
 import { SchedulesPage } from './pages/SchedulesPage';
 import { BookingsPage } from './pages/BookingsPage';
 import { InboxPage } from './pages/InboxPage';
+import { SathiPanel } from './components/SathiPanel';
 import { Button, Callout, LinkButton } from './design-system';
 import { getSession } from './auth/session';
 import { API_BASE } from './api';
@@ -29,6 +30,7 @@ export default function App() {
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   // what the patient said about recording the visit: agreed / declined / not_asked
+  const [sathiOpen, setSathiOpen] = useState(false);
   const [recordConsent, setRecordConsent] = useState<'agreed' | 'declined' | 'not_asked'>('not_asked');
   useEffect(() => {
     setRecordConsent('not_asked');
@@ -745,6 +747,9 @@ export default function App() {
             onSelectPatient={setSelectedPatient}
           />
 
+          <Button variant="outlined" onClick={() => setSathiOpen(true)} title="Ask a clinical question about this patient">
+            Ask Rx সাথী
+          </Button>
           {recordConsent === 'declined' && (
             <Callout tone="danger" title="Patient declined recording">
               The microphone is off for this patient. You can still type notes below, or write the prescription by hand.
@@ -768,6 +773,15 @@ export default function App() {
             hasExistingPrescription={medicines.length > 0}
           />
         </aside>
+
+        <SathiPanel
+          open={sathiOpen}
+          onClose={() => setSathiOpen(false)}
+          patient={selectedPatient}
+          weightKg={vitals.weight}
+          padItems={medicines}
+          onAdd={(o) => handleAddMedicine({ id: o.id, brand_name: o.brandName, generic_name: o.genericName, form: o.form, strength: o.strength, standard_dosage: '', instructions_bangla: '' })}
+        />
 
         <section className="rx-workbench__main">
           <AccuracyAnalytics metrics={accuracyMetrics} />
