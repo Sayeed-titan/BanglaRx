@@ -7,6 +7,7 @@ import { pcall, requestCode, setProfiles, signOut, usePatientSession, verifyCode
 import type { Profile } from './session';
 import { MyPrescriptions } from './MyPrescriptions';
 import { PENDING_DOCTOR_KEY } from '../rubina/RubinaChat';
+import { useInstall } from '../pwa/useInstall';
 import { ConsentScreen, Emergency } from './SafetyScreens';
 
 interface Doctor {
@@ -70,12 +71,15 @@ const LangToggle: React.FC<{ lang: Lang }> = ({ lang }) => (
   <SegmentedControl label={tr(lang, 'language')} value={lang} onChange={setLang} options={[{ value: 'bn', label: 'বাংলা' }, { value: 'en', label: 'English' }]} />
 );
 
-const Shell: React.FC<{ lang: Lang; signedIn?: boolean; children: React.ReactNode }> = ({ lang, signedIn, children }) => (
+const Shell: React.FC<{ lang: Lang; signedIn?: boolean; children: React.ReactNode }> = ({ lang, signedIn, children }) => {
+  const pwa = useInstall();
+  return (
   <Rx density="patient" className="rx-pt">
     <header className="rx-pt__bar">
       <strong className="rx-pt__brand rx-bn">{tr(lang, 'appName')}</strong>
       <div className="rx-row">
         <LangToggle lang={lang} />
+        {pwa.canInstall && <Button variant="tonal" onClick={pwa.install}>{tr(lang, 'installApp')}</Button>}
         {signedIn && (
           <Button variant="text" icon={<LogOut size={18} />} onClick={() => signOut()}>
             {tr(lang, 'signOut')}
@@ -85,7 +89,8 @@ const Shell: React.FC<{ lang: Lang; signedIn?: boolean; children: React.ReactNod
     </header>
     <main className="rx-pt__main">{children}</main>
   </Rx>
-);
+  );
+};
 
 /* ---- sign in: phone, then the code ---------------------------------------------------------------- */
 

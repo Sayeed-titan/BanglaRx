@@ -11,6 +11,13 @@ initPrefs()
 // Every call to the BanglaRx API carries the signed-in user's token
 installAuthFetch()
 
+// Installable app: the service worker keeps only the app's own files (never /api data). Off in development so edits show at once.
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
 // Open the app with ?ds to browse the design system. Loaded lazily so the product bundle is unchanged.
 const DesignSystemPreview = lazy(() => import('./design-system/Preview'))
 const showPreview = new URLSearchParams(window.location.search).has('ds')

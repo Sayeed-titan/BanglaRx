@@ -164,6 +164,8 @@ const T = {
   typing: { bn: 'রুবিনা লিখছে…', en: 'Rubina is typing…' },
   bookThis: { bn: 'এই ডাক্তারকে বুক করুন', en: 'Book this doctor' },
   rubinaNote: { bn: 'রুবিনা একটি এআই সহকারী। বুক করার সময় আপনার মোবাইল নম্বর দিয়ে সাইন ইন করতে হবে।', en: 'Rubina is an AI helper. You sign in with your mobile number only when you book.' },
+  installApp: { bn: 'অ্যাপ ইনস্টল করুন', en: 'Install the app' },
+  iosInstall: { bn: 'আইফোনে: শেয়ার বাটন চেপে "Add to Home Screen" বেছে নিন।', en: 'On iPhone: tap Share, then "Add to Home Screen".' },
   language: { bn: 'ভাষা', en: 'Language' },
 } as const;
 

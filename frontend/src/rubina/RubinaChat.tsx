@@ -5,6 +5,7 @@ import { Button, Callout, Card, Chip, Rx, SegmentedControl, TextField } from '..
 import { fmtDate, fmtTime, num, setLang, tr, useLang } from '../patient/i18n';
 import type { Lang } from '../patient/i18n';
 import { EmergencyCard } from '../patient/SafetyScreens';
+import { useInstall } from '../pwa/useInstall';
 
 interface Msg {
   id: number;
@@ -50,6 +51,7 @@ const write = (k: string, v: string | null) => {
 /** Public booking helper. Anyone can open it; signing in is only asked when they press Book. */
 export const RubinaChat: React.FC = () => {
   const lang: Lang = useLang();
+  const pwa = useInstall();
   const [token, setToken] = useState<string | null>(() => read(TOKEN_KEY));
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [text, setText] = useState('');
@@ -168,6 +170,7 @@ export const RubinaChat: React.FC = () => {
         <strong className="rx-pt__brand rx-bn">Rubina · BanglaRx</strong>
         <div className="rx-row">
           <SegmentedControl label={tr(lang, 'language')} value={lang} onChange={setLang} options={[{ value: 'bn', label: 'বাংলা' }, { value: 'en', label: 'English' }]} />
+          {pwa.canInstall && <Button variant="tonal" onClick={pwa.install}>{tr(lang, 'installApp')}</Button>}
           <Button variant="text" icon={<UserRound size={18} />} onClick={() => (window.location.hash = '#/patient')}>{tr(lang, 'myAccount')}</Button>
         </div>
       </header>
@@ -235,6 +238,7 @@ export const RubinaChat: React.FC = () => {
           {status === 'rubina' && (
             <Button variant="text" icon={<Headset size={18} />} onClick={askPerson} disabled={busy}>{tr(lang, 'talkToPerson')}</Button>
           )}
+          {pwa.iosHint && <span className="rx-pt__meta">{tr(lang, 'iosInstall')}</span>}
           <span className="rx-pt__meta">{tr(lang, 'rubinaNote')}</span>
         </div>
       </main>
