@@ -8,6 +8,7 @@
  *   node tests/stop-test-stack.mjs                            (stops the API and drops the database)
  */
 import { startStack } from './lib/test-stack.mjs';
-const { base, dbName } = await startStack({ port: 5155 });
+// RX_TEST_ENFORCE=1 turns sign-in enforcement on; RX_TEST_SMS=1 lets a test read the patient sign-in code (GET /api/_test/sms)
+const { base, dbName } = await startStack({ port: 5155, env: { ...(process.env.RX_TEST_ENFORCE ? { Auth__Enforce: 'true' } : {}), ...(process.env.RX_TEST_SMS ? { Sms__Provider: 'test' } : {}) } });
 console.log(`READY ${base}  (database ${dbName})`);
 setInterval(() => {}, 1 << 30);

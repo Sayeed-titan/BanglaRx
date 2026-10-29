@@ -50,7 +50,39 @@ function psqlRunner() {
   };
 }
 
-export async function startStack({ port = 5155 } = {}) {
+function launchApi({ c, dbName, base, extraEnv }) {
+  let log = '';
+  const api = spawn('dotnet', [join(BUILD_DIR, 'BanglaRx.Api.dll')], {
+    cwd: API_DIR,
+    stdio: ['ignore', 'pipe', 'pipe'],
+    env: {
+      ...process.env,
+      ASPNETCORE_URLS: base,
+      ConnectionStrings__DefaultConnection: `Host=${c.host};Port=${c.port ?? '5432'};Database=${dbName};Username=${c.username};Password=${c.password};`,
+      ...extraEnv,
+    },
+  });
+  api.stdout.on('data', (d) => (log += d));
+  api.stderr.on('data', (d) => (log += d));
+  return { api, getLog: () => log };
+}
+
+/** A second API process on the same throw-away database (for example with enforcement switched the other way). */
+export async function startApi({ dbName, port, env: extraEnv = {} }) {
+  const c = connection();
+  const base = `http://localhost:${port}`;
+  const { api, getLog } = launchApi({ c, dbName, base, extraEnv });
+  const state = JSON.parse(readFileSync(STATE, 'utf8'));
+  writeFileSync(STATE, JSON.stringify({ ...state, extraPids: [...(state.extraPids ?? []), api.pid] }));
+  for (let i = 0; i < 80; i++) {
+    try { if ((await fetch(`${base}/api/status`)).ok) return { base, api, getLog }; } catch { /* not up yet */ }
+    await new Promise((res) => setTimeout(res, 500));
+  }
+  throw new Error(`second API did not start:
+${getLog().slice(-1500)}`);
+}
+
+export async function startStack({ port = 5155, env: extraEnv = {} } = {}) {
   if (existsSync(STATE)) await stopStack();
   const { c, run } = psqlRunner();
   const dbName = `banglarx_test_${Date.now()}`;
@@ -66,23 +98,13 @@ export async function startStack({ port = 5155 } = {}) {
   const b = spawnSync('dotnet', ['build', '-nologo', '-v', 'q', '-o', BUILD_DIR], { cwd: API_DIR, encoding: 'utf8' });
   if (b.status !== 0) throw new Error(`dotnet build failed:\n${b.stdout}\n${b.stderr}`);
 
-  let log = '';
-  const api = spawn('dotnet', [join(BUILD_DIR, 'BanglaRx.Api.dll')], {
-    cwd: API_DIR,
-    stdio: ['ignore', 'pipe', 'pipe'],
-    env: {
-      ...process.env,
-      ASPNETCORE_URLS: base,
-      ConnectionStrings__DefaultConnection: `Host=${c.host};Port=${c.port ?? '5432'};Database=${dbName};Username=${c.username};Password=${c.password};`,
-    },
-  });
-  api.stdout.on('data', (d) => (log += d));
-  api.stderr.on('data', (d) => (log += d));
-  writeFileSync(STATE, JSON.stringify({ dbName, apiPid: api.pid }));
+  const started = launchApi({ c, dbName, base, extraEnv });
+  const { api, getLog } = started;
+  writeFileSync(STATE, JSON.stringify({ dbName, apiPid: api.pid, extraPids: [] }));
 
   for (let i = 0; i < 80; i++) {
     try {
-      if ((await fetch(`${base}/api/status`)).ok) return { base, dbName, api, getLog: () => log };
+      if ((await fetch(`${base}/api/status`)).ok) return { base, dbName, api, getLog, c };
     } catch { /* not up yet */ }
     await new Promise((res) => setTimeout(res, 500));
   }
@@ -92,8 +114,8 @@ export async function startStack({ port = 5155 } = {}) {
 
 export async function stopStack() {
   if (!existsSync(STATE)) return;
-  const { dbName, apiPid } = JSON.parse(readFileSync(STATE, 'utf8'));
-  if (apiPid) spawnSync('taskkill', ['/PID', String(apiPid), '/T', '/F']);
+  const { dbName, apiPid, extraPids = [] } = JSON.parse(readFileSync(STATE, 'utf8'));
+  for (const pid of [apiPid, ...extraPids]) if (pid) spawnSync('taskkill', ['/PID', String(pid), '/T', '/F']);
   await new Promise((res) => setTimeout(res, 800));
   const { run } = psqlRunner();
   run('postgres', ['-c', `DROP DATABASE IF EXISTS ${dbName} WITH (FORCE)`]);
