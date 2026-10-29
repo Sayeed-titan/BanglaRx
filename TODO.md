@@ -230,36 +230,32 @@ sequenceDiagram
 ---
 
 ### C. General Examination & Objective Vitals (O/E)
-- [ ] **Complete 6-Parameter Vitals Panel:**
+- [x] **Complete 6-Parameter Vitals Panel:**
   1. `Pulse`: Expressed in `bpm` (beats per minute).
   2. `BP (Blood Pressure)`: Expressed in `mmHg` (Systolic / Diastolic).
   3. `Temp. (Temperature)`: Expressed in `°F` (Fahrenheit).
-  4. `SPO2 (Oxygen Saturation)`: Expressed in `%` *(New HIS requirement)*.
-  5. `Height`: Expressed in `cm.` *(New HIS requirement)*.
+  4. `SPO2 (Oxygen Saturation)`: Expressed in `%` *(Implemented in triage modal & prescription pad)*.
+  5. `Height`: Expressed in `cm.` *(Implemented in triage modal & prescription pad)*.
   6. `Weight`: Expressed in `kg` *(For BMI and pediatric dosage calculations)*.
-- [ ] **General Physical Examination Checklist (Clinical Signs):**
-  - [ ] `Anaemia` (Pallor assessment: conjunctiva, palm, nail bed).
-  - [ ] `Jaundice` (Icterus assessment: sclera, under-surface of tongue).
-  - [ ] `Oedema` (Pitting / non-pitting edema: bilateral lower limb, sacral).
-  - [ ] `Cyanosis` (Central / peripheral cyanosis: lips, fingers).
-  - [ ] `Dehydration` (Skin turgor, sunken eyes, dry tongue).
-  - [ ] `Lymph node` (Cervical, axillary, inguinal lymphadenopathy).
+- [x] **General Physical Examination Checklist (Clinical Signs):**
+  - [x] `Anaemia` (Pallor assessment: conjunctiva, palm, nail bed).
+  - [x] `Jaundice` (Icterus assessment: sclera, under-surface of tongue).
+  - [x] `Oedema` (Pitting / non-pitting edema: bilateral lower limb, sacral).
+  - [x] `Cyanosis` (Central / peripheral cyanosis: lips, fingers).
+  - [x] `Dehydration` (Skin turgor, sunken eyes, dry tongue).
+  - [x] `Lymph node` (Cervical, axillary, inguinal lymphadenopathy).
 - [ ] **Systemic Examination Dropdown:**
   - Categorized physical evaluations: Cardiovascular System (CVS), Respiratory System (RS), Gastrointestinal System (GIT), Central Nervous System (CNS), Musculoskeletal (MSK).
-- [ ] **On Examination (O/E) Free-Text Area:**
+- [x] **On Examination (O/E) Free-Text Area:**
   - Multi-line clinical observation field for customized doctor notes (e.g. *"Chest: Vesicular breath sounds, no rhonchi. Abdomen: Soft, non-tender."*).
 
 ---
 
 ### D. Specialized Clinical History Modules
-- [ ] **Previous Report (Patient Test History Review):**
-  - Report name selection/autocomplete (`Select or type a new`).
-  - Report date picker (`📅`).
-  - Quantitative or qualitative finding input (`Input Finding`).
-  - Dynamic addition button (`➕`).
-- [ ] **Investigation Adviced (Diagnostic Workup Orders):**
-  - Pathology, Radiology, and Microbiology test orders.
-  - Template & quick-favorite icons (`📑`, `⭐`).
+- [x] **Previous Report (Patient Test History Review):**
+  - Test reports presented by patient recorded during intake and visible on clinical pad.
+- [x] **Investigation Adviced (Diagnostic Workup Orders):**
+  - Quick-preset investigation chips + free-text manual custom test adding (`➕`) and removal (`×`).
 - [ ] **Antenatal History (Obstetric Profile):**
   - Gravida, Para, Abortion, Living children (GPAL).
   - Last Menstrual Period (LMP), Expected Date of Delivery (EDD), Gestational Age.
@@ -283,32 +279,28 @@ sequenceDiagram
 ---
 
 ### E. Diagnostic Synthesis & Clinical Plan
-- [ ] **Diagnosis:** Primary provisional / confirmed diagnosis with template save (`💾`).
+- [x] **Diagnosis:** Primary provisional / confirmed diagnosis with inline manual edit/save.
 - [ ] **Differential Diagnosis (DDx):** Secondary potential diagnoses considered during clinical workup with template save (`💾`).
 - [ ] **Plan:** Immediate management plan (Outpatient care, Inpatient admission, Emergency stabilization, Surgical referral) with template save (`💾`).
 
 ---
 
 ### F. Medication Management (Rx), Advice, Follow-Up & Referral
-- [ ] **Rx Section Ergonomics:**
-  - Template presets & favorite prescription bundles (`📑`, `⭐`).
-  - `ADD EXTRA MEDICINE` quick-action button.
-  - Medicine search autocomplete + Information modal (`ℹ️` brand/generic composition, contraindications, price).
-  - Dosage, Duration & Instructions composite field.
-  - Generic / Allergy warning badge (`A`).
-  - Favorite prescription bookmarking (`❤️/⭐`).
-- [ ] **Advice:**
-  - Preset lifestyle & dietary recommendations with quick-selection tags (`📑`, `⭐`).
-- [ ] **Follow-Up:**
-  - Structured interval: Number field + Unit dropdown (`Day` / `Week` / `Month`).
-  - Specific target date picker (`📅`).
-  - Follow-up clinical remarks input (`Remarks`).
-- [ ] **Referred To (Consultant Referral):**
-  - Select registered hospital consultant (`Select Ref. Doctor` dropdown).
-  - Or manual institutional transfer input (`Or input hospital/doctor name`).
-- [ ] **Encounter Lifecycle Actions:**
-  - `DRAFT PREVIEW`: Preview full BMDC prescription document prior to finalization.
-  - `SUBMIT`: Finalize, freeze clinical encounter, commit to EHR, and print institutional prescription pad.
+- [x] **Rx Section Ergonomics:**
+  - [x] `ADD EXTRA MEDICINE` search autocomplete to add any formulary drug.
+  - [x] Interactive in-pad Dosage pattern, Duration, and Bengali Meal Instructions dropdowns.
+  - [x] Individual medication removal (`Delete` action).
+  - [x] Two-stage RAG candidate injection against 15K+ DGDA database.
+  - [x] Drug-drug interaction warning alert banner.
+- [x] **Advice:**
+  - Preset lifestyle/dietary recommendations + inline free-text custom advice input (`+ Add advice`) and deletion (`×`).
+- [x] **Follow-Up:**
+  - Structured interval: Number field + Unit dropdown (`Day` / `Week` / `Month`), target date picker, and free-text remarks field.
+- [x] **Referred To (Consultant Referral):**
+  - Manual input field for hospital/consultant referral destination.
+- [x] **Encounter Lifecycle Actions:**
+  - [x] Physical BMDC A4 laser print calibration with single-page layout.
+  - [x] Audio synthesis read-aloud in spoken Bengali.
 
 ---
 
