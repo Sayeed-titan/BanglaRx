@@ -1,70 +1,33 @@
 import React from 'react';
-import { ShieldCheck } from 'lucide-react';
 import type { AccuracyMetrics } from '../types/index';
+import { Badge, Callout } from '../design-system';
 
 interface AccuracyAnalyticsProps {
   metrics: AccuracyMetrics | null;
 }
 
+/** The verification strip above the sheet: what the AI drafted and what still needs a human look. */
 export const AccuracyAnalytics: React.FC<AccuracyAnalyticsProps> = ({ metrics }) => {
   if (!metrics) return null;
+  const unmatched = metrics.unmatchedMedicines;
+  const d = metrics.detectedCategories;
 
   return (
-    <div className="clinical-card" style={{ padding: '14px 18px', background: 'var(--slate-50)' }}>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '10px'
-      }}>
-        {/* Verification Status */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{
-            background: 'var(--emerald-50)',
-            color: 'var(--emerald-700)',
-            padding: '6px',
-            borderRadius: 'var(--radius-sm)',
-            display: 'flex'
-          }}>
-            <ShieldCheck size={16} />
-          </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '0.84rem', fontWeight: '700', color: 'var(--slate-900)' }}>
-                Clinical Verification:
-              </span>
-              {metrics.unmatchedMedicines > 0 ? (
-                <span className="badge-clinical badge-amber">
-                  {metrics.unmatchedMedicines} medicine(s) not matched — please verify
-                </span>
-              ) : (
-                <span className="badge-clinical badge-emerald">
-                  All medicines matched to formulary
-                </span>
-              )}
-            </div>
-            <p style={{ fontSize: '0.72rem', color: 'var(--slate-500)', marginTop: '1px' }}>
-              AI draft only — review every field before signing
-            </p>
-          </div>
-        </div>
-
-        {/* Doctor-Facing Clinical Summary Chips */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-          <span className="badge-clinical badge-amber">
-            {metrics.detectedCategories.symptoms} Symptoms
-          </span>
-          <span className="badge-clinical badge-teal">
-            {metrics.detectedCategories.vitals} Vitals
-          </span>
-          <span className="badge-clinical badge-emerald">
-            {metrics.detectedCategories.medications} Formulary Drugs
-          </span>
-          <span className="badge-clinical badge-slate">
-            {metrics.detectedCategories.instructions} Advice
-          </span>
-        </div>
+    <div className="no-print rx-stack" style={{ gap: 8 }}>
+      {unmatched > 0 ? (
+        <Callout tone="attention" title={`${unmatched} medicine(s) not matched to the formulary`}>
+          Please verify the name before you sign. AI draft only: review every field.
+        </Callout>
+      ) : (
+        <Callout tone="success" title={`All ${d.medications} medicines matched to the formulary`}>
+          AI draft only. Review every field before you sign.
+        </Callout>
+      )}
+      <div className="rx-row" style={{ gap: 6 }}>
+        <Badge tone="attention">{d.symptoms} symptoms</Badge>
+        <Badge tone="primary">{d.vitals} vitals</Badge>
+        <Badge tone="success">{d.medications} formulary drugs</Badge>
+        <Badge>{d.instructions} advice</Badge>
       </div>
     </div>
   );

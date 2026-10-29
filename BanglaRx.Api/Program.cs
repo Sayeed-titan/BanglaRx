@@ -1,5 +1,8 @@
 using System.Text.Json.Serialization;
+using BanglaRx.Api.Auth;
+using BanglaRx.Api.Booking;
 using BanglaRx.Api.Data;
+using BanglaRx.Api.PatientApp;
 using BanglaRx.Api.Endpoints;
 using BanglaRx.Api.Services;
 
@@ -27,6 +30,31 @@ builder.Services.AddCors(options =>
     });
 });
 
+// 2b. Sign-in and roles (switched off unless Auth:Enforce is true)
+builder.AddBanglaRxAuth();
+
+// 2c. Booking rules (clinic clock, lead time, how far ahead people may book)
+var bookingOptions = new BookingOptions();
+builder.Configuration.GetSection("Booking").Bind(bookingOptions);
+builder.Services.AddSingleton(bookingOptions);
+builder.Services.AddSingleton<ClinicClock>();
+
+// 2d. Patient sign-in by phone code. SMS goes out through: log (development), http (a gateway you configure), test (tests only).
+var patientOptions = new PatientOptions();
+builder.Configuration.GetSection("Patient").Bind(patientOptions);
+var smsOptions = new SmsOptions();
+builder.Configuration.GetSection("Sms").Bind(smsOptions);
+builder.Services.AddSingleton(patientOptions);
+builder.Services.AddSingleton(smsOptions);
+switch (smsOptions.Provider.ToLowerInvariant())
+{
+    case "http": builder.Services.AddSingleton<ISmsSender, HttpSmsSender>(); break;
+    case "test": builder.Services.AddSingleton<ISmsSender, TestSmsSender>(); break;
+    case "demo": builder.Services.AddSingleton<ISmsSender, DemoSmsSender>(); break;
+    default: builder.Services.AddSingleton<ISmsSender, LogSmsSender>(); break;
+}
+builder.Services.AddSingleton<PatientAuthService>();
+
 // 3. HTTP Client Factory
 builder.Services.AddHttpClient();
 
@@ -43,10 +71,16 @@ builder.Services.AddScoped<IConsultationAiService, ConsultationAiService>();
 var app = builder.Build();
 
 app.UseCors("AllowAll");
+app.UseAuthentication();
+app.UseMiddleware<RoleGuardMiddleware>();
 
 // 6. Database-First Schema Initialization & Seeding Validation
 var dbFactory = app.Services.GetRequiredService<IDbConnectionFactory>();
 await DbInitializer.EnsureDatabaseSchemaAsync(dbFactory);
+await ScheduleSchema.EnsureAsync(dbFactory);
+await app.InitBanglaRxAuthAsync();
+await BookingSchema.EnsureAsync(dbFactory);
+await PatientSchema.EnsureAsync(dbFactory);
 
 // 7. Register Modular Minimal API Endpoint Groups
 app.MapStatusEndpoints();
@@ -58,5 +92,14 @@ app.MapPrescriptionEndpoints();
 app.MapTemplateEndpoints();
 app.MapInteractionEndpoints();
 app.MapAiConsultationEndpoints();
+app.MapScheduleEndpoints();
+app.MapAuthEndpoints();
+app.MapPharmacyEndpoints();
+app.MapBookingEndpoints();
+app.MapPatientAppEndpoints();
+if (smsOptions.Provider.Equals("test", StringComparison.OrdinalIgnoreCase))
+    // tests only: lets a test read the code it asked for. Exists only when Sms:Provider is "test".
+    app.MapGet("/api/_test/sms", (string phone) => TestSmsSender.Last.TryGetValue(phone, out var m) ? Results.Ok(new { message = m }) : Results.NotFound());
 
-app.Run("http://localhost:5000");
+// ASPNETCORE_URLS / --urls can override the address (the API tests use another port); the default is unchanged
+app.Run(builder.Configuration["urls"] ?? builder.Configuration["ASPNETCORE_URLS"] ?? "http://localhost:5000");

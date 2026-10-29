@@ -1,18 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { Doctor, Patient, PrescriptionItem, SafetyAlert, AccuracyMetrics, QueueItem, GeneralSigns, MedicineOption } from './types/index';
 import { Navbar } from './components/Navbar';
+import { PatientCard } from './components/PatientCard';
 import { VoiceConsultation } from './components/VoiceConsultation';
 import { AccuracyAnalytics } from './components/AccuracyAnalytics';
 import { MedicineSearch } from './components/MedicineSearch';
 import { PrescriptionPad } from './components/PrescriptionPad';
 import { PatientQrModal } from './components/PatientQrModal';
 import { StackInfoModal } from './components/StackInfoModal';
-import { PatientRegistrationModal } from './components/PatientRegistrationModal';
 import { DoctorProfileModal } from './components/DoctorProfileModal';
-import { ChamberQueueDrawer } from './components/ChamberQueueDrawer';
+import { QueuePage } from './pages/QueuePage';
+import { RegistrationPage } from './pages/RegistrationPage';
+import { DashboardPage } from './pages/DashboardPage';
+import { PharmacyPage } from './pages/PharmacyPage';
+import { SchedulesPage } from './pages/SchedulesPage';
+import { BookingsPage } from './pages/BookingsPage';
+import { Button, LinkButton } from './design-system';
+import { getSession } from './auth/session';
+import { API_BASE } from './api';
 import { Info } from 'lucide-react';
 
-const API_BASE = 'http://localhost:5000/api';
 
 export default function App() {
   // Domain Data State
@@ -23,8 +30,16 @@ export default function App() {
 
   // Chamber Queue State (The Full Operational Picture)
   const [queue, setQueue] = useState<QueueItem[]>([]);
-  const [isQueueOpen, setIsQueueOpen] = useState(false);
-  const [isPatientRegOpen, setIsPatientRegOpen] = useState(false);
+  // Page routing: '#/' workbench, '#/queue' chamber queue, '#/register' new patient
+  const [route, setRoute] = useState(() => window.location.hash);
+  useEffect(() => {
+    const onHash = () => {
+      setRoute(window.location.hash);
+      window.scrollTo(0, 0);
+    };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
   const [isDoctorProfileOpen, setIsDoctorProfileOpen] = useState(false);
 
   // Audio & Input State
@@ -75,7 +90,10 @@ export default function App() {
   useEffect(() => {
     fetch(`${API_BASE}/doctors`)
       .then(r => r.json())
-      .then(d => {
+      .then(all => {
+        // a doctor (or the assistant working for one) only ever sees their own chamber
+        const mine = getSession()?.user.doctorId;
+        const d: Doctor[] = !Array.isArray(all) ? [] : mine ? all.filter((x: Doctor) => x.id === mine) : all;
         setDoctors(d);
         if (d.length > 0) {
           setSelectedDoctor(d[0]);
@@ -104,6 +122,13 @@ export default function App() {
       console.error('Failed to fetch queue:', e);
     }
   };
+
+  // The queue changes while you are on other pages (a booking arrives, the front desk registers someone):
+  // reload it every time you move between pages, so what you open is never stale.
+  useEffect(() => {
+    if (selectedDoctor) fetchQueue(selectedDoctor.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [route]);
 
   // Medicine Search Autocomplete
   useEffect(() => {
@@ -650,43 +675,61 @@ export default function App() {
   };
 
   const waitingCount = queue.filter(q => q.status === 'Waiting').length;
+  const activeQueueItem = queue.find(q => q.patient_id === selectedPatient?.id && q.status !== 'Completed');
 
+  // ---- Manager overview and pharmacy lookup (read-only pages) ----
+  if (route.startsWith('#/dashboard')) return <DashboardPage doctors={doctors} />;
+  if (route.startsWith('#/pharmacy')) return <PharmacyPage />;
+  if (route.startsWith('#/schedules')) return <SchedulesPage />;
+  if (route.startsWith('#/bookings')) return <BookingsPage />;
+
+  // ---- Queue page: today's chamber queue ----
+  if (route.startsWith('#/queue')) {
+    return (
+      <QueuePage
+        doctor={selectedDoctor}
+        queue={queue}
+        activePatientId={selectedPatient?.id || null}
+        onSelectPatientFromQueue={handleSelectPatientFromQueue}
+        onCallNextPatient={handleCallNextPatient}
+      />
+    );
+  }
+
+  // ---- Registration page: reception intake and token ----
+  if (route.startsWith('#/register')) {
+    return (
+      <RegistrationPage
+        queue={queue}
+        doctorName={selectedDoctor?.name}
+        roomNo={selectedDoctor?.room_no}
+        onPatientRegistered={handlePatientRegistered}
+        activeDoctorId={selectedDoctor?.id || 1}
+      />
+    );
+  }
+
+  // ---- Workbench: patient and voice on the left, the prescription on the right ----
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-app)' }}>
-      
-      {/* NAVBAR COMPONENT WITH QUEUE & REGISTRATION ACTIONS */}
+    <div className="rx-page">
       <Navbar
         doctors={doctors}
-        patients={patients}
         selectedDoctor={selectedDoctor}
-        selectedPatient={selectedPatient}
         setSelectedDoctor={handleDoctorSwitch}
-        setSelectedPatient={setSelectedPatient}
-        onOpenQrModal={() => setShowQrModal(true)}
-        onSavePrescription={handleSavePrescription}
-        isSaving={isSaving}
-        saveSuccess={saveSuccess}
         queueCount={queue.length}
         waitingCount={waitingCount}
-        onOpenQueue={() => setIsQueueOpen(true)}
-        onOpenPatientRegistration={() => setIsPatientRegOpen(true)}
         onOpenDoctorProfile={() => setIsDoctorProfileOpen(true)}
       />
 
-      {/* MAIN TWO-COLUMN CLINICAL WORKSPACE */}
-      <main style={{
-        flex: 1,
-        display: 'grid',
-        gridTemplateColumns: '43% 57%',
-        padding: '24px',
-        gap: '24px',
-        maxWidth: '1680px',
-        margin: '0 auto',
-        width: '100%'
-      }}>
+      <main className="rx-workbench">
+        <aside className="rx-workbench__side no-print">
+          <PatientCard
+            patient={selectedPatient}
+            patients={patients}
+            queueItem={activeQueueItem}
+            onSelectPatient={setSelectedPatient}
+          />
 
-        {/* LEFT COLUMN: AMBIENT COPILOT, VERIFICATION & FORMULARY LOOKUP */}
-        <section className="no-print" style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
           <VoiceConsultation
             isRecording={isRecording}
             onToggleRecording={toggleRecording}
@@ -704,19 +747,11 @@ export default function App() {
             setIsAmendmentMode={setIsAmendmentMode}
             hasExistingPrescription={medicines.length > 0}
           />
+        </aside>
 
+        <section className="rx-workbench__main">
           <AccuracyAnalytics metrics={accuracyMetrics} />
 
-          <MedicineSearch
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            searchResults={searchResults}
-            onAddMedicine={handleAddMedicine}
-          />
-        </section>
-
-        {/* RIGHT COLUMN: INSTITUTIONAL BMDC PRESCRIPTION PAD */}
-        <section style={{ display: 'flex', flexDirection: 'column' }}>
           <PrescriptionPad
             doctor={selectedDoctor}
             patient={selectedPatient}
@@ -756,65 +791,32 @@ export default function App() {
             onUpdateReferredTo={ref => setReferredTo(ref)}
             onSpeakBangla={speakBangla}
             onOpenQrModal={() => setShowQrModal(true)}
+            onSign={handleSavePrescription}
+            isSigning={isSaving}
+            signSuccess={saveSuccess}
+            searchSlot={
+              <MedicineSearch
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                searchResults={searchResults}
+                onAddMedicine={handleAddMedicine}
+              />
+            }
           />
         </section>
-
       </main>
 
-      {/* APPLICATION FOOTER */}
-      <footer className="no-print" style={{
-        borderTop: '1px solid var(--slate-200)',
-        background: '#FFFFFF',
-        padding: '14px 24px',
-        marginTop: 'auto',
-        boxShadow: 'var(--shadow-subtle)'
-      }}>
-        <div style={{
-          maxWidth: '1680px',
-          margin: '0 auto',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          fontSize: '0.76rem',
-          color: 'var(--slate-500)',
-          flexWrap: 'wrap',
-          gap: '12px'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontWeight: '700', color: 'var(--slate-800)' }}>BanglaRx AI™ Systems</span>
-            <span>•</span>
-            <span>Clinical Decision Support System (CDSS) for Bangladesh</span>
-            <span>•</span>
-            <span>© 2026 All Rights Reserved</span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--emerald-500)' }} />
-              <span>DGDA Formulary Grounded</span>
-            </div>
-
-            {/* Technical Specifications & Architecture Modal Launcher */}
-            <button
-              type="button"
-              onClick={() => setShowStackModal(true)}
-              className="btn-clinical btn-outline"
-              style={{
-                padding: '4px 10px',
-                fontSize: '0.72rem',
-                borderRadius: 'var(--radius-sm)',
-                gap: '5px'
-              }}
-              title="View System Architecture & Technical Specifications"
-            >
-              <Info size={13} color="var(--teal-600)" />
-              <span>Architecture & Stack</span>
-            </button>
-          </div>
-        </div>
+      <footer className="rx-appfoot no-print">
+        <span>BanglaRx AI · Clinical decision support for Bangladesh · Grounded on the DGDA formulary</span>
+        <span className="rx-row" style={{ gap: 4 }}>
+          <LinkButton href="#/dashboard" variant="text">Overview</LinkButton>
+          <LinkButton href="#/pharmacy" variant="text">Pharmacy</LinkButton>
+          <Button variant="text" icon={<Info size={16} />} onClick={() => setShowStackModal(true)} title="System architecture and technical specifications">
+            Architecture and stack
+          </Button>
+        </span>
       </footer>
 
-      {/* 1. PATIENT QR CODE MODAL */}
       <PatientQrModal
         isOpen={showQrModal}
         onClose={() => setShowQrModal(false)}
@@ -823,21 +825,11 @@ export default function App() {
         onSpeakBangla={speakBangla}
       />
 
-      {/* 2. SYSTEM ARCHITECTURE MODAL */}
       <StackInfoModal
         isOpen={showStackModal}
         onClose={() => setShowStackModal(false)}
       />
 
-      {/* 3. PATIENT REGISTRATION & TOKEN MODAL (RECEPTION DESK) */}
-      <PatientRegistrationModal
-        isOpen={isPatientRegOpen}
-        onClose={() => setIsPatientRegOpen(false)}
-        onPatientRegistered={handlePatientRegistered}
-        activeDoctorId={selectedDoctor?.id || 1}
-      />
-
-      {/* 4. DOCTOR PROFILE & BMDC SETUP MODAL */}
       <DoctorProfileModal
         isOpen={isDoctorProfileOpen}
         onClose={() => setIsDoctorProfileOpen(false)}
@@ -848,24 +840,6 @@ export default function App() {
           handleDoctorSwitch(newDoc);
         }}
       />
-
-      {/* 5. TODAY'S LIVE CHAMBER QUEUE DRAWER */}
-      <ChamberQueueDrawer
-        isOpen={isQueueOpen}
-        onClose={() => setIsQueueOpen(false)}
-        queue={queue}
-        activePatientId={selectedPatient?.id || null}
-        onSelectPatientFromQueue={handleSelectPatientFromQueue}
-        onOpenPatientRegistration={() => {
-          setIsQueueOpen(false);
-          setIsPatientRegOpen(true);
-        }}
-        onCallNextPatient={() => {
-          handleCallNextPatient();
-          setIsQueueOpen(false);
-        }}
-      />
-
     </div>
   );
 }
