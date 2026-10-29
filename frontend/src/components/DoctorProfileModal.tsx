@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Check, Stethoscope } from 'lucide-react';
 import type { Doctor } from '../types/index';
 import { Button, Modal, SegmentedControl, TextField } from '../design-system';
+import { API_BASE } from '../api';
 
 interface DoctorProfileModalProps {
   isOpen: boolean;
@@ -74,7 +75,7 @@ export const DoctorProfileModal: React.FC<DoctorProfileModalProps> = ({
       };
 
       if (mode === 'create') {
-        const res = await fetch('http://localhost:5000/api/doctors', {
+        const res = await fetch(`${API_BASE}/doctors`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -83,7 +84,7 @@ export const DoctorProfileModal: React.FC<DoctorProfileModalProps> = ({
         onDoctorCreated?.(created);
         onDoctorUpdated(created);
       } else {
-        const res = await fetch(`http://localhost:5000/api/doctors/${doctor?.id || 1}`, {
+        const res = await fetch(`${API_BASE}/doctors/${doctor?.id || 1}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...payload, id: doctor?.id || 1 })

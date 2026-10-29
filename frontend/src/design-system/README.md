@@ -68,7 +68,10 @@ Add a component in the matching file, export it from `index.ts`, show it in `Pre
 | `#/queue` | Today's chamber queue: stat tiles, call next, list, "what patients see" | `pages/QueuePage` |
 | `#/register` | New patient and token: three steps, sticky token card | `pages/RegistrationPage` |
 | `#/dashboard` | Manager overview: counts, arrivals by hour, doctors right now. Read-only, counted from the real queue and prescriptions | `pages/DashboardPage` |
+| `#/login`, `#/password`, `#/users` | Sign-in, setup, change password, and the manager's user list. Shown by `auth/AuthGate` around the whole app; roles decide which screens open (`auth/roles.ts`), the server decides what is allowed | `pages/LoginPage`, `pages/UsersPage`, `auth/` |
+| `#/bookings` | The booking desk: pick a doctor and a day, see every time, book, move, cancel, mark arrived (becomes a queue token). Doctors and assistants see their own day read-only | `pages/BookingsPage` |
 | `#/schedules` | Doctors, branches and weekly sessions. Reads and saves through the API (`/api/schedules`), validated on the server | `pages/SchedulesPage` |
+| `#/patient` | The patient app: phone-code sign-in, family, today's place in line, book and cancel. Bangla first, English toggle, `Rx density="patient"`. Outside the staff gate; uses its own token (`patient/session.ts`) | `patient/PatientApp` |
 | `#/pharmacy` | Find a signed prescription by Rx number and tick medicines off. Shows no diagnosis or notes. Ticks are not saved yet | `pages/PharmacyPage` |
 
 Routing is a plain hash route in `App.tsx`. All state and handlers still live in `App.tsx`, so every function works across pages. Page layout classes are in `pages.css`; the prescription sheet is in `pad.css` and is sized in `em` so the screen (14px) and A4 print (9.5pt) stay in proportion. Keep `.rx-paper`, `no-print` and `main > section:last-child` intact: `index.css` print rules depend on them.

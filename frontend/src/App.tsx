@@ -14,10 +14,12 @@ import { RegistrationPage } from './pages/RegistrationPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { PharmacyPage } from './pages/PharmacyPage';
 import { SchedulesPage } from './pages/SchedulesPage';
+import { BookingsPage } from './pages/BookingsPage';
 import { Button, LinkButton } from './design-system';
+import { getSession } from './auth/session';
+import { API_BASE } from './api';
 import { Info } from 'lucide-react';
 
-const API_BASE = 'http://localhost:5000/api';
 
 export default function App() {
   // Domain Data State
@@ -88,7 +90,10 @@ export default function App() {
   useEffect(() => {
     fetch(`${API_BASE}/doctors`)
       .then(r => r.json())
-      .then(d => {
+      .then(all => {
+        // a doctor (or the assistant working for one) only ever sees their own chamber
+        const mine = getSession()?.user.doctorId;
+        const d: Doctor[] = !Array.isArray(all) ? [] : mine ? all.filter((x: Doctor) => x.id === mine) : all;
         setDoctors(d);
         if (d.length > 0) {
           setSelectedDoctor(d[0]);
@@ -117,6 +122,13 @@ export default function App() {
       console.error('Failed to fetch queue:', e);
     }
   };
+
+  // The queue changes while you are on other pages (a booking arrives, the front desk registers someone):
+  // reload it every time you move between pages, so what you open is never stale.
+  useEffect(() => {
+    if (selectedDoctor) fetchQueue(selectedDoctor.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [route]);
 
   // Medicine Search Autocomplete
   useEffect(() => {
@@ -669,6 +681,7 @@ export default function App() {
   if (route.startsWith('#/dashboard')) return <DashboardPage doctors={doctors} />;
   if (route.startsWith('#/pharmacy')) return <PharmacyPage />;
   if (route.startsWith('#/schedules')) return <SchedulesPage />;
+  if (route.startsWith('#/bookings')) return <BookingsPage />;
 
   // ---- Queue page: today's chamber queue ----
   if (route.startsWith('#/queue')) {

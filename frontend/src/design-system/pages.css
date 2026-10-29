@@ -87,3 +87,37 @@
 .rx-recent__btn:hover, .rx-recent__btn[aria-current='true'] { background: var(--rx-surface-2); }
 @media (max-width: 720px) { .rx-shell__main { padding: 16px; } }
 @media print { .rx-navrail { display: none; } }
+
+/* ---- Sign-in (the canvas "Sign in" page): brand panel + form ---------------------- */
+.rx-login { min-height: 100vh; display: flex; flex-wrap: wrap; background: var(--rx-bg); color: var(--rx-ink); }
+.rx-login__brand { flex: 1 1 420px; min-width: 0; background: #0F6B5C; color: #fff; padding: 56px; display: flex; flex-direction: column; justify-content: space-between; gap: 40px; }
+.rx-login__brand .rx-brand__mark { background: rgba(255, 255, 255, 0.16); color: #fff; }
+.rx-login__tagline { margin: 0; font-size: 46px; line-height: 1.15; letter-spacing: -0.02em; }
+.rx-login__form { flex: 1 1 520px; min-width: 0; padding: 48px 56px; display: flex; flex-direction: column; justify-content: center; gap: 24px; }
+@media (max-width: 720px) { .rx-login__brand { padding: 32px 24px; } .rx-login__tagline { font-size: 34px; } .rx-login__form { padding: 32px 24px; } }
+
+/* ---- Who is signed in: a small pill, never printed ------------------------------- */
+.rx-account { position: fixed; left: 16px; bottom: 16px; z-index: 40; display: flex; align-items: center; gap: 6px; padding: 6px 8px 6px 16px; border-radius: var(--rx-r-pill); background: var(--rx-surface); border: 1px solid var(--rx-outline); box-shadow: var(--rx-shadow-paper); font-size: var(--rx-fs-label); max-width: calc(100vw - 32px); }
+.rx-account__who { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+.rx-account__who span { font-size: var(--rx-fs-caption); color: var(--rx-ink-2); }
+@media print { .rx-account { display: none; } }
+
+/* leave room under the content for the signed-in pill */
+.rx-split, .rx-workbench, .rx-shell__main { padding-bottom: 88px; }
+
+/* ---- Patient app (#/patient): big, calm, phone-first ---- */
+.rx-pt { min-height: 100vh; background: var(--rx-bg); color: var(--rx-ink); }
+.rx-pt__bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 12px 16px; background: var(--rx-surface); border-bottom: 1px solid var(--rx-outline); }
+.rx-pt__brand { font-size: 20px; }
+.rx-pt__main { max-width: 640px; margin: 0 auto; padding: 20px 16px 64px; }
+.rx-pt__h1 { margin: 0; font-size: 26px; line-height: 1.3; }
+.rx-pt__h2 { margin: 0; font-size: 19px; line-height: 1.3; }
+.rx-pt__lead { margin: 0; font-size: 17px; line-height: 1.6; color: var(--rx-ink-2); }
+.rx-pt__note { margin: 0; font-size: var(--rx-fs-label); color: var(--rx-ink-2); }
+.rx-pt__meta { font-size: var(--rx-fs-label); color: var(--rx-ink-2); line-height: 1.5; }
+.rx-pt__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.rx-pt__booking { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.rx-pt__chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.rx-pt__big { display: flex; flex-direction: column; gap: 2px; }
+.rx-pt__big span { font-size: var(--rx-fs-label); color: var(--rx-ink-2); }
+.rx-pt__big strong { font-size: 28px; }

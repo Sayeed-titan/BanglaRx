@@ -1,6 +1,7 @@
 import React, { useId, useState } from 'react';
 import { Volume2, Printer, QrCode, Plus, X, Calendar, FileText, Edit2, Check, UserCheck, AlertTriangle, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import type { Doctor, Patient, PrescriptionItem, GeneralSigns, SafetyAlert, MedicineOption } from '../types/index';
+import { useSession } from '../auth/session';
 import { Badge, Button, Callout, Chip, IconButton, MedicineRow, PatientBanner, Textarea, VitalRow } from '../design-system';
 
 interface PrescriptionPadProps {
@@ -164,6 +165,9 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
   signSuccess,
   searchSlot,
 }) => {
+  // when signed in, only a doctor may sign; with sign-in switched off nobody is signed in and nothing changes
+  const session = useSession();
+  const canSign = !session || session.user.role === 'doctor';
   const [customTest, setCustomTest] = useState('');
   const [customComplaint, setCustomComplaint] = useState('');
   const [customAdvice, setCustomAdvice] = useState('');
@@ -538,7 +542,9 @@ export const PrescriptionPad: React.FC<PrescriptionPadProps> = ({
           <Button variant="outlined" icon={<QrCode size={18} />} onClick={onOpenQrModal} title="Open the patient mobile view and QR code">
             Patient QR
           </Button>
-          {signSuccess ? (
+          {!canSign ? (
+            <Badge tone="info">Only the doctor signs</Badge>
+          ) : signSuccess ? (
             <Badge tone="success" icon={<CheckCircle2 size={16} />}>Signed and sent</Badge>
           ) : (
             <Button size="lg" icon={<ShieldCheck size={20} />} onClick={onSign} disabled={isSigning}>

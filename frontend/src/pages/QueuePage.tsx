@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Play, UserPlus, Users } from 'lucide-react';
+import { ArrowRight, CalendarCheck, Play, UserPlus, Users } from 'lucide-react';
 import type { Doctor, QueueItem } from '../types/index';
 import { Badge, Button, Card, EmptyState, LinkButton, PageHeader, QueueCard, StatTile } from '../design-system';
 
@@ -33,9 +33,14 @@ export const QueuePage: React.FC<QueuePageProps> = ({ doctor, queue, activePatie
         backLabel="Back to the workbench"
         live
         actions={
-          <LinkButton href="#/register" icon={<UserPlus size={18} />}>
-            New patient
-          </LinkButton>
+          <>
+            <LinkButton href="#/bookings" variant="outlined" icon={<CalendarCheck size={18} />}>
+              Bookings
+            </LinkButton>
+            <LinkButton href="#/register" icon={<UserPlus size={18} />}>
+              New patient
+            </LinkButton>
+          </>
         }
       />
 

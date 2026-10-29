@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Check } from 'lucide-react';
 import type { QueueItem } from '../types/index';
 import { Button, Card, PageHeader, SegmentedControl, Select, TextField } from '../design-system';
+import { API_BASE } from '../api';
 
 interface RegistrationPageProps {
   queue: QueueItem[];
@@ -84,7 +85,7 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({ queue, docto
     setIsSubmitting(true);
     try {
       // 1. Create Patient in Database
-      const patRes = await fetch('http://localhost:5000/api/patients', {
+      const patRes = await fetch(`${API_BASE}/patients`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -110,7 +111,7 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({ queue, docto
       if (weight) triageVitals.weight = `${weight} kg`;
 
       // 2. Add to Today's Chamber Queue
-      const queueRes = await fetch('http://localhost:5000/api/queue', {
+      const queueRes = await fetch(`${API_BASE}/queue`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

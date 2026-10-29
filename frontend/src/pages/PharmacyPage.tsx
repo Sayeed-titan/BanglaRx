@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ShieldCheck, ShieldAlert } from 'lucide-react';
 import { Badge, Callout, Card, EmptyState, PageHeader, PatientBanner, TextField } from '../design-system';
 import { getJson } from '../api';
@@ -49,22 +49,31 @@ export const PharmacyPage: React.FC = () => {
   const [detail, setDetail] = useState<RxDetail | null>(null);
   const [given, setGiven] = useState<Record<number, boolean>>({});
 
+  // the pharmacist's view: signed prescriptions only, searched on the server
   useEffect(() => {
     const ctl = new AbortController();
-    getJson<RxListRow[]>('/prescriptions', ctl.signal)
-      .then(setList)
-      .catch((e) => {
-        if (e?.name !== 'AbortError') setError(true);
-      });
-    return () => ctl.abort();
-  }, []);
+    const timer = setTimeout(() => {
+      getJson<RxListRow[]>(`/pharmacy/prescriptions?q=${encodeURIComponent(query.trim())}`, ctl.signal)
+        .then((rows) => {
+          setList(rows);
+          setError(false);
+        })
+        .catch((e) => {
+          if (e?.name !== 'AbortError') setError(true);
+        });
+    }, 250);
+    return () => {
+      clearTimeout(timer);
+      ctl.abort();
+    };
+  }, [query]);
 
   useEffect(() => {
     if (selected === null) return;
     const ctl = new AbortController();
     setDetail(null);
     setGiven({});
-    getJson<RxDetail>(`/prescriptions/${selected}`, ctl.signal)
+    getJson<RxDetail>(`/pharmacy/prescriptions/${selected}`, ctl.signal)
       .then(setDetail)
       .catch((e) => {
         if (e?.name !== 'AbortError') setError(true);
@@ -72,17 +81,14 @@ export const PharmacyPage: React.FC = () => {
     return () => ctl.abort();
   }, [selected]);
 
-  const matches = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return (list ?? []).filter((r) => !q || r.rx_number.toLowerCase().includes(q) || r.patient_name.toLowerCase().includes(q)).slice(0, 8);
-  }, [list, query]);
+  const matches = list ?? [];
 
   const rx = detail?.prescription;
   const markedCount = detail ? detail.items.filter((_, i) => given[i]).length : 0;
 
   return (
     <div className="rx-page">
-      <PageHeader title="Pharmacy" subtitle="Find a prescription by its Rx number or the patient's name" backHref="#/dashboard" backLabel="Back to the overview" />
+      <PageHeader title="Pharmacy" subtitle="Signed prescriptions only. Find one by its Rx number or the patient's name" backHref="#/dashboard" backLabel="Back to the overview" />
 
       <main className="rx-split">
         <aside className="rx-split__side" aria-label="Find a prescription">
@@ -97,7 +103,7 @@ export const PharmacyPage: React.FC = () => {
               />
               {error && <Callout tone="attention" title="Can't reach the server">Start the BanglaRx API, then try again.</Callout>}
               {!error && list === null && <span style={{ color: 'var(--rx-ink-2)' }}>Loading prescriptions…</span>}
-              {list && matches.length === 0 && <EmptyState title="No prescription found">Check the number on the patient's printout.</EmptyState>}
+              {list && matches.length === 0 && <EmptyState title="No prescription found">Only signed prescriptions appear here. Check the number on the patient's printout.</EmptyState>}
               <ul className="rx-recent" aria-label="Matching prescriptions">
                 {matches.map((r) => (
                   <li key={r.id}>
