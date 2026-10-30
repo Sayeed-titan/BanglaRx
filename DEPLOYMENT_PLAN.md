@@ -1,5 +1,7 @@
 # BanglaRx AI - Showcase Deployment Plan (one VM, our domain, PWA)
 
+> Step-by-step install and release instructions, with the scripts, are in `deploy/DEPLOY_RUNBOOK.md`. This file is the plan and the reasoning.
+
 Goal: for the AI summit it must look and behave like a real product. No "demo" banners,
 no fake data, no localhost. Real HTTPS domain, real sign-in, installable on a phone.
 
