@@ -92,6 +92,7 @@ function AddRow({ label, placeholder, value, onChange, onAdd, bangla }: {
           id={id}
           className={'rx-field__input' + (bangla ? ' rx-bn' : '')}
           type="text"
+          autoComplete="off"
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}
