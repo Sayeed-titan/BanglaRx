@@ -27,3 +27,6 @@ Thumbs.db
 
 # documents
 /research-documents
+
+# Deploy build output (made by deploy/build.ps1)
+deploy/out/

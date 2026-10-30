@@ -20,14 +20,17 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 });
 
-// 2. Configure CORS for Local & Network Frontend Clients
+// 2. CORS. Development (no origins listed): any origin may call the API. Production: list the public address(es) under
+// Cors:AllowedOrigins in appsettings.local.json and only those may. (Behind IIS the page and the API share one address, so
+// the browser never sends a cross-origin call at all; the list is a second lock.)
+var corsOrigins = (builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>())
+    .Where(o => !string.IsNullOrWhiteSpace(o)).Select(o => o.Trim().TrimEnd('/')).ToArray();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        if (corsOrigins.Length > 0) policy.WithOrigins(corsOrigins).AllowAnyMethod().AllowAnyHeader();
+        else policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
     });
 });
 
