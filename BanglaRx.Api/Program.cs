@@ -70,8 +70,11 @@ builder.Services.AddSingleton<ReportReader>();
 builder.Services.AddHttpClient();
 
 // 4. Database-First PostgreSQL Connection Factory
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? "Host=localhost;Port=5432;Database=BanglaRxDB;Username=postgres;Password=123456;";
+// No built-in fallback: a password in source control is a password everyone has. Put it in appsettings.local.json (git-ignored),
+// or in the ConnectionStrings__DefaultConnection environment variable.
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(connectionString))
+    throw new InvalidOperationException("No database connection string. Set ConnectionStrings:DefaultConnection in appsettings.local.json (see deploy/appsettings.production.example.json) or the ConnectionStrings__DefaultConnection environment variable.");
 builder.Services.AddSingleton<IDbConnectionFactory>(new PostgresDbConnectionFactory(connectionString));
 
 // 5. Clinical Application & Intelligence Services

@@ -19,9 +19,16 @@ const STATE = join(tmpdir(), 'rx-test-stack.json');
 
 // connection settings come from the app's own config; the password is never printed
 function connection() {
-  const cfg = JSON.parse(readFileSync(join(API_DIR, 'appsettings.json'), 'utf8'));
+  // the connection string lives in the git-ignored appsettings.local.json, or in ConnectionStrings__DefaultConnection
+  let conn = process.env.ConnectionStrings__DefaultConnection;
+  if (!conn) {
+    const local = join(API_DIR, 'appsettings.local.json');
+    if (!existsSync(local)) throw new Error('No database settings: put ConnectionStrings:DefaultConnection in BanglaRx.Api/appsettings.local.json or set ConnectionStrings__DefaultConnection.');
+    conn = JSON.parse(readFileSync(local, 'utf8')).ConnectionStrings?.DefaultConnection;
+    if (!conn) throw new Error('appsettings.local.json has no ConnectionStrings:DefaultConnection.');
+  }
   return Object.fromEntries(
-    cfg.ConnectionStrings.DefaultConnection.split(';').filter(Boolean).map((p) => {
+    conn.split(';').filter(Boolean).map((p) => {
       const i = p.indexOf('=');
       return [p.slice(0, i).trim().toLowerCase(), p.slice(i + 1).trim()];
     }),
