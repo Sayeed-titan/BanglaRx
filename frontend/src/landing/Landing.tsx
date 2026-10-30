@@ -91,6 +91,62 @@ const Estimator: React.FC<{ lang: Lang }> = ({ lang }) => {
   );
 };
 
+const VIS = {
+  bn: {
+    stripLabel: 'BanglaRx কী করে',
+    strip: ['বাংলা, ইংরেজি ও বাংলিশে কাজ করে', 'এআই খসড়া করে, ডাক্তার সই করেন', 'রোগী শুধু নিজের তথ্য দেখেন', 'ফোন ও ট্যাবলেটে ইনস্টল করা যায়'],
+    sample: 'নমুনা পর্দা',
+    sampleRx: 'নমুনা প্রেসক্রিপশন। আসল রোগী নয়।',
+    say: 'বলুন, কী সমস্যা?',
+    token: 'আপনার টোকেন',
+    serving: 'এখন চলছে',
+    aiDrafted: 'এআই খসড়া · ডাক্তার যাচাই করেছেন',
+    emergency: 'জরুরি অবস্থায় (বুকে ব্যথা, শ্বাসকষ্ট, অজ্ঞান) সরাসরি হাসপাতালের জরুরি বিভাগে যান।',
+    footNav: 'দ্রুত লিঙ্ক',
+  },
+  en: {
+    stripLabel: 'What BanglaRx does',
+    strip: ['Works in Bangla, English and Banglish', 'AI drafts, the doctor signs', 'Patients see only their own records', 'Installs on a phone or tablet'],
+    sample: 'Sample screen',
+    sampleRx: 'Sample prescription. Not a real patient.',
+    say: 'Tell me, what is wrong?',
+    token: 'Your token',
+    serving: 'Now serving',
+    aiDrafted: 'AI drafted · Doctor reviewed',
+    emergency: 'In an emergency (chest pain, trouble breathing, fainting) go straight to a hospital emergency department.',
+    footNav: 'Quick links',
+  },
+} as const;
+
+/** Two pictures in the real design-system look: the patient app and a prescription. Both are labelled as samples. */
+const HeroVisual: React.FC<{ lang: Lang }> = ({ lang }) => {
+  const v = VIS[lang];
+  return (
+    <div className="rx-land__visual" role="img" aria-label={`${v.sample}, ${v.sampleRx}`}>
+      <div className="rx-land__phone" aria-hidden="true">
+        <div className="rx-land__phone-hero">
+          <span><Sparkles size={14} /> Rubina</span>
+          <strong className="rx-bn">{v.say}</strong>
+          <span className="rx-land__phone-mic"><Mic size={26} /></span>
+        </div>
+        <div className="rx-land__phone-live">
+          <span>{v.serving}<strong>{num(lang, 5)}</strong></span>
+          <span className="rx-land__phone-you">{v.token}<strong>{num(lang, 8)}</strong></span>
+        </div>
+        <div className="rx-land__phone-nav"><span /><span /><span /><span /><span /></div>
+      </div>
+      <div className="rx-land__sheet" aria-hidden="true">
+        <strong>Rx</strong>
+        <div className="rx-land__sheet-line"><b>Paracetamol 500 mg</b><span>1+1+1 · 5 days</span></div>
+        <div className="rx-land__sheet-line"><b>Omeprazole 20 mg</b><span>1+0+1 · 14 days</span></div>
+        <div className="rx-land__sheet-line"><b>ORS</b><span>{lang === 'bn' ? 'প্রয়োজনমতো' : 'as needed'}</span></div>
+        <span className="rx-land__sheet-tag"><BadgeCheck size={14} /> {v.aiDrafted}</span>
+      </div>
+      <span className="rx-land__fine rx-land__visual-note">{v.sampleRx}</span>
+    </div>
+  );
+};
+
 /** The public home page. Nobody needs to sign in to read it; every internal screen sits behind the staff sign-in. */
 export const Landing: React.FC = () => {
   const lang = useLang();
@@ -120,7 +176,8 @@ export const Landing: React.FC = () => {
 
       <main>
         <section className="rx-land__hero" aria-labelledby="hero-h">
-          <div className="rx-land__wrap rx-stack" style={{ gap: 20 }}>
+          <div className="rx-land__wrap rx-land__herogrid">
+          <div className="rx-stack" style={{ gap: 20 }}>
             <span className="rx-land__kicker">{t.hero.kicker}</span>
             <h1 id="hero-h" className="rx-land__h1 rx-bn">{t.hero.title}</h1>
             <p className="rx-land__lead" style={{ maxWidth: 680 }}>{t.hero.lead}</p>
@@ -134,7 +191,13 @@ export const Landing: React.FC = () => {
               {pwa.canInstall && <Button variant="tonal" onClick={pwa.install}>{lang === 'bn' ? 'অ্যাপ ইনস্টল করুন' : 'Install the app'}</Button>}
             </div>
           </div>
+          <HeroVisual lang={lang} />
+          </div>
         </section>
+
+        <ul className="rx-land__strip" aria-label={VIS[lang].stripLabel}>
+          {VIS[lang].strip.map((x) => <li key={x}><CheckCircle2 size={18} aria-hidden="true" /> {x}</li>)}
+        </ul>
 
         <Section id="patients-sec" kicker={t.patients.kicker} title={t.patients.title} lead={t.patients.lead}>
           <Points points={t.patients.points} icons={ICONS.patients} />
@@ -209,11 +272,25 @@ export const Landing: React.FC = () => {
       </main>
 
       <footer className="rx-land__foot">
-        <div className="rx-land__wrap rx-row" style={{ justifyContent: 'space-between' }}>
-          <span>{t.footer}</span>
+        <div className="rx-land__wrap rx-land__footgrid">
+          <div className="rx-stack" style={{ gap: 6 }}>
+            <strong>BanglaRx</strong>
+            <span>{t.footer}</span>
+            <span className="rx-land__fine">{VIS[lang].emergency}</span>
+          </div>
+          <nav className="rx-land__footlinks" aria-label={VIS[lang].footNav}>
+            <a href="#/rubina">{t.cta.find}</a>
+            <a href="#/patient">{t.nav.patientSignIn}</a>
+            <a href="#/login">{t.nav.staffSignIn}</a>
+          </nav>
           <span className="rx-land__fine">© {new Date().getFullYear()} BanglaRx</span>
         </div>
       </footer>
+
+      <div className="rx-land__sticky no-print">
+        <LinkButton href="#/rubina" icon={<Headset size={18} />}>{t.cta.find}</LinkButton>
+        <LinkButton href="#/patient" variant="outlined">{t.nav.patientSignIn}</LinkButton>
+      </div>
     </Rx>
   );
 };

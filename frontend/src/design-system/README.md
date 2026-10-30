@@ -71,7 +71,7 @@ Add a component in the matching file, export it from `index.ts`, show it in `Pre
 | `#/login`, `#/password`, `#/users` | Sign-in, setup, change password, and the manager's user list. Shown by `auth/AuthGate` around the whole app; roles decide which screens open (`auth/roles.ts`), the server decides what is allowed | `pages/LoginPage`, `pages/UsersPage`, `auth/` |
 | `#/bookings` | The booking desk: pick a doctor and a day, see every time, book, move, cancel, mark arrived (becomes a queue token). Doctors and assistants see their own day read-only | `pages/BookingsPage` |
 | `#/schedules` | Doctors, branches and weekly sessions. Reads and saves through the API (`/api/schedules`), validated on the server | `pages/SchedulesPage` |
-| `#/patient` | The patient app: phone-code sign-in, family, today's place in line, book and cancel. Bangla first, English toggle, `Rx density="patient"`. Outside the staff gate; uses its own token (`patient/session.ts`) | `patient/PatientApp` |
+| `#/patient` | The patient app: phone-code sign-in, family, today's place in line, book and cancel. Phone layout from the canvas: greeting bar, Rubina hero with mic, four quick tiles, bottom bar (Home, Booking, Queue, Medicines, Reports), booking ticket, queue track. Bangla first, English toggle, `Rx density="patient"`. Outside the staff gate; uses its own token (`patient/session.ts`) | `patient/PatientApp` |
 | `#/pharmacy` | Find a signed prescription by Rx number and tick medicines off. Shows no diagnosis or notes. Ticks are not saved yet | `pages/PharmacyPage` |
 
 Routing is a plain hash route in `App.tsx`. All state and handlers still live in `App.tsx`, so every function works across pages. Page layout classes are in `pages.css`; the prescription sheet is in `pad.css` and is sized in `em` so the screen (14px) and A4 print (9.5pt) stay in proportion. Keep `.rx-paper`, `no-print` and `main > section:last-child` intact: `index.css` print rules depend on them.
@@ -81,3 +81,8 @@ Routing is a plain hash route in `App.tsx`. All state and handlers still live in
 Every screen now uses the design components and the page structure from the canvas. The guard's legacy count is 6, all inside `index.css` (the print stylesheet keeps its own colours on purpose).
 
 Not built yet (designed on the canvas): NavRail, BottomNav, Sheet, DdiAlert, AuditTrail, QueueTrack, ConsentSheet, Toast, Skeleton, and the canvas pages that need backend features that do not exist yet: sign-in and roles (RBAC), Rubina inbox and booking, dispense records, and the patient app. See `FULLSTACK_WORKFLOW.md` at the repo root: each of these is built as a slice, database + API + tests + screen together. Build their tables and endpoints first, then the screens, so no page shows invented data.
+
+
+## Tablet
+
+The workbench and the two-column pages (queue, registration) have a tablet layout in `pages.css`: portrait (601-900px) shows one half at a time at full width; landscape (901-1199px) shows both halves with the menu folded to icons. Check both whenever those pages change.
