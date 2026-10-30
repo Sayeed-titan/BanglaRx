@@ -56,6 +56,7 @@ public static class PatientAppEndpoints
     private static readonly string[] Channels = { "app", "web", "whatsapp" };
 
     private static PatientAccount Me(HttpContext ctx) => (PatientAccount)ctx.Items[AccountItem]!;
+    public static PatientAccount CurrentAccount(HttpContext ctx) => Me(ctx);
 
     private static IResult Fail(int status, string message) => Results.Json(new { errors = new[] { message } }, statusCode: status);
 
@@ -213,6 +214,8 @@ public static class PatientAppEndpoints
             // a patient sees only what they can book: no other patient's name, no taken times
             return Results.Ok(day with { Slots = day.Slots.Where(s => s.State == "open").Select(s => s with { BookingId = null }).ToList() });
         });
+
+        PatientReportEndpoints.Map(g);
 
         // ---- consent: what the patient allows (recording the visit, reminders, keeping reports) ----
         g.MapGet("/consent", async (HttpContext ctx, IDbConnectionFactory f) =>

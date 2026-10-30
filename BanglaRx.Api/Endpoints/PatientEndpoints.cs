@@ -31,6 +31,21 @@ public static class PatientEndpoints
             return Results.Ok(new { recordVisit = status });
         });
 
+        // Reports the patient photographed, checked and confirmed themselves. Never a lab result: the doctor must still verify.
+        group.MapGet("/{id:int}/reports", async (int id, IDbConnectionFactory connectionFactory) =>
+        {
+            using var db = connectionFactory.CreateConnection();
+            var rows = await db.QueryAsync(@"
+                SELECT id, kind, to_char(taken_on, 'YYYY-MM-DD') AS taken_on, created_at, report_values::text AS vals
+                FROM patient_reports WHERE patient_id = @id ORDER BY COALESCE(taken_on, created_at::date) DESC, id DESC LIMIT 20;", new { id });
+            return Results.Ok(rows.Select(r => new
+            {
+                id = (long)r.id, kind = (string)r.kind, takenOn = (string?)r.taken_on,
+                createdAt = (DateTime)r.created_at, values = System.Text.Json.JsonDocument.Parse((string)r.vals).RootElement,
+                source = "patient_confirmed_ai_read",
+            }));
+        });
+
         group.MapPost("/", async (CreatePatientRequest req, IDbConnectionFactory connectionFactory) =>
         {
             using var db = connectionFactory.CreateConnection();

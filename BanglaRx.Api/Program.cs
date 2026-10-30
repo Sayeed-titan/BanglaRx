@@ -61,6 +61,7 @@ var rubinaOptions = new RubinaOptions();
 builder.Configuration.GetSection("Rubina").Bind(rubinaOptions);
 builder.Services.AddSingleton(rubinaOptions);
 builder.Services.AddSingleton<RubinaService>();
+builder.Services.AddSingleton<ReportReader>();
 
 // 3. HTTP Client Factory
 builder.Services.AddHttpClient();
@@ -91,6 +92,7 @@ await BookingSchema.EnsureAsync(dbFactory);
 await PatientSchema.EnsureAsync(dbFactory);
 await RubinaSchema.EnsureAsync(dbFactory);
 await PharmacySchema.EnsureAsync(dbFactory);
+await ReportSchema.EnsureAsync(dbFactory);
 
 // 7. Register Modular Minimal API Endpoint Groups
 app.MapStatusEndpoints();

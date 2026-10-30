@@ -17,6 +17,7 @@ import { SchedulesPage } from './pages/SchedulesPage';
 import { BookingsPage } from './pages/BookingsPage';
 import { InboxPage } from './pages/InboxPage';
 import { SathiPanel } from './components/SathiPanel';
+import { PatientReportsCard } from './components/PatientReportsCard';
 import { Button, Callout, LinkButton } from './design-system';
 import { getSession } from './auth/session';
 import { API_BASE } from './api';
@@ -747,6 +748,7 @@ export default function App() {
             onSelectPatient={setSelectedPatient}
           />
 
+          <PatientReportsCard patientId={selectedPatient?.id} onReviewed={(t) => setPatientReportsPresented((cur) => (cur.includes(t) ? cur : [...cur, t]))} />
           <Button variant="outlined" onClick={() => setSathiOpen(true)} title="Ask a clinical question about this patient">
             Ask Rx সাথী
           </Button>

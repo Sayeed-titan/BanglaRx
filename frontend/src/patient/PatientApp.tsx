@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { CalendarCheck, CalendarPlus, CheckCircle2, FileText, Headset, LogOut, Phone, ShieldCheck, TriangleAlert, UserPlus } from 'lucide-react';
+import { CalendarCheck, CalendarPlus, Camera, CheckCircle2, FileText, Headset, LogOut, Phone, ShieldCheck, TriangleAlert, UserPlus } from 'lucide-react';
 import { Badge, Button, Callout, Card, Chip, EmptyState, Rx, SegmentedControl, Select, TextField } from '../design-system';
 import { fmtDate, fmtTime, num, setLang, tr, useLang } from './i18n';
 import type { Key, Lang } from './i18n';
 import { pcall, requestCode, setProfiles, signOut, usePatientSession, verifyCode } from './session';
 import type { Profile } from './session';
 import { MyPrescriptions } from './MyPrescriptions';
+import { MyReports } from './MyReports';
 import { PENDING_DOCTOR_KEY } from '../rubina/RubinaChat';
 import { useInstall } from '../pwa/useInstall';
 import { ConsentScreen, Emergency } from './SafetyScreens';
@@ -203,7 +204,7 @@ const AddPerson: React.FC<{ lang: Lang; onDone: () => void; onCancel: () => void
   );
 };
 
-const Home: React.FC<{ lang: Lang; onBook: () => void; onRx: () => void; onConsent: () => void; onEmergency: () => void }> = ({ lang, onBook, onRx, onConsent, onEmergency }) => {
+const Home: React.FC<{ lang: Lang; onBook: () => void; onRx: () => void; onConsent: () => void; onEmergency: () => void; onReports: () => void }> = ({ lang, onBook, onRx, onConsent, onEmergency, onReports }) => {
   const session = usePatientSession()!;
   const [rows, setRows] = useState<BookingRow[] | null>(null);
   const [queue, setQueue] = useState<QueuePos[]>([]);
@@ -278,6 +279,9 @@ const Home: React.FC<{ lang: Lang; onBook: () => void; onRx: () => void; onConse
       </Button>
       <Button variant="outlined" size="lg" icon={<FileText size={20} />} onClick={onRx} disabled={session.profiles.length === 0} fullWidth>
         {tr(lang, 'myRxBtn')}
+      </Button>
+      <Button variant="outlined" size="lg" icon={<Camera size={20} />} onClick={onReports} disabled={session.profiles.length === 0} fullWidth>
+        {tr(lang, 'reportsBtn')}
       </Button>
       <Button variant="text" icon={<ShieldCheck size={18} />} onClick={onConsent}>{tr(lang, 'consentBtn')}</Button>
       <Button variant="text" icon={<Headset size={18} />} onClick={() => (window.location.hash = '#/rubina')}>{tr(lang, 'askRubina')}</Button>
@@ -477,7 +481,7 @@ const Book: React.FC<{ lang: Lang; onDone: () => void }> = ({ lang, onDone }) =>
 export const PatientApp: React.FC = () => {
   const lang = useLang();
   const session = usePatientSession();
-  const [screen, setScreen] = useState<'home' | 'book' | 'rx' | 'consent' | 'emergency'>(() => {
+  const [screen, setScreen] = useState<'home' | 'book' | 'rx' | 'consent' | 'emergency' | 'reports'>(() => {
     try {
       return sessionStorage.getItem(PENDING_DOCTOR_KEY) ? 'book' : 'home';
     } catch {
@@ -494,10 +498,11 @@ export const PatientApp: React.FC = () => {
   }
   return (
     <Shell lang={lang} signedIn>
-      {screen === 'home' && <Home lang={lang} onBook={() => setScreen('book')} onRx={() => setScreen('rx')} onConsent={() => setScreen('consent')} onEmergency={() => setScreen('emergency')} />}
+      {screen === 'home' && <Home lang={lang} onBook={() => setScreen('book')} onRx={() => setScreen('rx')} onConsent={() => setScreen('consent')} onEmergency={() => setScreen('emergency')} onReports={() => setScreen('reports')} />}
       {screen === 'book' && <Book lang={lang} onDone={() => setScreen('home')} />}
       {screen === 'rx' && <MyPrescriptions lang={lang} onBack={() => setScreen('home')} />}
       {screen === 'consent' && <ConsentScreen lang={lang} onBack={() => setScreen('home')} />}
+      {screen === 'reports' && <MyReports lang={lang} onBack={() => setScreen('home')} onConsent={() => setScreen('consent')} />}
       {screen === 'emergency' && <Emergency lang={lang} onBack={() => setScreen('home')} />}
     </Shell>
   );
