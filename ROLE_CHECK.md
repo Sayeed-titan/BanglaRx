@@ -55,3 +55,18 @@ Run against throw-away databases only. The real `BanglaRxDB` was never touched.
 ```bash
 for s in api auth booking patient pharmacy fullcycle; do node tests/run-$s-tests.mjs; done
 ```
+
+## Incident during the P0 work (2026-10-30, afternoon)
+
+Moving the database password out of `appsettings.json` into the git-ignored `appsettings.local.json` made that file **override** the
+test suites' environment variable, so for a short time the suites ran against the real `BanglaRxDB` instead of a throw-away one.
+Caught when the auth suite said "Setup is already done". Fixed in commit `1c1426b`: environment variables now win, `/api/status`
+reports the real database name, and the test stack **stops before running anything** if its API is not on its own throw-away database.
+All six suites pass after the fix and the real database counts did not change in the clean re-run.
+
+What the misdirected runs left behind in the real `BanglaRxDB` (read-only check; nothing deleted yet):
+
+- prescriptions id 7 and 8 (RX-20261030-00003/00004, "Viral fever with cough", patient 1, doctor 1) plus their dispense records
+- branches "North Branch" (id 39) and "Closed Branch" (id 41)
+- the schedule test replaces and clears a doctor's weekly sessions: doctor schedules may have been overwritten (6 session rows exist now; the earlier number is unknown)
+- the two real accounts (`mkl.sayeed`, `habib.ibnsina`) were **not** changed

@@ -222,8 +222,10 @@ You MUST return a valid JSON object strictly matching this schema:
             var client = _httpClientFactory.CreateClient();
             client.Timeout = TimeSpan.FromSeconds(25);
             client.DefaultRequestHeaders.UserAgent.ParseAdd("BanglaRx-AI-Engine/2.0");
+            // the key goes in a header, never in the URL (URLs end up in logs and error messages)
+            client.DefaultRequestHeaders.Add("x-goog-api-key", geminiApiKey);
 
-            var endpoint = $"https://generativelanguage.googleapis.com/v1beta/models/{geminiModel}:generateContent?key={geminiApiKey}";
+            var endpoint = $"https://generativelanguage.googleapis.com/v1beta/models/{geminiModel}:generateContent";
             var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
 
             var response = await client.PostAsync(endpoint, content);

@@ -3,12 +3,17 @@
 Details for every line: [GAP_ANALYSIS.md](GAP_ANALYSIS.md). Test results: [ROLE_CHECK.md](ROLE_CHECK.md).
 
 ## P0 (before any real patient data)
-- [ ] Split `init_database.sql`: schema (no DROP) and dev reset; fix runbook
-- [ ] Remove committed DB password `123456`; fail start-up if no connection string
-- [ ] Turn auth on by default
-- [ ] Untrack `BanglaRx.Api/.vs/` files from git
-- [ ] Send Gemini key in a header, not the URL
+- [x] `init_database.sql` now refuses to run on a database that holds data; runbook updated
+- [x] Remove committed DB password `123456`; fail start-up if no connection string
+- [x] Turn auth on by default
+- [x] Untrack `BanglaRx.Api/.vs/` files from git
+- [x] Send Gemini key in a header, not the URL
 - [ ] Decide: patient data to Gemini, consent and data location (your call)
+
+## Follow-ups from the P0 work
+- [ ] Rotate the old database password `123456` (it is still in git history) and use the `banglarx_app` user
+- [ ] Review and clean 6 test leftovers in the real `BanglaRxDB` (see ROLE_CHECK.md, "Incident")
+- [ ] Decide whether to rewrite git history to remove the old password
 
 ## P1 (before a pilot clinic)
 - [ ] Add CI (build, tests, lint, `tsc`)
@@ -24,7 +29,7 @@ Details for every line: [GAP_ANALYSIS.md](GAP_ANALYSIS.md). Test results: [ROLE_
 - [ ] Add versioned DB migrations
 - [ ] Off-box backups and a restore drill
 - [ ] Shorter patient token life or cookie storage
-- [ ] Check why `/api/status` shows the wrong database name
+- [x] Check why `/api/status` shows the wrong database name
 
 ## P2 (next)
 - [ ] Real SMS provider

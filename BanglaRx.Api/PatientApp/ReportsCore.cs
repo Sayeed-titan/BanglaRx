@@ -92,7 +92,8 @@ Return JSON only: {""kind"": string, ""takenOn"": string|null, ""values"": [{""n
         {
             var client = _http.CreateClient();
             client.Timeout = TimeSpan.FromSeconds(45);
-            var res = await client.PostAsync($"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}",
+            client.DefaultRequestHeaders.Add("x-goog-api-key", key); // header, not URL: URLs end up in logs
+            var res = await client.PostAsync($"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
                 new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json"));
             if (!res.IsSuccessStatusCode) return null;
             using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
