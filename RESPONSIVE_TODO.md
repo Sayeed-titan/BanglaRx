@@ -30,6 +30,8 @@
 
 ---
 
+> **Update:** the workbench tab switcher (Consultation / Rx) below 900 px, 16 px inputs on phones and the installable app (manifest, service worker, icons) are done. The rest of this list is mostly covered by the redesign; re-check each item on a real phone.
+
 ### Phase 3: Adaptive Workspace Layout & Mobile Tabbed Switcher
 - [ ] **Replace Hardcoded Grid Columns in `App.tsx`:**
   - Change `gridTemplateColumns: '43% 57%'` to responsive `.clinical-workspace-grid`.

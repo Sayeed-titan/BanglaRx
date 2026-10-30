@@ -43,6 +43,25 @@ node tests/stop-test-stack.mjs                                    # stops the AP
 | Patient sign-in and booking | `patient_accounts`, `patient_account_profiles`, `otp_codes` | `/api/patient/auth/*`, `/api/patient/{me,profiles,doctors,slots,bookings,queue}` | `#/patient` (Bangla first, English toggle) |
 | Sign-in and roles | `users`, `auth_events`, `app_secrets` (token signing key) | `/api/auth/*`, `/api/users/*`, `/api/pharmacy/*`; role table in `Auth/RoleGuard.cs` | sign-in / setup / first-password screens, `#/users`, the account pill |
 
+| Rubina public chat | `chat_conversations`, `chat_messages` | `/api/public/chat`, `/api/public/doctors` (no sign-in) | `#/rubina` |
+| Reception inbox | same tables | `/api/inbox` (receptionist, manager) | `#/inbox` |
+| Rx Sathi (doctor's assistant) | none (reads patient + formulary) | `POST /api/sathi/chat` (doctor, assistant) | "Ask Rx Sathi" panel in the workbench |
+| Consent | `patient_consents`, `patient_consent_log` | `/api/patient/consent`, `GET /api/patients/{id}/consent` | patient "My permissions"; the doctor's mic follows it |
+| Patient prescriptions | reads `prescriptions` | `GET /api/patient/prescriptions` | patient "My prescriptions" |
+| Patient reports | `patient_reports`, `patient_report_reads` | `/api/patient/reports/*`, `GET /api/patients/{id}/reports` | patient "My reports", doctor side card |
+| Hand-over records | `dispense_records` | `/api/pharmacy/prescriptions/{id}/dispense`, `GET /api/prescriptions/{id}/history` | `#/pharmacy`, History button on the pad |
+| Installable app | none | none | `manifest.webmanifest`, `sw.js` (never caches `/api`) |
+
+## How the newer slices behave
+
+- **Rubina** answers only from live doctor data. Red-flag words (chest pain, breathing trouble, bleeding, seizure, poisoning...) are caught by fixed rules before the model runs and get the 999 / emergency message. Limits: 500 characters a message, 20 messages per 10 minutes per address, `Rubina:DailyMessageCap` a day. Reception sees the chat in `#/inbox`, takes over, and the patient sees the reply.
+- **Rx Sathi** never receives the patient's name or phone. Only formulary medicines become cards, allergy conflicts are removed by fixed rules, and adding a card leaves dosage and duration for the doctor.
+- **Consent**: "No" to recording turns the doctor's microphone off for that patient (typing still works). Every answer is logged with its date.
+- **Reports**: the photo is read and thrown away. Values are kept only after the patient corrects any `?` and confirms, and only if "Keep my reports" is on. Doctors see them as "patient-given, AI-read".
+- **Hand-over**: one record per medicine per prescription version; if the doctor revises the prescription later, the pharmacy sees a warning. Undo works for 15 minutes.
+- **Phones**: the workbench shows Consultation or Rx one at a time below 900 px. The service worker is registered in production builds only.
+- **Showcase mode**: `Sms__Provider=demo` (set by `start_banglarx.bat`) shows the sign-in code on screen. Turn it off for any real use.
+
 ## Sign-in and roles: how it works
 
 - **Roles:** doctor, assistant, receptionist, pharmacist, manager. The one table of who may call what is `BanglaRx.Api/Auth/RoleGuard.cs` (`RoleRules.Rows`). A route that matches no row is manager-only, so a new endpoint stays locked until someone decides who may use it. Add a row (and a test) with every new endpoint.

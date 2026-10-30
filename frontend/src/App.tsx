@@ -18,7 +18,7 @@ import { BookingsPage } from './pages/BookingsPage';
 import { InboxPage } from './pages/InboxPage';
 import { SathiPanel } from './components/SathiPanel';
 import { PatientReportsCard } from './components/PatientReportsCard';
-import { Button, Callout, LinkButton } from './design-system';
+import { Button, Callout, LinkButton, SegmentedControl } from './design-system';
 import { getSession } from './auth/session';
 import { API_BASE } from './api';
 import { Info } from 'lucide-react';
@@ -32,6 +32,8 @@ export default function App() {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   // what the patient said about recording the visit: agreed / declined / not_asked
   const [sathiOpen, setSathiOpen] = useState(false);
+  // phones and small tablets show Consultation or Rx, one at a time
+  const [mobileTab, setMobileTab] = useState<'consult' | 'rx'>('consult');
   const [recordConsent, setRecordConsent] = useState<'agreed' | 'declined' | 'not_asked'>('not_asked');
   useEffect(() => {
     setRecordConsent('not_asked');
@@ -320,6 +322,7 @@ export default function App() {
         if (data.chiefComplaints && data.chiefComplaints.length > 0) setComplaints(data.chiefComplaints);
         if (data.diagnosis) setDiagnosis(data.diagnosis);
         if (data.medicines && data.medicines.length > 0) setMedicines(data.medicines);
+        setMobileTab('rx'); // on a phone, show the finished draft
         if (data.investigations && data.investigations.length > 0) setInvestigations(data.investigations);
         if (data.patientReportsPresented && data.patientReportsPresented.length > 0) {
           setPatientReportsPresented(data.patientReportsPresented);
@@ -739,7 +742,16 @@ export default function App() {
         onOpenDoctorProfile={() => setIsDoctorProfileOpen(true)}
       />
 
-      <main className="rx-workbench">
+      <div className="rx-tabsbar no-print">
+        <SegmentedControl
+          label="Workbench view"
+          value={mobileTab}
+          onChange={(v) => setMobileTab(v as 'consult' | 'rx')}
+          options={[{ value: 'consult', label: 'Consultation' }, { value: 'rx', label: `Rx (${medicines.length})` }]}
+        />
+      </div>
+
+      <main className="rx-workbench" data-tab={mobileTab}>
         <aside className="rx-workbench__side no-print">
           <PatientCard
             patient={selectedPatient}

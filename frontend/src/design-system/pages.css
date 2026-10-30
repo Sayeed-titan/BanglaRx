@@ -102,6 +102,18 @@
 .rx-account__who span { font-size: var(--rx-fs-caption); color: var(--rx-ink-2); }
 @media print { .rx-account { display: none; } }
 
+/* ---- Phones and small tablets: the workbench shows one half at a time (Consultation or Rx) ---- */
+.rx-tabsbar { display: none; }
+@media (max-width: 900px) {
+  .rx-tabsbar { display: flex; gap: 8px; padding: 8px 16px; position: sticky; top: 0; z-index: 30; background: var(--rx-bg); border-bottom: 1px solid var(--rx-outline); }
+  .rx-tabsbar > * { flex: 1; }
+  .rx-workbench[data-tab="consult"] .rx-workbench__main { display: none; }
+  .rx-workbench[data-tab="rx"] .rx-workbench__side { display: none; }
+  /* 16px stops iPhone from zooming the page when a field is tapped */
+  .rx-select, .rx-select--sm, .rx-field__input, .rx-pad textarea, .rx-workbench textarea { font-size: 16px; }
+}
+@media print { .rx-tabsbar { display: none; } }
+
 /* leave room under the content for the signed-in pill */
 .rx-split, .rx-workbench, .rx-shell__main { padding-bottom: 88px; }
 
