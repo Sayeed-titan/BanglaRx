@@ -12,7 +12,7 @@ Details for every line: [GAP_ANALYSIS.md](GAP_ANALYSIS.md). Test results: [ROLE_
 
 ## Follow-ups from the P0 work
 - [ ] Rotate the old database password `123456` (it is still in git history) and use the `banglarx_app` user
-- [ ] Review and clean 6 test leftovers in the real `BanglaRxDB` (see ROLE_CHECK.md, "Incident")
+- [ ] (optional, kept on purpose as sample data) Clean the 6 test leftovers in the real `BanglaRxDB` (see ROLE_CHECK.md, "Incident"); check doctor schedules in `#/schedules`
 - [ ] Decide whether to rewrite git history to remove the old password
 
 ## P1 (before a pilot clinic)
