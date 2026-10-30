@@ -274,6 +274,8 @@ psql -U postgres -d postgres -c "CREATE DATABASE \"BanglaRxDB\";"
 psql -U postgres -d BanglaRxDB -f "database/init_database.sql"
 ```
 
+> The script drops and recreates the base tables. It refuses to run on a database that already holds patients, prescriptions, doctors or medicines (unless the database name contains `dev` or `test`).
+
 *Alternatively, open **pgAdmin**, create a new database named `BanglaRxDB`, open the Query Tool, paste the contents of `database/init_database.sql`, and execute (F5).*
 
 ### Step 3: Configure Backend Secrets

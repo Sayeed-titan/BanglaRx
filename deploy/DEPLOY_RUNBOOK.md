@@ -35,7 +35,7 @@ What is in this folder, and what each file does:
    \c BanglaRxDB
    CREATE EXTENSION IF NOT EXISTS pg_trgm;
    ```
-   Load the base tables **once, into the empty database only** (the script drops and recreates its tables):
+   Load the base tables **once, into the empty database only**. The script drops and recreates its tables, so it now refuses to run (and changes nothing) if patients, prescriptions, doctors or medicines already hold rows. Never use it to "update" a live system; restore from a backup instead:
    ```powershell
    psql -h localhost -U banglarx_app -d BanglaRxDB -f database\init_database.sql
    ```

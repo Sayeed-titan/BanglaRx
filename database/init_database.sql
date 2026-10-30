@@ -11,6 +11,27 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 
 -- ============================================================================
+-- 0. SAFETY GUARD. This script DROPS and recreates the base tables, so it must only ever run on an EMPTY database.
+-- Everything below sits in ONE transaction: if the guard raises, nothing after it runs and the final COMMIT rolls back.
+-- A database whose name contains "dev" or "test" is allowed to be reset (that is how the test stack uses it).
+-- ============================================================================
+BEGIN;
+DO $guard$
+DECLARE t text; n bigint;
+BEGIN
+    IF current_database() ~* '(dev|test)' THEN RETURN; END IF;
+    FOREACH t IN ARRAY ARRAY['patients','prescriptions','prescription_items','doctors','medicines','drug_interactions','audit_logs'] LOOP
+        IF to_regclass('public.' || t) IS NOT NULL THEN
+            EXECUTE format('SELECT count(*) FROM %I', t) INTO n;
+            IF n > 0 THEN
+                RAISE EXCEPTION 'REFUSING TO RUN: table % already holds % rows in database %. This script drops tables; run it only on an empty database. Restore from a backup instead.', t, n, current_database();
+            END IF;
+        END IF;
+    END LOOP;
+END
+$guard$;
+
+-- ============================================================================
 -- 1. DROP EXISTING OBJECTS (CLEAN SLATE / IDEMPOTENT EXECUTION)
 -- ============================================================================
 DROP TABLE IF EXISTS audit_logs CASCADE;
@@ -428,4 +449,5 @@ VALUES (
     '{"message": "BanglaRxDB initialized with tables, constraints, Bangladesh pharma registry and DDI rules."}'::jsonb
 );
 
+COMMIT;
 -- End of script
