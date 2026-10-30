@@ -66,6 +66,8 @@ function launchApi({ c, dbName, base, extraEnv }) {
       ...process.env,
       ASPNETCORE_URLS: base,
       ConnectionStrings__DefaultConnection: `Host=${c.host};Port=${c.port ?? '5432'};Database=${dbName};Username=${c.username};Password=${c.password};`,
+      // the API now enforces sign-in by default; the plain suites run without it unless a test asks for it
+      Auth__Enforce: 'false',
       ...extraEnv,
     },
   });
@@ -82,7 +84,14 @@ export async function startApi({ dbName, port, env: extraEnv = {} }) {
   const state = JSON.parse(readFileSync(STATE, 'utf8'));
   writeFileSync(STATE, JSON.stringify({ ...state, extraPids: [...(state.extraPids ?? []), api.pid] }));
   for (let i = 0; i < 80; i++) {
-    try { if ((await fetch(`${base}/api/status`)).ok) return { base, api, getLog }; } catch { /* not up yet */ }
+    try {
+      const res = await fetch(`${base}/api/status`);
+      if (res.ok) {
+        const seen = (await res.json()).databaseName;
+        if (seen !== dbName) { api.kill(); throw new Error(`SAFETY STOP: the second test API is connected to "${seen}", not "${dbName}".`); }
+        return { base, api, getLog };
+      }
+    } catch (e) { if (String(e.message).startsWith('SAFETY STOP')) throw e; /* not up yet */ }
     await new Promise((res) => setTimeout(res, 500));
   }
   throw new Error(`second API did not start:
@@ -111,7 +120,16 @@ export async function startStack({ port = 5155, env: extraEnv = {} } = {}) {
 
   for (let i = 0; i < 80; i++) {
     try {
-      if ((await fetch(`${base}/api/status`)).ok) return { base, dbName, api, getLog, c };
+      const res = await fetch(`${base}/api/status`);
+      if (res.ok) {
+        // never let a suite write to a database other than its own throw-away one (a settings file once overrode it)
+        const seen = (await res.json()).databaseName;
+        if (seen !== dbName) {
+          await stopStack();
+          throw new Error(`SAFETY STOP: the test API is connected to "${seen}", not the throw-away database "${dbName}". Nothing was run.`);
+        }
+        return { base, dbName, api, getLog, c };
+      }
     } catch { /* not up yet */ }
     await new Promise((res) => setTimeout(res, 500));
   }

@@ -20,8 +20,8 @@ public static class Roles
 
 public class AuthOptions
 {
-    /// <summary>When false (the default) the API behaves exactly as before: nothing requires sign-in.</summary>
-    public bool Enforce { get; set; }
+    /// <summary>True by default: every internal route needs a staff sign-in. Set Auth:Enforce to false only on a private development machine.</summary>
+    public bool Enforce { get; set; } = true;
     public int TokenHours { get; set; } = 12;
     public int MaxFailedAttempts { get; set; } = 5;
     public int LockMinutes { get; set; } = 15;

@@ -67,11 +67,11 @@ node tests/stop-test-stack.mjs                                    # stops the AP
 
 - **Roles:** doctor, assistant, receptionist, pharmacist, manager. The one table of who may call what is `BanglaRx.Api/Auth/RoleGuard.cs` (`RoleRules.Rows`). A route that matches no row is manager-only, so a new endpoint stays locked until someone decides who may use it. Add a row (and a test) with every new endpoint.
 - **Doctor isolation:** a doctor, and the assistant working for that doctor, only ever reach their own queue, prescriptions and templates. The server enforces it; hiding things in the screen is not the rule.
-- **Switch:** `Auth:Enforce` (default **false**). While false, the API behaves exactly as before, except that the user list and the sign-in log are always manager-only.
+- **Switch:** `Auth:Enforce` (default **true** since 2026-10-30). Set it to `false` only on a private development machine; the API then logs a warning at start-up and behaves as it did before sign-in existed, except that the user list and the sign-in log stay manager-only.
 - **Turning it on, safely:**
   1. Start the app and open `#/login`. With no accounts yet it shows the setup screen: you choose the first manager's username and password (nobody else, and no code, ever sees it).
   2. In `#/users`, add everyone else. Each gets a temporary password and must choose their own at first sign-in.
-  3. Put `{ "Auth": { "Enforce": true } }` in `BanglaRx.Api/appsettings.local.json` (git-ignored) and restart the API. Sign-in is now required everywhere.
+  3. Nothing to switch on: sign-in is required everywhere by default. (To work without it on a private machine, put `{ "Auth": { "Enforce": false } }` in `BanglaRx.Api/appsettings.local.json`.)
 - **Passwords:** PBKDF2-SHA256, 210,000 rounds, random salt. 5 wrong tries lock an account for 15 minutes. Signing out, a password change, a role change, or switching a person off ends all of their sessions at once. Tokens last 12 hours and live in the browser tab only.
 - **Token signing key:** `Auth:JwtSecret` if you set one, otherwise a random key generated once and kept in the `app_secrets` table.
 

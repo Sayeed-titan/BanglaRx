@@ -30,7 +30,8 @@ public static class StatusEndpoints
                         (SELECT count(*) FROM drug_interactions) AS total_interactions,
                         (SELECT count(*) FROM patients) AS total_patients,
                         (SELECT count(*) FROM prescriptions) AS total_prescriptions,
-                        (SELECT count(*) FROM doctors) AS total_doctors;
+                        (SELECT count(*) FROM doctors) AS total_doctors,
+                        current_database() AS db_name;
                 ");
 
                 var apiKey = config["Gemini:ApiKey"];
@@ -39,7 +40,7 @@ public static class StatusEndpoints
                 {
                     DatabaseConnected = true,
                     Engine = "Secure Relational Clinical Data Vault (Database-First PostgreSQL)",
-                    DatabaseName = "BanglaRxDB",
+                    DatabaseName = (string)stats.db_name,
                     AiModel = "BanglaRx Neural Core",
                     AiStatus = string.IsNullOrEmpty(apiKey) ? "Not Configured" : "Connected (BanglaRx Ambient Neural Network)",
                     Architecture = "Modular Minimal APIs with Dapper Micro-ORM",

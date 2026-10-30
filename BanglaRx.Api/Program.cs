@@ -12,6 +12,8 @@ Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
+// environment variables win over the local file (the test suites point the API at a throw-away database this way)
+builder.Configuration.AddEnvironmentVariables();
 
 // 1. Configure JSON Options
 builder.Services.ConfigureHttpJsonOptions(options =>
@@ -34,7 +36,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-// 2b. Sign-in and roles (switched off unless Auth:Enforce is true)
+// 2b. Sign-in and roles (ON by default; Auth:Enforce=false switches it off for private development)
 builder.AddBanglaRxAuth();
 
 // 2c. Booking rules (clinic clock, lead time, how far ahead people may book)
@@ -84,6 +86,9 @@ builder.Services.AddScoped<IConsultationAiService, ConsultationAiService>();
 builder.Services.AddScoped<SathiService>();
 
 var app = builder.Build();
+
+if (!app.Services.GetRequiredService<AuthOptions>().Enforce)
+    app.Logger.LogWarning("Auth:Enforce is OFF: patient and prescription routes are open to anyone who can reach this port. Use only on a private development machine.");
 
 app.UseCors("AllowAll");
 app.UseAuthentication();
