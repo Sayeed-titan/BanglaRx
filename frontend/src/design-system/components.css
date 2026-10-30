@@ -139,6 +139,7 @@ span.rx-chip { cursor: default; }
 .rx-field__control:focus-within { border-color: var(--rx-primary); box-shadow: 0 0 0 4px color-mix(in srgb, var(--rx-primary) 18%, transparent); }
 .rx-field__control--error { border-color: var(--rx-danger-solid); }
 .rx-field__input { flex: 1; min-width: 0; height: calc(var(--rx-control-h)); border: 0; outline: 0; background: transparent; color: var(--rx-ink); font: inherit; font-size: var(--rx-fs-body); }
+.rx .rx-field__input:focus-visible { outline: 0; }
 .rx-field__input::placeholder { color: var(--rx-ink-3); }
 .rx-field__suffix { flex: none; font-size: var(--rx-fs-caption); color: var(--rx-ink-2); }
 .rx-field__help { font-size: var(--rx-fs-caption); color: var(--rx-ink-2); }
