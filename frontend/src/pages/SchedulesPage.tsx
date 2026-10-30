@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
-import { Badge, Button, Callout, Card, EmptyState, IconButton, NavRail, Select, Switch, TextField } from '../design-system';
+import { Badge, Button, Callout, Card, EmptyState, IconButton, Select, Switch, TextField } from '../design-system';
 import { getJson, sendJson } from '../api';
-import { managerNav } from './nav';
 
 interface Session {
   id: number;
@@ -164,8 +163,6 @@ export const SchedulesPage: React.FC = () => {
   return (
     <div className="rx-page">
       <div className="rx-shell">
-        <NavRail label="Manager" items={managerNav('#/schedules')} />
-
         <main className="rx-shell__main">
           <header>
             <h1 style={{ margin: 0, fontSize: 26, letterSpacing: '-0.01em' }}>Doctors and schedules</h1>

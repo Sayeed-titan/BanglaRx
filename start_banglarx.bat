@@ -9,6 +9,8 @@ echo.
 echo [1/3] Starting ASP.NET Core Backend API on http://localhost:5000 ...
 rem Showcase: patient sign-in code is shown on screen (no real SMS)
 set Sms__Provider=demo
+rem Every internal screen and API route needs a staff sign-in (first run: create the manager account)
+set Auth__Enforce=true
 start "BanglaRx Backend API" cmd /k "cd /d "%~dp0BanglaRx.Api" && dotnet run"
 
 echo [2/3] Starting React/Vite Frontend on http://localhost:5173 ...

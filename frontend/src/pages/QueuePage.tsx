@@ -20,7 +20,7 @@ export const QueuePage: React.FC<QueuePageProps> = ({ doctor, queue, activePatie
   const completed = queue.filter((q) => q.status === 'Completed');
   const next = waiting.slice().sort((a, b) => a.token_number - b.token_number)[0];
   const goToPad = () => {
-    window.location.hash = '#/';
+    window.location.hash = '#/workbench';
   };
   const sorted = queue.slice().sort((a, b) => ORDER[a.status] - ORDER[b.status] || a.token_number - b.token_number);
 
@@ -29,7 +29,7 @@ export const QueuePage: React.FC<QueuePageProps> = ({ doctor, queue, activePatie
       <PageHeader
         title="Today's chamber queue"
         subtitle={`${doctor?.name ?? 'No doctor'}${doctor?.room_no ? ` · ${doctor.room_no}` : ''} · ${new Date().toLocaleDateString('en-GB')}`}
-        backHref="#/"
+        backHref="#/workbench"
         backLabel="Back to the workbench"
         live
         actions={

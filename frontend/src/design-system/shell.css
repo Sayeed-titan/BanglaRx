@@ -1,0 +1,46 @@
+/* ---- The signed-in frame: a sidebar that collapses to icons on desktop and slides in on a phone ---- */
+.rx-staff { display: flex; min-height: 100vh; background: var(--rx-bg); --rx-staff-top: 0px; }
+.rx-staff__main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.rx-staff__top, .rx-staff__scrim, .rx-side__close { display: none; }
+
+.rx-side { flex: none; width: 264px; position: sticky; top: 0; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 16px 12px; background: var(--rx-surface-2); border-right: 1px solid var(--rx-outline); transition: width 0.16s ease; }
+.rx-side__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 4px; min-height: 48px; }
+.rx-side__nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.rx-side__foot { display: flex; flex-direction: column; gap: 2px; border-top: 1px solid var(--rx-outline); padding-top: 10px; }
+.rx-side__link { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 14px; min-height: var(--rx-tap); padding: 0 14px; border-radius: var(--rx-r-md); color: var(--rx-ink); font-size: 15px; text-decoration: none; white-space: nowrap; }
+.rx-side__link:hover { background: var(--rx-surface-3); }
+.rx-side__link:focus-visible, .rx-staff__burger:focus-visible, .rx-side__close:focus-visible { outline: 3px solid var(--rx-primary); outline-offset: 2px; }
+.rx-side__link--on { background: color-mix(in srgb, var(--rx-primary) 18%, var(--rx-surface)); font-weight: 700; }
+.rx-side__link svg { flex: none; }
+.rx-side__who { display: flex; align-items: center; gap: 12px; padding: 8px 10px; }
+.rx-side__avatar { flex: none; width: 36px; height: 36px; border-radius: var(--rx-r-pill); display: flex; align-items: center; justify-content: center; background: var(--rx-primary); color: var(--rx-on-primary); font-weight: 700; }
+.rx-side__name { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+.rx-side__name span { font-size: var(--rx-fs-caption); color: var(--rx-ink-2); }
+
+/* desktop: collapsed means icons only, with the name on hover (title) */
+@media (min-width: 901px) {
+  .rx-staff[data-collapsed='true'] .rx-side { width: 76px; }
+  .rx-staff[data-collapsed='true'] .rx-side__label { display: none; }
+  .rx-staff[data-collapsed='true'] .rx-side__link { justify-content: center; padding: 0; }
+  .rx-staff[data-collapsed='true'] .rx-side__who { justify-content: center; padding: 8px 0; }
+  .rx-staff[data-collapsed='true'] .rx-side__head { justify-content: center; }
+}
+
+/* phone and small tablet: a top bar with a menu button; the sidebar slides over the page */
+@media (max-width: 900px) {
+  .rx-staff { flex-direction: column; --rx-staff-top: 60px; }
+  .rx-staff__top { display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 50; min-height: 60px; padding: 0 12px; background: var(--rx-surface); border-bottom: 1px solid var(--rx-outline); }
+  .rx-staff__burger { all: unset; box-sizing: border-box; cursor: pointer; width: var(--rx-tap); height: var(--rx-tap); display: flex; align-items: center; justify-content: center; border-radius: var(--rx-r-md); color: var(--rx-ink); }
+  .rx-staff__burger:hover { background: var(--rx-surface-2); }
+  .rx-side { position: fixed; top: 0; bottom: 0; left: 0; z-index: 80; width: min(300px, 86vw); height: 100%; transform: translateX(-102%); transition: transform 0.18s ease; box-shadow: var(--rx-shadow-paper); }
+  .rx-staff[data-open='true'] .rx-side { transform: none; }
+  .rx-staff__scrim { position: fixed; inset: 0; z-index: 70; background: color-mix(in srgb, var(--rx-ink) 45%, transparent); }
+  .rx-staff[data-open='true'] .rx-staff__scrim { display: block; }
+  .rx-side__close { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; justify-content: center; width: var(--rx-tap); height: var(--rx-tap); border-radius: var(--rx-r-md); color: var(--rx-ink); }
+  .rx-side__collapse { display: none; }
+  .rx-tabsbar { top: var(--rx-staff-top); }
+}
+
+@media (prefers-reduced-motion: reduce) { .rx-side { transition: none; } }
+@media print { .rx-side, .rx-staff__top, .rx-staff__scrim { display: none; } .rx-staff { display: block; } }
+

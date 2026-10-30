@@ -1,0 +1,47 @@
+/* ---- Public home page ---- */
+.rx-land { min-height: 100vh; background: var(--rx-bg); color: var(--rx-ink); }
+.rx-land__wrap { width: 100%; max-width: 1120px; margin: 0 auto; padding: 0 24px; box-sizing: border-box; }
+.rx-land__bar { position: sticky; top: 0; z-index: 40; background: var(--rx-surface); border-bottom: 1px solid var(--rx-outline); }
+.rx-land__barin { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 68px; flex-wrap: wrap; padding-top: 8px; padding-bottom: 8px; }
+.rx-land__links { display: flex; gap: 4px; flex-wrap: wrap; }
+.rx-land__links a { min-height: var(--rx-tap); display: inline-flex; align-items: center; padding: 0 14px; border-radius: var(--rx-r-pill); color: var(--rx-ink); text-decoration: none; font-size: 15px; }
+.rx-land__links a:hover { background: var(--rx-surface-2); }
+.rx-land__links a:focus-visible { outline: 3px solid var(--rx-primary); outline-offset: 2px; }
+
+.rx-land__hero { padding: 72px 0 64px; background: color-mix(in srgb, var(--rx-primary) 10%, var(--rx-bg)); border-bottom: 1px solid var(--rx-outline); }
+.rx-land__kicker { font-size: var(--rx-fs-label); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--rx-primary); }
+.rx-land__h1 { margin: 0; font-size: clamp(30px, 5.2vw, 52px); line-height: 1.15; letter-spacing: -0.02em; max-width: 880px; }
+.rx-land__h2 { margin: 0; font-size: clamp(24px, 3.4vw, 34px); line-height: 1.2; letter-spacing: -0.01em; }
+.rx-land__h3 { margin: 0; font-size: 19px; line-height: 1.3; }
+.rx-land__lead { margin: 0; font-size: 18px; line-height: 1.6; color: var(--rx-ink-2); }
+.rx-land__p { margin: 0; font-size: 16px; line-height: 1.6; color: var(--rx-ink-2); }
+.rx-land__fine { font-size: var(--rx-fs-caption); color: var(--rx-ink-2); line-height: 1.5; }
+
+.rx-land__section { padding: 64px 0; }
+.rx-land__section--tint { background: var(--rx-surface-2); }
+.rx-land__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.rx-land__grid--two { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.rx-land__icon { width: 44px; height: 44px; border-radius: var(--rx-r-md); display: inline-flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--rx-primary) 16%, var(--rx-surface)); color: var(--rx-primary); }
+.rx-land__impact { display: flex; flex-direction: column; gap: 4px; padding: 16px 18px; border-left: 4px solid var(--rx-primary); background: var(--rx-surface); border-radius: var(--rx-r-sm); line-height: 1.5; }
+.rx-land__impact span { color: var(--rx-ink-2); }
+.rx-land__proof { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.rx-land__proof li { padding: 12px 14px; border-radius: var(--rx-r-sm); background: var(--rx-surface-2); font-weight: 700; }
+.rx-land__steps { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 10px; line-height: 1.55; }
+
+.rx-land__calc { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+.rx-land__result { display: flex; flex-direction: column; gap: 10px; padding: 16px 18px; border-radius: var(--rx-r-md); background: var(--rx-surface-2); }
+.rx-land__stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.rx-land__stats div { display: flex; flex-direction: column; gap: 2px; }
+.rx-land__stats span { font-size: var(--rx-fs-caption); color: var(--rx-ink-2); }
+.rx-land__stats strong { font-size: 26px; line-height: 1.2; }
+.rx-land__stats small { font-size: var(--rx-fs-caption); font-weight: 400; color: var(--rx-ink-2); }
+
+.rx-land__cta { padding: 64px 0; background: color-mix(in srgb, var(--rx-primary) 12%, var(--rx-bg)); border-top: 1px solid var(--rx-outline); }
+.rx-land__foot { padding: 20px 0; border-top: 1px solid var(--rx-outline); background: var(--rx-surface); font-size: var(--rx-fs-label); color: var(--rx-ink-2); }
+
+@media (max-width: 720px) {
+  .rx-land__wrap { padding: 0 16px; }
+  .rx-land__links { display: none; }
+  .rx-land__hero, .rx-land__section, .rx-land__cta { padding-top: 40px; padding-bottom: 40px; }
+}
+@media print { .rx-land__bar { display: none; } }

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Callout, Card, EmptyState, NavRail, StatTile } from '../design-system';
+import { Callout, Card, EmptyState, StatTile } from '../design-system';
 import { getJson } from '../api';
-import { managerNav } from './nav';
 import type { Doctor } from '../types/index';
 
 interface DashboardPageProps {
@@ -22,7 +21,6 @@ interface RxRow {
   created_at: string;
 }
 
-const NAV = managerNav('#/dashboard');
 
 const sameDay = (iso: string, now: Date) => new Date(iso).toDateString() === now.toDateString();
 
@@ -65,8 +63,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ doctors }) => {
   return (
     <div className="rx-page">
       <div className="rx-shell">
-        <NavRail label="Manager" items={NAV} />
-
         <main className="rx-shell__main">
           <header className="rx-row" style={{ justifyContent: 'space-between' }}>
             <div>

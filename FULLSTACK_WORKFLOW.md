@@ -60,6 +60,7 @@ node tests/stop-test-stack.mjs                                    # stops the AP
 - **Reports**: the photo is read and thrown away. Values are kept only after the patient corrects any `?` and confirms, and only if "Keep my reports" is on. Doctors see them as "patient-given, AI-read".
 - **Hand-over**: one record per medicine per prescription version; if the doctor revises the prescription later, the pharmacy sees a warning. Undo works for 15 minutes.
 - **Phones**: the workbench shows Consultation or Rx one at a time below 900 px. The service worker is registered in production builds only.
+- **Public and internal screens**: `#/` is the public home page (patients, doctors, clinics, an estimator that only does arithmetic on the clinic's own numbers). `#/rubina` and `#/patient` are public too. Every other address is internal: without a staff sign-in it goes to `#/login`, and a signed-in person is sent to their own home if their role may not open it. The doctor's workbench moved from `#/` to `#/workbench`. All internal screens sit in one frame with a role-based sidebar that collapses to icons (remembered) and slides in on a phone. `start_banglarx.bat` sets `Auth__Enforce=true` so the server refuses internal calls without a token; on first run the setup screen creates the manager account.
 - **Showcase mode**: `Sms__Provider=demo` (set by `start_banglarx.bat`) shows the sign-in code on screen. Turn it off for any real use.
 
 ## Sign-in and roles: how it works

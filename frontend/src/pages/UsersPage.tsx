@@ -1,11 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { UserPlus } from 'lucide-react';
-import { Badge, Button, Callout, Card, EmptyState, NavRail, Select, TextField } from '../design-system';
+import { Badge, Button, Callout, Card, EmptyState, Select, TextField } from '../design-system';
 import { getJson, sendJson } from '../api';
 import { fetchStatus, getSession } from '../auth/session';
 import { ROLE_LABEL } from '../auth/roles';
 import type { Role } from '../auth/session';
-import { managerNav } from './nav';
 
 interface UserRow {
   id: number;
@@ -184,8 +183,6 @@ export const UsersPage: React.FC = () => {
   return (
     <div className="rx-page">
       <div className="rx-shell">
-        <NavRail label="Manager" items={managerNav('#/users')} />
-
         <main className="rx-shell__main">
           <header>
             <h1 style={{ margin: 0, fontSize: 26, letterSpacing: '-0.01em' }}>Users and access</h1>
